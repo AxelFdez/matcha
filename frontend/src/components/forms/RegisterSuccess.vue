@@ -1,0 +1,104 @@
+<template>
+  <div class="register--success--container fade-In">
+    <div class="text">
+      <h3>{{ $t("accountCreatedTitle") }}</h3>
+      <p
+        id="sub--title"
+        v-html="replace_newLine_to_br_tags($t('accountCreatedText'))"
+      ></p>
+    </div>
+    <div class="login--btn">
+      <span
+          @click="goToLoginPage"
+        ><i
+          class="fa-solid fa-right-to-bracket"
+        ></i
+      ></span>
+    </div>
+  </div>
+</template>
+
+<script>
+import { replace_newLine_to_br_tags } from "@/libft/libft.js";
+
+export default {
+  name: "RegisterSuccess",
+
+  methods: {
+    goToLoginPage() {
+      this.$store.commit('setIsRegisterFormSent', false);
+      this.$store.commit('setServerMessage', '');
+      this.$router.push({ name: 'LoginPage' });
+    }
+  },
+
+  setup() {
+   
+    return {
+    
+      replace_newLine_to_br_tags,
+    };
+  },
+};
+</script>
+
+<style lang=scss>
+.register--success--container {
+  position: relative;
+  height: auto;
+  width: auto;
+  max-width: 500px;
+  margin: 25px;
+  padding: 10px 20px 20px 20px;
+  border-radius: 15px;
+  background-image: linear-gradient(to right, #ff24a7af, #8890feb2);
+  box-shadow: 0 0 28px rgba(0, 0, 0, 0.498);
+  cursor: default;
+  user-select: none;
+
+  .text {
+    h3 {
+      margin: 0;
+      padding: 0;
+      color: white;
+      text-align: center;
+      font-weight: 900;
+      text-transform: capitalize;
+      font-size: calc(min(3vw + 2vh, 50px));
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.438);
+    }
+    p {
+      // border: solid 1px white;
+      width: 80%;
+      font-weight: 400;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      font-size: calc(min(1vw + 1.3vh, 20px));
+      margin: auto;
+      word-wrap: break-word;
+    }
+  }
+  .login--btn {
+    text-decoration: none;
+
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+
+    span {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: white;
+      transition: all ease-in-out 0.3s;
+      &:hover {
+        color: var(--light-pink);
+      }
+    }
+  }
+}
+</style>
