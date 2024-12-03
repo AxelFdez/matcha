@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>matcha email verification</title>
+</head>
+<style lang="scss">
+    body {
+        font-family: "Roboto", sans-serif;
+        background: url(assets/couple-bg.jpg) fixed center/cover;
+        height: 100vh;
+    }
+
+    .email--verif--container {
+        height: 100vh;
+        width: 70%;
+        margin: auto;
+        display: grid;
+        align-items: center;
+        justify-content: center;
+        h1 {
+            text-align: center;
+            font-size: 7rem;
+            font-weight: 900;
+            color: white;
+            @media (max-width: 600px) {
+                font-size: 4rem;
+            }
+        }
+        .logo {
+            display: grid;
+            justify-content: center;
+            img {
+                width: 155px;
+                height: 155px;
+                opacity: 0.8;
+                @media (max-width: 600px) {
+                    width: 100px;
+                    height: 100px;
+                }
+            }
+        }
+        h2 {
+            text-align: center;
+            font-size: 2rem;
+            color: white;
+            @media (max-width: 600px) {
+                font-size: 1.5rem;
+            }
+        }
+        h4 {
+            text-align: center;
+            font-size: 1.5rem;
+            color: white;
+            @media (max-width: 600px) {
+                font-size: 1rem;
+            }
+        }
+    }
+</style>
+
+<body>
+    <div class="email--verif--container">
+        <div>
+            <h1>matcha</h1>
+            <div class="logo">
+                <img src="assets/feu.png" alt="imgLogo" />
+            </div>
+            {% if (success) %}
+                <h2>Your email has been verified successfully.</h2>
+                {% else %}
+                <h2>Server error, please try again later.</h2>
+            {% endif %}
+            <h4>You can close this window.</h4>
+        </div>
+    </div>
+</body>
+
+</html>
