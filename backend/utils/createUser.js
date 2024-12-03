@@ -8,6 +8,8 @@ const path = require('path');
 const connectBdd = require('../config/connectBdd');
 const pool = require('../config/connectBdd');
 
+// COMMENTED OUT BECAUSE OF THE USE OF POSTGRESQL INSTEAD OF MONGODB
+
 class DuplicationError extends Error {
     constructor(message) {
         super(message);
