@@ -4,55 +4,61 @@
 
     </section>
     <section class="main--page--profile">
-      <div class="profile--container">
+      <div  v-if="userReady" class="profile--container">
         <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" />
-          <p v-else>Chargement des utilisateurs...</p>
+        <p v-else>Chargement des utilisateurs...</p>
+
+      </div>
+      <div v-else>
+        <p>Your Profile is not fill</p>
       </div>
     </section>
-    </div>
+  </div>
 </template>
 
 <script>
 import ProfileCard from '@/components/ProfileCard.vue';
 import { fetchData } from '../config/api';
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { onMounted } from "vue";
+import { useStore } from 'vuex';
 
 export default {
-    name: "MainPage",
-    components: {
-        ProfileCard
-    },
-    // data () {
+  name: "MainPage",
+  components: {
+    ProfileCard
+  },
+  setup() {
+    const store = useStore();
+    const user = computed(() => store.state);
+    const userReady = computed(() => user.value && user.value.is_ready);
 
-    // },
+    const tenUsers = ref([]);
 
-
-    setup() {
-  onMounted(() => {
-    console.log("mounted");
-    getTenUsers();
-  });
-
-  const tenUsers = ref([]);
-
-  const getTenUsers = async () => {
+    const getTenUsers = async () => {
       const response = await fetchData("/browseUsers", {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': "Bearer " + localStorage.getItem('accessToken'),
         },
       });
       const data = await response.json();
-      console.log("data", data);
       if (data) {
+        console.log(data);
         tenUsers.value = data.users;
       }
+    };
+
+    onMounted(() => {
+      if (!userReady.value) {
+        store.commit('setIsLoadingStartApp', false);
+        return;
       }
-    if (tenUsers.value.length === 0) {
       getTenUsers();
-    }
-    return { tenUsers };
+    });
+
+    return {tenUsers, userReady};
   }
 };
 </script>
@@ -63,6 +69,7 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100vh;
+
   h1 {
     font-size: 5rem;
     font-weight: 900;
@@ -81,6 +88,7 @@ button {
   font-size: 1.5rem;
   cursor: pointer;
   transition: 0.3s;
+
   &:hover {
     background-color: #8890fee5;
   }

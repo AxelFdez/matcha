@@ -11,9 +11,9 @@
     <LoadingCmp v-if="$store.getters.getIsLoading"></LoadingCmp>
     <div v-if="$store.getters.getIsReady">
 
-        <!-- <Header></Header> -->
+         <Header></Header>
         <router-view> </router-view>
-        <!-- <Footer></Footer> -->
+<!--         <Footer></Footer>-->
 
     </div>
   </div>

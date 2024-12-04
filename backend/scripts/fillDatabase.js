@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { faker } = require('@faker-js/faker');
 
 // Configuration de la base de données
 const pool = new Pool({
@@ -9,44 +10,69 @@ const pool = new Pool({
   port: 5432,              // Port par défaut de PostgreSQL
 });
 
+function generateFakeUser() {
+  return {
+    username: faker.internet.username(),
+    password: faker.internet.password(),
+    firstname: faker.person.firstName(),
+    lastname: faker.person.lastName(),
+    email: faker.internet.email(),
+    gender: faker.person.sex(), // "male" ou "female"
+    sexualPreferences: faker.person.sex(),
+    biography: faker.lorem.sentence(),
+    age: faker.number.int({ min: 18, max: 99 }),
+    interests: [faker.hacker.noun(), faker.music.genre()],
+    photos: [null, null, null, null, null],
+    profilePicture: faker.number.int({ min: 0, max: 4 }),
+    fameRating: faker.number.int({ min: 0, max: 1000 }),
+    location: {
+      authorization: faker.datatype.boolean(),
+      type: 'Point',
+      coordinates: [faker.address.longitude(), faker.address.latitude()]
+    },
+    verified: faker.datatype.boolean(1),
+    ready : faker.datatype.boolean(1)
+  };
+}
+
 // Les données des utilisateurs à insérer
-const users = [
-  {
-    username: 'john_doe',
-    password: 'password123',
-    firstname: 'John',
-    lastname: 'Doe',
-    email: 'john.doe@example.com',
-    gender: 'Male',
-    sexualPreferences: 'Female',
-    biography: 'Just a simple guy.',
-    age: 30,
-    interests: ['#music', '#travel'],
-    photos: [null, null, null, null, null],
-    profilePicture: 0,
-    fameRating: 10,
-    reported: 0,
-    location: { authorization: true, type: 'Point', coordinates: [48.8566, 2.3522] }, // Paris
-  },
-  {
-    username: 'jane_smith',
-    password: 'password456',
-    firstname: 'Jane',
-    lastname: 'Smith',
-    email: 'jane.smith@example.com',
-    gender: 'Female',
-    sexualPreferences: 'Male',
-    biography: 'Love hiking and coding.',
-    age: 28,
-    interests: ['#hiking', '#coding'],
-    photos: [null, null, null, null, null],
-    profilePicture: 1,
-    fameRating: 20,
-    reported: 0,
-    location: { authorization: true, type: 'Point', coordinates: [34.0522, -118.2437] }, // Los Angeles
-  },
+// const users = [
+//   {
+//     username: 'john_doe',
+//     password: 'password123',
+//     firstname: 'John',
+//     lastname: 'Doe',
+//     email: 'john.doe@example.com',
+//     gender: 'Male',
+//     sexualPreferences: 'Female',
+//     biography: 'Just a simple guy.',
+//     age: 30,
+//     interests: ['#music', '#travel'],
+//     photos: [null, null, null, null, null],
+//     profilePicture: 0,
+//     fameRating: 10,
+//     reported: 0,
+//     location: { authorization: true, type: 'Point', coordinates: [48.8566, 2.3522] }, // Paris
+//   },
+//   {
+//     username: 'jane_smith',
+//     password: 'password456',
+//     firstname: 'Jane',
+//     lastname: 'Smith',
+//     email: 'jane.smith@example.com',
+//     gender: 'Female',
+//     sexualPreferences: 'Male',
+//     biography: 'Love hiking and coding.',
+//     age: 28,
+//     interests: ['#hiking', '#coding'],
+//     photos: [null, null, null, null, null],
+//     profilePicture: 1,
+//     fameRating: 20,
+//     reported: 0,
+//     location: { authorization: true, type: 'Point', coordinates: [34.0522, -118.2437] }, // Los Angeles
+//   },
   // Ajoute d'autres utilisateurs ici
-];
+// ];
 
 // Fonction pour insérer un utilisateur
 async function insertUser(user) {
@@ -78,7 +104,8 @@ async function insertUser(user) {
 (async function () {
   try {
     console.log('Insertion des utilisateurs...');
-    for (const user of users) {
+    const fakeUsers = Array.from({ length: 100 }, generateFakeUser);
+    for (const user of fakeUsers) {
       await insertUser(user);
     }
     console.log('Tous les utilisateurs ont été insérés avec succès.');

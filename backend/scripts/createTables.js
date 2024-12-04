@@ -1,90 +1,68 @@
-const { Pool } = require('pg');
+const { Client } = require('pg');
 
 // Configuration de la base de données
-const pool = new Pool({
-    user: 'your_user',       // Remplace par ton utilisateur PostgreSQL
-    host: 'localhost',       // Adresse de la base de données
-    database: 'your_database', // Nom de la base de données
-    password: 'your_password', // Mot de passe PostgreSQL
-    port: 5432,              // Port par défaut de PostgreSQL
+const client = new Client({
+    host: 'localhost',
+    user: 'your_user',
+    password: 'your_password',
+    database: 'your_database',
+    port: 5432, // Port par défaut de PostgreSQL
 });
 
-// Les données des utilisateurs à insérer
-const users = [
-    {
-        username: 'john_doe',
-        password: 'password123',
-        firstname: 'John',
-        lastname: 'Doe',
-        email: 'john.doe@example.com',
-        gender: 'Male',
-        sexualPreferences: 'Female',
-        biography: 'Just a simple guy.',
-        age: 30,
-        interests: ['#music', '#travel'],
-        photos: [null, null, null, null, null],
-        profilePicture: 0,
-        fameRating: 10,
-        reported: 0,
-        location: { authorization: true, type: 'Point', coordinates: [48.8566, 2.3522] }, // Paris
-    },
-    {
-        username: 'jane_smith',
-        password: 'password456',
-        firstname: 'Jane',
-        lastname: 'Smith',
-        email: 'jane.smith@example.com',
-        gender: 'Female',
-        sexualPreferences: 'Male',
-        biography: 'Love hiking and coding.',
-        age: 28,
-        interests: ['#hiking', '#coding'],
-        photos: [null, null, null, null, null],
-        profilePicture: 1,
-        fameRating: 20,
-        reported: 0,
-        location: { authorization: true, type: 'Point', coordinates: [34.0522, -118.2437] }, // Los Angeles
-    },
-    // Ajoute d'autres utilisateurs ici
-];
-
-// Fonction pour insérer un utilisateur
-async function insertUser(user) {
+(async () => {
     try {
-        const query = `
-      INSERT INTO users (
-        username, password, firstname, lastname, email, gender, sexualPreferences,
-        biography, age, interests, photos, profilePicture, fameRating, reported, location
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7,
-        $8, $9, $10, $11, $12, $13, $14, $15
-      )
-      RETURNING id;
+        await client.connect();
+        console.log("Connexion à la base de données réussie.");
+
+        // Création de la table "users"
+        const createUsersTable = `
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        firstname VARCHAR(255) NOT NULL,
+        lastname VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        verified BOOLEAN DEFAULT false,
+        ready BOOLEAN DEFAULT false,
+        refreshToken VARCHAR(255) DEFAULT 'None',
+        connected BOOLEAN DEFAULT false,
+        lastConnection TIMESTAMP DEFAULT NULL,
+        gender VARCHAR(50) DEFAULT 'None',
+        sexualPreferences VARCHAR(50) DEFAULT 'None',
+        biography TEXT DEFAULT 'bio here',
+        age INTEGER DEFAULT NULL,
+        interests TEXT[] DEFAULT '{}', -- Tableau de chaînes de caractères
+        photos TEXT[] DEFAULT '{}',
+        profilePicture INTEGER DEFAULT 0,
+        fameRating INTEGER DEFAULT 0,
+        reported INTEGER DEFAULT 0,
+        location JSONB DEFAULT '{"authorization": false, "type": "Point", "coordinates": [0, 0]}',
+        blackList UUID[], -- Tableau d'IDs (UUID)
+        viewedBy UUID[],
+        likedBy UUID[],
+        matcha UUID[],
+        notifications JSONB[],
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
     `;
-        const values = [
-            user.username, user.password, user.firstname, user.lastname, user.email, user.gender,
-            user.sexualPreferences, user.biography, user.age, user.interests, user.photos,
-            user.profilePicture, user.fameRating, user.reported, JSON.stringify(user.location),
-        ];
-        const result = await pool.query(query, values);
-        console.log(`Utilisateur inséré avec ID : ${result.rows[0].id}`);
-    } catch (err) {
-        console.error('Erreur lors de l\'insertion de l\'utilisateur :', err.message);
-    }
-}
 
-// Fonction principale
-(async function () {
-    try {
-        console.log('Insertion des utilisateurs...');
-        for (const user of users) {
-            await insertUser(user);
-        }
-        console.log('Tous les utilisateurs ont été insérés avec succès.');
+        // Exécuter la requête pour créer la table
+        await client.query(createUsersTable);
+        console.log("Table 'users' créée ou déjà existante.");
+
+        // Index pour les requêtes géographiques (location)
+        const createIndex = `
+      CREATE INDEX IF NOT EXISTS location_idx ON users USING GIN (location);
+    `;
+        await client.query(createIndex);
+        console.log("Index pour 'location' créé.");
+
     } catch (err) {
-        console.error('Erreur lors de l\'insertion :', err.message);
+        console.error("Erreur lors de la configuration de la base de données :", err);
     } finally {
-        await pool.end(); // Fermer le pool de connexions
+        await client.end();
+        console.log("Connexion fermée.");
     }
 })();

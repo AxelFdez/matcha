@@ -15,10 +15,11 @@ var usersRouter = require('./routes/users');
 var app = express();
 
 // Désactive CORS pour toutes les requêtes
-app.use(cors({
-  origin: 'http://localhost:8082',  // Remplace par le domaine d'où viennent les requêtes
-  credentials: true,                 // Permet l'envoi et la réception des cookies
-}));
+app.use(cors());
+// app.use(cors({
+//   origin: 'http://192.168.1.42:8081',  // Remplace par le domaine d'où viennent les requêtes
+//   credentials: true,                 // Permet l'envoi et la réception des cookies
+// }));
 
 
 // view engine setup

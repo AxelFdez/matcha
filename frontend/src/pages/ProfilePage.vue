@@ -1,4 +1,4 @@
-<template>
+a<template>
   <div v-if="this.$store.getters.getIsConnected" class="profile--page fade-In">
     <div class="profile--main--container">
       <div v-if="alert" :class="['alert', alert.type]">

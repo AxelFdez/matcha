@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const connectBdd = require('../config/connectBdd');
+const pool = require('../config/connectBdd');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '15m';
@@ -10,33 +11,36 @@ const REFRESH_TOKEN_EXPIRES_IN = '7d';
 
 async function loginUser(req, res) {
     try {
-		await connectBdd();
+		// await connectBdd();
+        // console.log(req.body);
         const { username, password } = req.body;
-        const user = await User.findOne({ username });
-        if (!user) {
+        // const user = await User.findOne({ username });
+        const user = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (user.rows.empty) {
             return res.status(404).json({ message: "User not found" });
         }
+        // console.log(user.rows[0]);
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.rows[0].password);
         if (!isMatch) {
             return res.status(401).json({ message: "Wrong Password" });
         }
 
         // Création du access token
         const accessToken = jwt.sign(
-            { userId: user._id, email: user.email },
+            { userId: user.rows[0]._id, email: user.rows[0].email },
             JWT_SECRET,
             { expiresIn: JWT_EXPIRES_IN }
         );
 
         // Création du refresh token
         const refreshToken = jwt.sign(
-            { userId: user._id },
+            { userId: user.rows[0]._id },
             REFRESH_TOKEN_SECRET,
             { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
         );
 
-		user.refreshToken = refreshToken;
+        user.rows[0].refreshToken = refreshToken;
 
         // if (!user.verified) {
 
@@ -51,20 +55,23 @@ async function loginUser(req, res) {
         //     }
         //      });
 		// }
+
 		//  Séparation de la chaîne en latitude et longitude
         if (req.body.location) {
             // console.log(req.body.location);
             const latitude = parseFloat(req.body.location.latitude);
             const longitude = parseFloat(req.body.location.longitude);
-            user.location.coordinates = [latitude, longitude];
-            user.location.authorization = true;
+            user.rows[0].location.coordinates = [latitude, longitude];
+            user.rows[0].location.authorization = true;
         }
         else {
-            user.location.authorization = false;
+            user.rows[0].location.authorization = false;
         }
 
-		user.connected = true;
-		await user.save();
+		// user.connected = true;
+        pool.query('UPDATE users SET refreshToken = $1, location = $2, connected = $3 WHERE username = $4',
+            [refreshToken, JSON.stringify(user.rows[0].location), true, username]);
+		// await user.save();
 
         // Envoyer les tokens au client
         // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8082');  // Origine spécifique
@@ -75,10 +82,10 @@ async function loginUser(req, res) {
             accessToken : accessToken,
             refreshToken: refreshToken,
             user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                verified: user.verified,
+                id: user.rows[0]._id,
+                username: user.rows[0].username,
+                email: user.rows[0].email,
+                verified: user.rows[0].verified,
             }
         });
     } catch (error) {

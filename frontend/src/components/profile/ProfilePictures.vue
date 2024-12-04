@@ -120,7 +120,7 @@ export default {
         formData.append('imageIndex', index);
 
         // Envoyer l'image au serveur
-        fetch('http://192.168.1.60:8081/updateUser', {
+        fetch(process.env.VUE_APP_API_URL + '/updateUser', {
           method: 'POST',
           body: formData,
           headers: {
@@ -130,7 +130,7 @@ export default {
           .then((response) => response.json())
           .then((data) => {
             console.log(data)
-            if (data.message === 'User updated') {
+            if (data.alert.type === 'success') {
               if (data.imageIndex)
                 this.getPhoto(data.imageIndex);
             } else {
