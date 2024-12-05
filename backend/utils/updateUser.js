@@ -102,12 +102,12 @@ async function updateUser(req, res) {
 			}
 			updates.profilePicture = req.body.profilePicture;
 		}
-		console.log("user.ready = ", user.ready);
-		console.log("user.age = ", user.age);
-		console.log("user.gender", user.gender);
-		console.log("user.sexualpreferences = ", user.sexualpreferences);
-		console.log("user.interests.length = ", user.interests.length);
-		console.log("user.photos[0] = ", user.photos[0]);
+		// console.log("user.ready = ", user.ready);
+		// console.log("user.age = ", user.age);
+		// console.log("user.gender", user.gender);
+		// console.log("user.sexualpreferences = ", user.sexualpreferences);
+		// console.log("user.interests.length = ", user.interests.length);
+		// console.log("user.photos[0] = ", user.photos[0]);
 		if (!user.ready) {
 			if (user.age && user.gender && user.sexualpreferences && user.interests.length > 0 && user.photos[0]) {
 				updates.ready = true;

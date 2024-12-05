@@ -75,14 +75,14 @@ async function loginUser(req, res) {
 
         // Envoyer les tokens au client
         // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8082');  // Origine spécifique
-        // res.setHeader('Access-Control-Allow-Credentials', 'true');  // Permet les cookies
-        // res.cookie('refreshToken', refreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000, path: '/' }); // 7 jours en millisecondes
+        res.setHeader('Access-Control-Allow-Credentials', 'true');  // Permet les cookies
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 7 jours en millisecondes
         res.status(201).json({
             message: "Connexion réussie",
             accessToken : accessToken,
-            refreshToken: refreshToken,
+            // refreshToken: refreshToken,
             user: {
-                id: user.rows[0]._id,
+                id: user.rows[0].id,
                 username: user.rows[0].username,
                 email: user.rows[0].email,
                 verified: user.rows[0].verified,

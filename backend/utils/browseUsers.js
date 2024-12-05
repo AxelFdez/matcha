@@ -118,7 +118,7 @@ module.exports = async function browseUsers(req, res) {
 		query += ' LIMIT 10';
 
 		const usersResult = await pool.query(query, queryParams);
-		console.log(usersResult.rows);
+		// console.log(usersResult.rows);
 		const users = usersResult.rows;
 
 		if (!users.length) {

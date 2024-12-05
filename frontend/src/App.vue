@@ -81,16 +81,18 @@ export default {
           if (responseData.accessToken) {
             localStorage.setItem('accessToken', responseData.accessToken)
             console.log('ACCESS Token');
-
           }
 
-          // await store.dispatch('initWebSocket');
           await store.dispatch('getUserInfos', localStorage.getItem('userName'));
           if (store.getters.getVerified === true) {
+            await store.dispatch('initWebSocket');
+            // console.log(store.getters);
+            // console.log('verified');
             store.commit('setIsReady', true);
             store.commit('setIsConnected', true);
           }
           else {
+            console.log('not verified');
             store.commit('setIsReady', true);
             store.commit('setIsConnected', false);
           }

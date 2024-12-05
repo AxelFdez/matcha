@@ -46,6 +46,8 @@ async function setupWebSocket(server) {
 				chatUser(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'newLocation') {
 				await pool.query('UPDATE users SET location = $1 WHERE id = $2', [[parsedMessage.location.latitude, parsedMessage.location.longitude], userId]);
+			} else if (parsedMessage.type === 'test') {
+				console.log('Test received:', parsedMessage.message);
 			}
 		});
 
