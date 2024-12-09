@@ -1,10 +1,10 @@
 <template>
-  <div class="main--page--container">
-    <section class="main--page--research">
+<!--  <div class="main&#45;&#45;page&#45;&#45;container">-->
+<!--    <section class="main&#45;&#45;page&#45;&#45;research">-->
 
-    </section>
-    <section class="main--page--profile">
-      <div  v-if="userReady" class="profile--container">
+<!--    </section>-->
+    <section class="container mx-auto px-4">
+      <div  v-if="userReady">
         <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" />
         <p v-else>Chargement des utilisateurs...</p>
 
@@ -13,7 +13,7 @@
         <p>Your Profile is not fill</p>
       </div>
     </section>
-  </div>
+<!--  </div>-->
 </template>
 
 <script>
@@ -68,7 +68,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+
+  //height: 100vh;
 
   h1 {
     font-size: 5rem;

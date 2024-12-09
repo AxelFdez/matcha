@@ -1,42 +1,46 @@
 <template>
 <div class="max-w-2xl p-4 mx-auto">
-	<div id="carousel-example" class="relative w-full" data-carousel="static">
-	  <!-- Carousel wrapper -->
-	  <div class="relative h-56 overflow-hidden rounded-lg md:h-96">
-		<!-- Item 1 -->
-		<div id="carousel-item-1" class="hidden duration-700 ease-in-out p-6 pb-12 ml-10 pt-0 max-w-sm rounded-xl flex object-cover w-full h-full">
-		  <!-- <span
-			class="relative text-2xl font-semibold text-white -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 sm:text-3xl dark:text-gray-800">First
-			Slide</span> -->
-		  <img :src=getImage(user.photos[0])
-			class="rounded-lg" alt="...">
-			</div>
-		<!-- Item 2 -->
-		<div id="carousel-item-2" class="hidden duration-700 ease-in-out p-6 pb-12 ml-10 pt-0 max-w-sm rounded-xl flex object-cover w-full h-full">
-		  <img :src=getImage(user.photos[1])
-			class="rounded-lg" alt="...">
-		</div>
-		<!-- Item 3 -->
-		<div id="carousel-item-3" class="hidden duration-700 ease-in-out p-6 pb-12 ml-10 pt-0 max-w-sm rounded-xl flex object-cover w-full h-full">
-		  <img :src="getImage(user.photos[2])"
-			class="rounded-lg" alt="...">
-		</div>
-		<!-- Item 4 -->
-		<div id="carousel-item-4" class="hidden duration-700 ease-in-out p-6 pb-12 ml-10 pt-0 max-w-sm rounded-xl flex object-cover w-full h-full">
-		  <img :src="getImage(user.photos[3])"
-			class="rounded-lg" alt="...">
-		</div>
-	  </div>
+  <div id="carousel-example" class="relative w-full" data-carousel="static">
+    <!-- Carousel wrapper -->
+    <div class="relative h-56 flex justify-center overflow-hidden rounded-lg md:h-96">
+      <!-- Item 1 -->
+      <div id="carousel-item-1" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center object-cover w-full h-full">
+        <img :src="photos[0] || imgPlaceholder"
+             class="rounded-lg" alt="...">
+      </div>
+      <!-- Item 2 -->
+      <div id="carousel-item-2" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+        <img :src="photos[1] || imgPlaceholder"
+             class="rounded-lg" alt="...">
+      </div>
+      <!-- Item 3 -->
+      <div id="carousel-item-3" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+        <img :src="photos[2] || imgPlaceholder"
+             class="rounded-lg" alt="...">
+      </div>
+      <!-- Item 4 -->
+      <div id="carousel-item-4" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+        <img :src="photos[3] || imgPlaceholder"
+             class="rounded-lg" alt="...">
+      </div>
+      <!-- Item 5 -->
+      <div id="carousel-item-5" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+        <img :src="photos[4] || imgPlaceholder"
+             class="rounded-lg" alt="...">
+      </div>
+    </div>
 	  <!-- Slider indicators -->
 	  <div class="absolute z-30 flex space-x-3 -translate-x-1/2 bottom-5 left-1/2">
-		<button id="carousel-indicator-1" type="button" class="w-3 h-3 rounded-full" aria-current="true"
-		  aria-label="Slide 1"></button>
-		<button id="carousel-indicator-2" type="button" class="w-3 h-3 rounded-full" aria-current="false"
-		  aria-label="Slide 2"></button>
-		<button id="carousel-indicator-3" type="button" class="w-3 h-3 rounded-full" aria-current="false"
-		  aria-label="Slide 3"></button>
-		<button id="carousel-indicator-4" type="button" class="w-3 h-3 rounded-full" aria-current="false"
-		  aria-label="Slide 4"></button>
+		  <button id="carousel-indicator-1" type="button" class="w-3 h-3 rounded-full" aria-current="true"
+		    aria-label="Slide 1"></button>
+		  <button id="carousel-indicator-2" type="button" class="w-3 h-3 rounded-full" aria-current="false"
+		    aria-label="Slide 2"></button>
+		  <button id="carousel-indicator-3" type="button" class="w-3 h-3 rounded-full" aria-current="false"
+		    aria-label="Slide 3"></button>
+		  <button id="carousel-indicator-4" type="button" class="w-3 h-3 rounded-full" aria-current="false"
+		    aria-label="Slide 4"></button>
+      <button id="carousel-indicator-5" type="button" class="w-3 h-3 rounded-full" aria-current="false"
+              aria-label="Slide 5"></button>
 	  </div>
 	  <!-- Slider controls -->
 	  <button id="data-carousel-prev" type="button"
@@ -69,29 +73,40 @@
 import { defineProps, onMounted } from 'vue';
 import { Carousel } from 'flowbite';
 import { ref } from 'vue';
+import {fetchData} from "@/config/api";
 
+const props = defineProps({
+  user: {
+    type: Object,
+    required: true,
+    default: () => ({ username: '', photos: [] })
+  }
+});
+
+const photos = ref([]);
 const imgPlaceholder = 'src/default-avatar-img.jpeg';
-//  const name = "ProfileCard";
-function getImage(photo) {
-  if (photo) {
-    console.log(photo);
-        // Convertir le binaire en Base64
-        return `data:image/jpeg;base64,${photo}`;
-      } else {
-        return imgPlaceholder;
-      }
-    }
 
-    const props = defineProps({
-      user: {
-        type: Object,
-        required: true,
-        default: () => ({ photos: {} })
-      }
-    });
-    const imageUrl = ref(0);
+const loadImages = async (username) => {
+  const imagePromises = props.user.photos.map((_, index) =>
+      fetchData(`/getPhotos/${username}?index=${index}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      })
+          .then((response) => response.ok ? response.blob() : null)
+          .then((blob) => blob ? URL.createObjectURL(blob) : imgPlaceholder)
+          .catch(() => imgPlaceholder)
+  );
+  photos.value = await Promise.all(imagePromises);
+};
+
 
 onMounted(() => {
+
+  if (props.user.username) {
+    loadImages(props.user.username);
+  }
     const carouselElement = document.getElementById('carousel-example');
 
     const items = [
@@ -110,6 +125,10 @@ onMounted(() => {
         {
             position: 3,
             el: document.getElementById('carousel-item-4')
+        },
+        {
+            position: 4,
+            el: document.getElementById('carousel-item-5')
         },
     ];
 
@@ -137,6 +156,10 @@ onMounted(() => {
                     position: 3,
                     el: document.getElementById('carousel-indicator-4')
                 },
+                {
+                    position: 4,
+                    el: document.getElementById('carousel-indicator-5')
+                }
             ]
         },
 
@@ -169,5 +192,7 @@ onMounted(() => {
             carousel.next();
         });
     }
+
+
 })
 </script>

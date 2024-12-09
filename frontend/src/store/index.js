@@ -303,6 +303,7 @@ export const store = createStore({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "authorization": "bearer " + localStorage.getItem('accessToken'),
           },
           body: JSON.stringify(formData),
         });

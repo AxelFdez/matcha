@@ -1,5 +1,5 @@
 <template>
-  <div class="container" :style="{ opacity: headerOpacity }" :class="{ 'hidden-element': headerOpacity === 0 }">
+  <div class="header-container" :style="{ opacity: headerOpacity }" :class="{ 'hidden-element': headerOpacity === 0 }">
 
     <div class="header">
       <TitleCmp></TitleCmp>
@@ -70,7 +70,7 @@ export default {
 </script>
 
 <style lang=scss>
-.container {
+.header-container {
   position: fixed;
   z-index: 1000;
   width: 100%;

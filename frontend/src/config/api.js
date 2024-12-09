@@ -14,8 +14,8 @@ export const fetchData = async (endpoint, options = {}) => {
   };
 
   try {
-    console.log("api_base_url ", "http://192.168.1.42:8081" + endpoint);
-    const response = await fetch("http://192.168.1.42:8081" + endpoint, config);
+    console.log("api_base_url ", process.env.VUE_APP_API_URL + endpoint);
+    const response = await fetch(process.env.VUE_APP_API_URL + endpoint, config);
     // if (!response.ok) {
     //   throw new Error(`Erreur: ${response.statusText}`);
     // }

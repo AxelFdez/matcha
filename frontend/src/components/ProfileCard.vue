@@ -1,15 +1,26 @@
 <template>
-  <div class="card-container">
-    <div class="profile--card">
+  <div class="overflow-hidden">
 
+<div class="card-container rounded-xl shadow-lg max-w-2xl p-4 mt-48 mx-auto">
       <carousel :user="user"></carousel>
       <div class="p-4 flex flex-col content-center item-center">
-        <h2>{{ user.username }}</h2>
-        <p>{{ user.firstname }} {{ user.lastname }}</p>
+        <p class="text-sm text-gray-900 dark:text-white">{{ user.username }}</p>
+        <p class="text-3xl text-gray-900 dark:text-white">{{ user.firstname }} {{ user.lastname }}</p>
       </div>
+  <div class="flex justify-around items-center">
+    <button type="button" class="text-6xl p-5 ps-12 hover:scale-105 hover:no-underline transition-transform cursor-pointer duration-300">👍</button>
+    <button type="button" class="text-6xl p-5 pe-12 hover:scale-105 hover:no-underline transition-transform cursor-pointer duration-300">👎</button>
+  </div>
+   <div class="flex justify-end items-center">
+  <button type="button" class="flex items-center hover:scale-105 transition-transform cursor-pointer duration-300 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg px-3 py-2 text-xs me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+  Voir Profile
+  <svg class="ml-2 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.0" d="M19 12H5m14 0-4 4m4-4-4-4"/>
+  </svg>
+</button>
+   </div>
     </div>
-    <div class="profile--infos">
-    </div>
+
   </div>
 </template>
 
@@ -27,7 +38,7 @@ import carousel from './carousel.vue';
     });
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 // .profile--card {
 //   display: grid;
 //   justify-items: center;
@@ -42,27 +53,23 @@ import carousel from './carousel.vue';
 // }
 
 .card-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 500px;
-  height: 600px;
-  border-radius: 30px;
-  transition: .5s;
-  cursor: pointer;
+  //transform: translate(-50%, -50%);
+  //width: 500px;
+  //height: 600px;
+  //border-radius: 30px;
+  //transition: .5s;
 }
 
-.card-container .profile--card {
+.card-container{
   background-image: linear-gradient(to right, #ff24a7d3, #8890fee5);
-  display: inline-block;
-  width: 100%;
-  height: 100%;
-  border-radius: 30px;
-  backface-visibility: hidden;
-  transform: perspective(1000px) rotateY(0deg);
-  transition: .5s;
-  box-shadow: 0 25px 15px rgb(0 0 0 / 50%)
+  //display: inline-block;
+  //width: 100%;
+  //height: 100%;
+  //border-radius: 30px;
+  //backface-visibility: hidden;
+  //transform: perspective(1000px) rotateY(0deg);
+  //transition: .5s;
+  //box-shadow: 0 25px 15px rgb(0 0 0 / 50%)
 }
 
 // .card-container:active .profile--card {
@@ -70,18 +77,18 @@ import carousel from './carousel.vue';
 // }
 
 .card-container .profile--infos {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 30px;
-  backface-visibility: hidden;
-  transform: perspective(1000px) rotateY(-180deg);
-  background-image: linear-gradient(to right, #ff24a7d3, #8890fee5);
-
-  transition: .5s;
-  box-shadow: 0 25px 15px rgb(0 0 0 / 50%)
+  //position: absolute;
+  //top: 0;
+  //left: 0;
+  //width: 100%;
+  //height: 100%;
+  //border-radius: 30px;
+  //backface-visibility: hidden;
+  //transform: perspective(1000px) rotateY(-180deg);
+  //background-image: linear-gradient(to right, #ff24a7d3, #8890fee5);
+  //
+  //transition: .5s;
+  //box-shadow: 0 25px 15px rgb(0 0 0 / 50%)
 }
 
 // .card-container:active .profile--infos {
