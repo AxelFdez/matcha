@@ -17,7 +17,7 @@ var app = express();
 // Désactive CORS pour toutes les requêtes
 // app.use(cors());
 app.use(cors({
-  origin: 'http://192.168.1.63:8080',  // Remplace par le domaine d'où viennent les requêtes
+  origin: process.env.FRONT_URL,  // Remplace par le domaine d'où viennent les requêtes
   credentials: true,                 // Permet l'envoi et la réception des cookies
 }));
 

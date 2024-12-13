@@ -2,31 +2,31 @@
 <div class="max-w-2xl p-4 mx-auto">
   <div id="carousel-example" class="relative w-full" data-carousel="static">
     <!-- Carousel wrapper -->
-    <div class="relative h-56 flex justify-center overflow-hidden rounded-lg md:h-96">
+    <div class="relative h-56 overflow-hidden rounded-lg sm:h-64 xl:h-80 2xl:h-966">
       <!-- Item 1 -->
-      <div id="carousel-item-1" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center object-cover w-full h-full">
+      <div id="carousel-item-1" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl">
         <img :src="photos[0] || imgPlaceholder"
-             class="rounded-lg" alt="...">
+             class="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2" alt="...">
       </div>
       <!-- Item 2 -->
-      <div id="carousel-item-2" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+      <div id="carousel-item-2" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl">
         <img :src="photos[1] || imgPlaceholder"
-             class="rounded-lg" alt="...">
+             class="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2" alt="...">
       </div>
       <!-- Item 3 -->
-      <div id="carousel-item-3" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+      <div id="carousel-item-3" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl">
         <img :src="photos[2] || imgPlaceholder"
-             class="rounded-lg" alt="...">
+             class="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2" alt="...">
       </div>
       <!-- Item 4 -->
-      <div id="carousel-item-4" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+      <div id="carousel-item-4" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl">
         <img :src="photos[3] || imgPlaceholder"
-             class="rounded-lg" alt="...">
+             class="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2" alt="...">
       </div>
       <!-- Item 5 -->
-      <div id="carousel-item-5" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl flex justify-center  object-cover w-full h-full">
+      <div id="carousel-item-5" class="hidden duration-700 ease-in-out pb-12 max-w-sm rounded-xl">
         <img :src="photos[4] || imgPlaceholder"
-             class="rounded-lg" alt="...">
+             class="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2" alt="...">
       </div>
     </div>
 	  <!-- Slider indicators -->
@@ -175,7 +175,7 @@ onMounted(() => {
         }
     };
 
-    if (document.getElementById('carousel-item-1')) {
+    // if (document.getElementById('carousel-item-1')) {
         const carousel = new Carousel(carouselElement, items, options);
 
         // carousel.cycle()
@@ -191,7 +191,7 @@ onMounted(() => {
         nextButton.addEventListener('click', () => {
             carousel.next();
         });
-    }
+    // }
 
 
 })
