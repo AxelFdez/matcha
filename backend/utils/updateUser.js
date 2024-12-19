@@ -35,18 +35,18 @@ async function updateUser(req, res) {
 			updates.password = hash;
 		}
 		if (req.body.biography) {
-			updates.biography = req.body.biography;
+			updates.biography = req.body.biography.slice(0, 15);
 		}
 		if (req.body.gender) {
-			updates.gender = req.body.gender;
+			updates.gender = req.body.gender.toLowerCase();
 		}
 		if (req.body.sexualpreferences) {
 			if ((req.body.sexualpreferences[0] && req.body.sexualpreferences[1]) || (!req.body.sexualpreferences[0] && !req.body.sexualpreferences[1])) {
-				req.body.sexualpreferences = "Both";
+				req.body.sexualpreferences = "both";
 			} else if (req.body.sexualpreferences[0]) {
-				req.body.sexualpreferences = req.body.sexualpreferences[0];
+				req.body.sexualpreferences = req.body.sexualpreferences[0].toLowerCase();
 			} else {
-				req.body.sexualpreferences = req.body.sexualpreferences[1];
+				req.body.sexualpreferences = req.body.sexualpreferences[1].toLowerCase();
 			}
 			updates.sexualpreferences = req.body.sexualpreferences;
 		}
@@ -57,7 +57,7 @@ async function updateUser(req, res) {
 			updates.age = req.body.age;
 		}
 		if (req.body.interests) {
-			console.log(req.body.interests);
+			// console.log(req.body.interests);
 			for (let i = 0; i < req.body.interests.length; i++) {
 				if (!req.body.interests[i].startsWith("#")) {
 					return res.status(400).json({ alert: { type: "warning", message: "Invalid interest" } });
