@@ -1,7 +1,27 @@
 <template>
   <div class="overflow-auto">
-    <div class="card-container rounded-xl shadow-lg max-w-2xl p-4 mt-48 mx-auto">
-      <carousel :user="user"></carousel>
+    <div class="card-container rounded-xl shadow-lg max-w-2xl p-4 mt-48">
+      <!-- <carousel :user="user"></carousel> -->
+      <swiper
+        :modules="modules"
+        :slides-per-view="1"
+        :loop="true"
+        navigation
+        :pagination="{ clickable: true }"
+        :scrollbar="{ draggable: true }"
+        @swiper="onSwiper"
+        @slideChange="onSlideChange"
+        class="rounded shadow-black shadow-sm m-2"
+      >
+        <swiper-slide v-for="(photo, index) in photos" :key="index">
+          <img
+            :src="imgPlaceholder"
+            :alt="`Photo ${index + 1}`"
+            class="w-full sm:h-48 object-contain rounded-lg"
+          />
+        </swiper-slide>
+        ...
+      </swiper>
       <div class="p-4 flex flex-col content-center item-center">
         <p class="text-sm text-gray-900 dark:text-white">{{ user.username }}</p>
         <p class="text-3xl text-gray-900 dark:text-white">{{ user.firstname }} {{ user.lastname }}</p>
@@ -53,17 +73,49 @@ import carousel from './carousel.vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import profileInfos from './ProfileInfos.vue';
+import { Swiper, SwiperSlide } from "swiper/vue";
+import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
+import { fetchData } from "@/config/api";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/scrollbar";
 const open = ref(true)
 
 const toggleModal = () => {
   open.value = !open.value;
 };
 
+const modules = [Navigation, Pagination, Scrollbar, A11y];
+
+const loadImages = async (username) => {
+  const imagePromises = props.user.photos.map((_, index) =>
+    fetchData(`/getPhotos/${username}?index=${index}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    })
+      .then((response) => (response.ok ? response.blob() : null))
+      .then((blob) => (blob ? URL.createObjectURL(blob) : imgPlaceholder))
+      .catch(() => imgPlaceholder)
+  );
+  photos.value = await Promise.all(imagePromises);
+};
+
+const photos = ref([]);
+const imgPlaceholder = "src/default-avatar-img.jpeg";
+
 const props = defineProps({
   user: {
     type: Object,
     required: true,
     default: () => ({ photos: {} })
+  }
+});
+onMounted(() => {
+  if (props.user.username) {
+    loadImages(props.user.username);
   }
 });
 </script>

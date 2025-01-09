@@ -3,9 +3,9 @@ const { Client } = require('pg');
 // Configuration de la base de données
 const client = new Client({
     host: 'localhost',
-    user: 'your_user',
-    password: 'your_password',
-    database: 'your_database',
+    user: 'myuser',
+    password: 'mypassword',
+    database: 'mydatabase',
     port: 5432, // Port par défaut de PostgreSQL
 });
 
