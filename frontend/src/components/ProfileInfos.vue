@@ -61,7 +61,7 @@ onMounted(() => {
 <template>
   <div class="card-container p-4">
     <!-- <div class="flex justify-between items-center px-4 me-4 sm:px-0"> -->
-    <div class="container flex flex-wrap justify-around items-center">
+    <div class="container flex justify-around items-center h-48">
       <swiper
         :modules="modules"
         :slides-per-view="1"

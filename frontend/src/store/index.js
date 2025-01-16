@@ -23,7 +23,7 @@ export const store = createStore({
     isLoading: false,
     isLoadingStartApp: false,
     is_connected: false,
-    // ws: null,
+    ws: null,
     is_login_form_sent: false,
     is_register_form_sent: false,
     is_forgot_form_sent: false,
@@ -50,7 +50,7 @@ export const store = createStore({
     getIsLoading(state) { return state.isLoading; },
     getIsLoadingStartApp(state) { return state.isLoadingStartApp; },
     getIsConnected(state) { return state.is_connected; },
-    // getWebSocket(state) { return state.ws; },
+    getWebSocket(state) { return state.ws; },
     getIsLoginFormSent(state) { return state.is_login_form_sent; },
     getIsRegisterFormSent(state) { return state.is_register_form_sent; },
     getIsForgotFormSent(state) { return state.is_forgot_form_sent; },
@@ -111,7 +111,7 @@ export const store = createStore({
       commit(
         "setWebSocket",
         new WebSocket(
-          "ws://192.168.1.42:8081/?id=" + userId
+          "ws://localhost:3001/?id=" + userId
         )
       );
 
@@ -122,6 +122,7 @@ export const store = createStore({
           userId: userId,
           message: "Hello Server!",
         });
+        store.commit("setWebSocket", state.ws);
         state.ws.send(message);
       };
       state.ws.onmessage = function (messageEvent) {
@@ -179,7 +180,7 @@ export const store = createStore({
             if (responseData.message === 'Email already exists') {
               commit('setServerMessage', 'emailExist');
             }
-            break;
+            break;true
           case 503:
             commit('setServerMessage', 'serverError');
             break;
@@ -214,14 +215,15 @@ export const store = createStore({
             // localStorage.setItem("refreshToken", responseData.refreshToken);
             localStorage.setItem("userId", responseData.user.id);
             localStorage.setItem("userName", responseData.user.username);
+            localStorage.setItem("is_ready", responseData.user.ready);
+            console.log("is_ready = ", responseData.user.ready);
             commit("setUserName", localStorage.getItem("userName"));
             if (responseData.user.verified === false) {
               commit("setServerMessage", "emailNotVerif");
               break;
             }
             dispatch("getUserInfos", localStorage.getItem("userName"));
-            // commit("setIsReady", true);
-            dispatch("initWebSocket");
+
             commit("setServerMessage", "success");
             break;
           case 401:
@@ -248,10 +250,10 @@ export const store = createStore({
       }
     },
 
-    async getUserInfos({commit}, username ) {
+    async getUserInfos({commit, dispatch}, username ) {
 
       console.log("getUserInfos");
-
+      dispatch("initWebSocket");
 
       try {
         const response = await fetchData("/profile/" + username, {
@@ -273,6 +275,8 @@ export const store = createStore({
             commit("setLastName", responseData.user.lastname);
             commit("setEmail", responseData.user.email);
             commit("setVerified", responseData.user.verified);
+            commit("setIsReady", responseData.user.ready);
+            console.log("is_ready = ", responseData.user.ready);
             commit("setAge", responseData.user.age);
             commit("setGender", responseData.user.gender);
             commit("setSexPref", responseData.user.sexualPreferences);

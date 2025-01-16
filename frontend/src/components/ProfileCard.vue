@@ -1,6 +1,6 @@
 <template>
-  <div class="overflow-auto">
-    <div class="card-container rounded-xl shadow-lg max-w-2xl p-4 mt-48">
+  <div class="overflow-auto justify-items-center">
+    <div class="card-container justify-items-center rounded-xl shadow-lg max-w-2xl p-4 mt-48">
       <!-- <carousel :user="user"></carousel> -->
       <swiper
         :modules="modules"
@@ -11,25 +11,25 @@
         :scrollbar="{ draggable: true }"
         @swiper="onSwiper"
         @slideChange="onSlideChange"
-        class="rounded shadow-black shadow-sm m-2"
+        class="rounded shadow-black h-1/4 shadow-sm w-2/3 m-2"
       >
         <swiper-slide v-for="(photo, index) in photos" :key="index">
           <img
             :src="imgPlaceholder"
             :alt="`Photo ${index + 1}`"
-            class="w-full sm:h-48 object-contain rounded-lg"
+            class="w-full object-cover rounded-lg"
           />
         </swiper-slide>
         ...
       </swiper>
-      <div class="p-4 flex flex-col content-center item-center">
-        <p class="text-sm text-gray-900 dark:text-white">{{ user.username }}</p>
-        <p class="text-3xl text-gray-900 dark:text-white">{{ user.firstname }} {{ user.lastname }}</p>
+      <div class="m-4 justify-items-center">
+        <h2 class="text-sm text-gray-900 dark:text-white">{{ user.username }}</h2>
+        <h3 class="text-3xl text-gray-900 dark:text-white">{{ user.firstname }} {{ user.lastname }}</h3>
       </div>
       <div class="flex justify-around items-center">
-        <button type="button"
+        <button @click="like" type="button"
           class="text-6xl p-5 ps-12 hover:scale-105 hover:no-underline transition-transform cursor-pointer duration-300">👍</button>
-        <button type="button"
+        <button @click="dislike" type="button"
           class="text-6xl p-5 pe-12 hover:scale-105 hover:no-underline transition-transform cursor-pointer duration-300">👎</button>
       </div>
       <div class="flex justify-end items-center">
@@ -69,24 +69,25 @@
 <script setup>
 import { defineProps, onMounted } from 'vue';
 import { ref } from 'vue';
-import carousel from './carousel.vue';
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { Dialog, DialogPanel,  TransitionChild, TransitionRoot } from '@headlessui/vue'
 import profileInfos from './ProfileInfos.vue';
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
 import { fetchData } from "@/config/api";
+import { useStore } from "vuex";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/scrollbar";
-const open = ref(true)
+const open = ref(false)
 
 const toggleModal = () => {
   open.value = !open.value;
 };
 
-const modules = [Navigation, Pagination, Scrollbar, A11y];
+const store = useStore();
+
+const modules = [Navigation, Pagination, Scrollbar, A11y, ];
 
 const loadImages = async (username) => {
   const imagePromises = props.user.photos.map((_, index) =>
@@ -105,6 +106,20 @@ const loadImages = async (username) => {
 
 const photos = ref([]);
 const imgPlaceholder = "src/default-avatar-img.jpeg";
+
+const like = () => {
+  console.log("like");
+  const ws = store.getters.getWebSocket;
+  const username = store.getters.getUserName;
+  const userId = localStorage.getItem("userId");
+  console.log("ws", ws);
+  console.log("username", username);
+  ws.send(JSON.stringify({ type:"like", userId: userId, message :{ user: username, userLiked: props.user.username }}));
+};
+
+const dislike = () => {
+  console.log("dislike");
+};
 
 const props = defineProps({
   user: {

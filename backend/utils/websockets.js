@@ -10,6 +10,7 @@ const { deleteNotification, notificationViewed } = require('./notificationHandle
 
 let clients = new Map();
 
+
 async function setupWebSocket(server) {
 	const wss = new WebSocket.Server({ server });
 
@@ -32,6 +33,8 @@ async function setupWebSocket(server) {
 
 		ws.on('message', async function incoming(message) {
 			const parsedMessage = JSON.parse(message);
+			console.log('received: %s', message, "\n");
+			ws.send(JSON.stringify({type: 'receive', userId: userId, message: 'message recieved by server'}));
 			if (parsedMessage.type === 'like') {
 				likeUser(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'unlike') {
@@ -44,8 +47,8 @@ async function setupWebSocket(server) {
 				deleteNotification(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'chat') {
 				chatUser(parsedMessage.userId, parsedMessage.message);
-			} else if (parsedMessage.type === 'newLocation') {
-				await pool.query('UPDATE users SET location = $1 WHERE id = $2', [[parsedMessage.location.latitude, parsedMessage.location.longitude], userId]);
+			// } else if (parsedMessage.type === 'newLocation') {
+			// 	await pool.query('UPDATE users SET location = $1 WHERE id = $2', [[parsedMessage.location.latitude, parsedMessage.location.longitude], userId]);
 			} else if (parsedMessage.type === 'test') {
 				console.log('Test received:', parsedMessage.message);
 			}

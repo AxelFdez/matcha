@@ -1,9 +1,12 @@
 const WebSocket = require('ws');
-const connectBdd = require('../config/connectBdd');
+const pool = require('../config/connectBdd');
 
 async function likeUser(userId, message) {
+	console.log('likeUser');
 	const { clients } = require('./websockets');
-	let ws = clients.get(userId);
+	const username = message.user;
+	const userLikedM = message.userLiked;
+	ws = clients.get(userId);
 	if (!ws) {
 		return;
 	}
@@ -19,8 +22,8 @@ async function likeUser(userId, message) {
 	}
 
 	const User = require('../models/User');
-	connectBdd();
-	user = await User.findOne({ username: message.user });
+	// connectBdd();
+	const user = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
 	if (!user) {
 		ws.send(JSON.stringify({
 					type: 'error',
@@ -32,7 +35,8 @@ async function likeUser(userId, message) {
 		return;
 	}
 
-	userliked = await User.findOne({ username: message.userLiked });
+	userliked = await pool.query('SELECT * FROM users WHERE username = $1', [userLikedM]);
+	console.log('userliked = ', userliked);
 	if (!userliked) {
 		ws.send(JSON.stringify({
 			type: 'error',
@@ -71,8 +75,9 @@ async function likeUser(userId, message) {
 		});
 		user.fameRating += 50;
 		userliked.fameRating += 50;
-		await user.save();
-		await userliked.save();
+		// await user.save();
+		// await userliked.save();
+		await pool.query('UPDATE users SET fameRating = $1 WHERE id = $2', [user.fameRating, user._id]);
 
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({
@@ -118,7 +123,8 @@ async function likeUser(userId, message) {
 		title: 'like',
 		body: user.username + ' liked you',
 	});
-	await userliked.save();
+	// await userliked.save();
+	await pool.query('UPDATE users SET fameRating = $1 WHERE id = $2', [userliked.fameRating, userliked._id]);
 	ws.send(JSON.stringify({
 		type: 'success',
 		userId: userId,

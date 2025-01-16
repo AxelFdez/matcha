@@ -4,14 +4,14 @@
 
 <!--    </section>-->
     <section class="container mx-auto px-4">
-      <div  v-if="userReady">
+      <!-- <div  v-if="userReady.value"> -->
         <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" />
         <p v-else>Chargement des utilisateurs...</p>
 
-      </div>
-      <div v-else>
-        <p>Your Profile is not fill</p>
-      </div>
+      <!-- </div> -->
+      <!-- <div v-else> -->
+        <!-- <p>Your Profile is not fill</p> -->
+      <!-- </div> -->
     </section>
 <!--  </div>-->
 </template>
@@ -93,5 +93,9 @@ button {
   &:hover {
     background-color: #8890fee5;
   }
+}
+p {
+  color: white;
+  padding-top : 150px;
 }
 </style>

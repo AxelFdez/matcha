@@ -86,6 +86,7 @@ async function loginUser(req, res) {
                 username: user.rows[0].username,
                 email: user.rows[0].email,
                 verified: user.rows[0].verified,
+                ready: user.rows[0].ready,
             }
         });
     } catch (error) {

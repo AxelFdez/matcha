@@ -3,10 +3,10 @@ const { faker } = require('@faker-js/faker');
 
 // Configuration de la base de données
 const pool = new Pool({
-  user: 'myuser',       // Remplace par ton utilisateur PostgreSQL
+  user: 'postgres',       // Remplace par ton utilisateur PostgreSQL
   host: 'localhost',       // Adresse de la base de données
-  database: 'mydatabase', // Nom de la base de données
-  password: 'mypassword', // Mot de passe PostgreSQL
+  database: 'postgres', // Nom de la base de données
+  password: 'mysecretpassword', // Mot de passe PostgreSQL
   port: 5432,              // Port par défaut de PostgreSQL
 });
 

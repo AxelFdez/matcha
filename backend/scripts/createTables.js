@@ -1,11 +1,13 @@
 const { Client } = require('pg');
+require('dotenv').config();
+
 
 // Configuration de la base de données
 const client = new Client({
     host: 'localhost',
-    user: 'myuser',
-    password: 'mypassword',
-    database: 'mydatabase',
+    user: 'postgres',
+    password: 'mysecretpassword',
+    database: 'postgres',
     port: 5432, // Port par défaut de PostgreSQL
 });
 
