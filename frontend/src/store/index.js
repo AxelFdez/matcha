@@ -111,7 +111,7 @@ export const store = createStore({
       commit(
         "setWebSocket",
         new WebSocket(
-          "ws://localhost:3001/?id=" + userId
+          process.env.VUE_APP_API_URL + "?id=" + userId
         )
       );
 

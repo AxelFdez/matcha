@@ -5,9 +5,12 @@ require('dotenv').config();
 // Configuration de la base de données
 const client = new Client({
     host: 'localhost',
-    user: 'postgres',
-    password: 'mysecretpassword',
-    database: 'postgres',
+    user: 'myuser',
+    password: 'mypassword',
+    database: 'mydatabase',
+    // user: 'postgres',
+    // password: 'mysecretpassword',
+    // database: 'postgres',
     port: 5432, // Port par défaut de PostgreSQL
 });
 
@@ -40,10 +43,10 @@ const client = new Client({
         fameRating INTEGER DEFAULT 0,
         reported INTEGER DEFAULT 0,
         location JSONB DEFAULT '{"authorization": false, "type": "Point", "coordinates": [0, 0]}',
-        blackList UUID[], -- Tableau d'IDs (UUID)
-        viewedBy UUID[],
-        likedBy UUID[],
-        matcha UUID[],
+        blackList text[], -- Tableau d'IDs d'utilisateurs
+        viewedBy text[],
+        likedBy text[],
+        matcha text[],
         notifications JSONB[],
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP

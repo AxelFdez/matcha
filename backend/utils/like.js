@@ -21,9 +21,9 @@ async function likeUser(userId, message) {
 		return;
 	}
 
-	const User = require('../models/User');
-	// connectBdd();
-	const user = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+	let user = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+	user = user["rows"][0];
+
 	if (!user) {
 		ws.send(JSON.stringify({
 					type: 'error',
@@ -36,7 +36,8 @@ async function likeUser(userId, message) {
 	}
 
 	userliked = await pool.query('SELECT * FROM users WHERE username = $1', [userLikedM]);
-	console.log('userliked = ', userliked);
+	userliked = userliked["rows"][0];
+
 	if (!userliked) {
 		ws.send(JSON.stringify({
 			type: 'error',
@@ -47,7 +48,7 @@ async function likeUser(userId, message) {
 		}));
 		return;
 	}
-	else if (userliked.likedBy.includes(user._id)) {
+	else if (userliked.likedby && userliked.likedby.includes(user.id.toString())) {
 		ws.send(JSON.stringify({
 			type: 'error',
 			userId: userId,
@@ -58,26 +59,45 @@ async function likeUser(userId, message) {
 		return;
 	}
 
-	userliked.likedBy.push(user);
+	await pool.query('UPDATE users SET likedby = array_append(likedby, $1) WHERE id = $2', [user.id, userliked.id]);
+
+	userliked.famerating += 10;
+    const ws2 = clients.get(userliked.id.toString());
+    if (ws2 && ws2.readyState === WebSocket.OPEN) {
+        ws2.send(JSON.stringify({
+            type: 'notification',
+            message: {
+				title: 'like',
+				user: user.username,
+        }}));
+    }
+
+	await pool.query('UPDATE users SET notifications = array_append(notifications, $1) WHERE id = $2', [{title: 'like', body: user.username + ' liked you'}, userliked.id]);
+	await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [userliked.famerating, userliked.id]);
+	ws.send(JSON.stringify({
+		type: 'success',
+		userId: userId,
+		message: {
+			title: 'like',
+		}
+	}));
 
 	// Check if is a match
-	const matcha = user.likedBy.includes(userliked._id);
+	let userLikedby = await pool.query('SELECT likedby FROM users WHERE id = $1', [user.id]);
+	userLikedby = userLikedby["rows"][0].likedby;
+	if (!userLikedby) {
+		return
+	}
+	const matcha = userLikedby.includes(userliked.id.toString());
 	if (matcha) {
-		user.matcha.push(userliked);
-		userliked.matcha.push(user);
-		user.notifications.push({
-			title: 'match',
-			body: userliked.username + ' matched with you',
-		});
-		userliked.notifications.push({
-			title: 'match',
-			body: user.username + ' matched with you',
-		});
-		user.fameRating += 50;
-		userliked.fameRating += 50;
-		// await user.save();
-		// await userliked.save();
-		await pool.query('UPDATE users SET fameRating = $1 WHERE id = $2', [user.fameRating, user._id]);
+		await pool.query('UPDATE users SET matcha = array_append(matcha, $1) WHERE id = $2', [userliked.id, user.id]);
+		await pool.query('UPDATE users SET matcha = array_append(matcha, $1) WHERE id = $2', [user.id, userliked.id]);
+		await pool.query('UPDATE users SET notifications = array_append(notifications, $1) WHERE id = $2', [{title: 'match', body: userliked.username + ' matched with you'}, user.id]);
+		await pool.query('UPDATE users SET notifications = array_append(notifications, $1) WHERE id = $2', [{title: 'match', body: user.username + ' matched with you'}, userliked.id]);
+		user.famerating += 50;
+		userliked.famerating += 50;
+		await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [user.famerating, user.id]);
+		await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [userliked.famerating, userliked.id]);
 
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({
@@ -88,7 +108,7 @@ async function likeUser(userId, message) {
 				}
 			}));
 		}
-		const ws2 = clients.get(userliked._id.toString());
+		const ws2 = clients.get(userliked.id.toString());
 		if (ws2 && ws2.readyState === WebSocket.OPEN) {
 			ws2.send(JSON.stringify({
 				type: 'notification',
@@ -99,7 +119,7 @@ async function likeUser(userId, message) {
 			}));
 		}
 		ws.send(JSON.stringify({
-			type: 'success',
+			type: 'matcha',
 			userId: userId,
 			message: {
 				title: 'matcha',
@@ -107,31 +127,6 @@ async function likeUser(userId, message) {
 		}));
 		return;
 	}
-
-	userliked.fameRating += 10;
-    const ws2 = clients.get(userliked._id.toString());
-    if (ws2 && ws2.readyState === WebSocket.OPEN) {
-        ws2.send(JSON.stringify({
-            type: 'notification',
-            message: {
-				title: 'like',
-				user: user.username,
-        }}));
-    }
-
-	userliked.notifications.push({
-		title: 'like',
-		body: user.username + ' liked you',
-	});
-	// await userliked.save();
-	await pool.query('UPDATE users SET fameRating = $1 WHERE id = $2', [userliked.fameRating, userliked._id]);
-	ws.send(JSON.stringify({
-		type: 'success',
-		userId: userId,
-		message: {
-			title: 'like',
-		}
-	}));
 }
 
 module.exports = likeUser;

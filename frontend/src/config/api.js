@@ -14,7 +14,7 @@ export const fetchData = async (endpoint, options = {}) => {
   };
 
   try {
-    console.log("api_base_url ", process.env.VUE_APP_API_URL + endpoint);
+    // console.log("api_base_url ", process.env.VUE_APP_API_URL + endpoint);
     const response = await fetch(process.env.VUE_APP_API_URL + endpoint, config);
     // if (!response.ok) {
     //   throw new Error(`Erreur: ${response.statusText}`);
