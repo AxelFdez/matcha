@@ -6,7 +6,7 @@
         <CardContacts></CardContacts>
         <Card_42></Card_42>
       </div>
-      <AboutProject></AboutProject>
+      <!-- <AboutProject></AboutProject> -->
       <div class="copyright">&copy; 2024 Axel Fernandez / Christophe Massa</div>
     </div>
   </footer>
@@ -35,6 +35,7 @@ footer {
 .footer {
   max-width: 2100px;
   height: auto;
+  padding-top: 20px;
   margin: 0px auto 0px auto;
   background: #ffffff;
 

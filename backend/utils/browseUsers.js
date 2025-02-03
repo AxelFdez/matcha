@@ -15,80 +15,126 @@ module.exports = async function browseUsers(req, res) {
 		const userLocation = user.location.coordinates;
 		const userId = user.id; // Ensure this is a UUID
 
+	// recupere les utilisateurs qui ont un profil complet et qui n'ont pas été ignorés, likés, matchés ou vus par l'utilisateur courant, et qui ne l'ont pas blacklisté
 		let query = `
       SELECT * FROM users
       WHERE ready = true
       AND id::text != $1::text
---       AND $1::text != ANY(likedBy::text[])
---       AND $1::text != ANY(matcha::text[])
---       AND $1::text != ANY(viewedBy::text[])
---       AND $1::text != ANY(blacklist::text[])
+	  AND NOT COALESCE($1::text = ANY(ignoredby), FALSE)
+	  AND NOT COALESCE($1::text = ANY(likedBy), FALSE)
+	  AND NOT COALESCE($1::text = ANY(matcha), FALSE)
+--	  AND NOT COALESCE($1::text = ANY(viewedBy), FALSE)
+	  AND NOT COALESCE($1::text = ANY(blacklist), FALSE)
     `;
 
 		const queryParams = [userId];
+		let paramIndex = 2;
+		let preparedQuery;
+
+		// ignore les utilisateurs ignorés precedemment
+		// if (user.ignoredby && user.ignoredby.length > 0) {
+		// 	// console.log(user.ignoredby);
+		// 	// query += ' AND id::text != ANY($2::text[])';
+		// query += ` AND id::text != ANY($${paramIndex}::text[])`;
+		// preparedQuery = ' AND $1::text != ANY(ignoreby::text[])';
+		// paramIndex++;
+		// query += preparedQuery;
+		// queryParams.push();
+		// }
+
+		//test
+		const test = await pool.query(query, queryParams);
+		console.log(test.rows);
+		return res.status(200).json({ users: test.rows });
+
 
 		if (user.sexualPreference === 'Male' || user.sexualPreference === 'Female') {
-			query += ' AND gender = $2';
+			// query += ' AND gender = $2';
+			preparedQuery = ' AND gender = $' + paramIndex;
+			paramIndex++;
+			query += preparedQuery;
 			queryParams.push(user.sexualPreference);
 		}
 
 		if (ageGap && (ageGap.min || ageGap.max)) {
 			if (ageGap.min) {
-				query += ' AND age >= $3';
+				preparedQuery = ' AND age >= $' + paramIndex;
+				paramIndex++;
+				query += preparedQuery;
 				queryParams.push(ageGap.min);
 			}
 			if (ageGap.max) {
-				query += ' AND age <= $4';
+				preparedQuery = ' AND age <= $' + paramIndex;
+				paramIndex++;
+				query += preparedQuery;
 				queryParams.push(ageGap.max);
 			}
 		}
 
 		if (fameRatingGap && (fameRatingGap.min || fameRatingGap.max)) {
 			if (fameRatingGap.min) {
-				query += ' AND fameRating >= $5';
+				preparedQuery = ' AND fameRating >= $' + paramIndex;
+				paramIndex++;
+				query += preparedQuery;
 				queryParams.push(fameRatingGap.min);
 			}
 			if (fameRatingGap.max) {
-				query += ' AND fameRating <= $6';
+				preparedQuery = ' AND fameRating <= $' + paramIndex;
+				paramIndex++;
+				query += preparedQuery;
 				queryParams.push(fameRatingGap.max);
 			}
 		}
 
 		if (tags) {
-			query += ' AND interests && $7';
+			preparedQuery = ' AND interests && $' + paramIndex;
+			paramIndex++;
+			query += preparedQuery;
 			queryParams.push(tags);
 		}
 
 		if (location) {
 			const [longitude, latitude] = location.split(',');
-			query += `
-        AND ST_DWithin(
-          ST_SetSRID(ST_MakePoint($8, $9), 4326)::geography,
-          ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
-          10000
-        )
-      `;
+			preparedQuery = ' AND ST_DWithin(ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, 10000)';
+			paramIndex += 2;
+			query += preparedQuery;
+	// 		query += `
+    //     AND ST_DWithin(
+    //       ST_SetSRID(ST_MakePoint($8, $9), 4326)::geography,
+    //       ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
+    //       10000
+    //     )
+    //   `;
 			queryParams.push(longitude, latitude);
 		}
 
 		if (filterBy) {
 			if (filterBy.type === 'age') {
-				query += ' AND age = $10';
+				preparedQuery = ' AND age = $' + paramIndex;
+				paramIndex++;
+				query += preparedQuery;
 				queryParams.push(filterBy.value);
 			} else if (filterBy.type === 'fameRating') {
-				query += ' AND fameRating BETWEEN $11 AND $12';
+				preparedQuery = ' AND fameRating BETWEEN $' + paramIndex + ' AND $' + (paramIndex + 1);
+				paramIndex += 2;
+				query += preparedQuery;
 				queryParams.push(filterBy.value, parseInt(filterBy.value) + 50);
 			} else if (filterBy.type === 'tags') {
-				query += ' AND interests && $13';
+				preparedQuery = ' AND interests && $' + paramIndex;
+				paramIndex++;
+				query += preparedQuery;
 				queryParams.push(filterBy.value);
 			} else if (filterBy.type === 'location') {
-				query += `
-          AND ST_DWithin(
-            ST_SetSRID(ST_MakePoint($14, $15), 4326)::geography,
-            ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
-            $16
-          )
-        `;
+				preparedQuery = ' AND ST_DWithin(ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, $' + (paramIndex + 2) + ')';
+				paramIndex += 3;
+				query += preparedQuery;
+				// query += `
+        //   AND ST_DWithin(
+        //     ST_SetSRID(ST_MakePoint($14, $15), 4326)::geography,
+        //     ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
+        //     $16
+        //   )
+        // `;
 				queryParams.push(userLocation[0], userLocation[1], filterBy.value);
 			}
 		}
@@ -103,10 +149,14 @@ module.exports = async function browseUsers(req, res) {
 			} else if (sortBy === 'fameRatingDecreasing') {
 				query += ' ORDER BY fameRating DESC';
 			} else if (sortBy === 'locationIncreasing') {
-				query += ' ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($17, $18), 4326)) ASC';
+				preparedQuery = ' ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)) ASC';
+				paramIndex += 2;
+				query += preparedQuery;
 				queryParams.push(userLocation[0], userLocation[1]);
 			} else if (sortBy === 'locationDecreasing') {
-				query += ' ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($19, $20), 4326)) DESC';
+				preparedQuery = ' ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)) DESC';
+				paramIndex += 2;
+				query += preparedQuery;
 				queryParams.push(userLocation[0], userLocation[1]);
 			} else if (sortBy === 'tagsIncreasing') {
 				query += ' ORDER BY array_length(interests, 1) ASC';

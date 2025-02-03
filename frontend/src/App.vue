@@ -13,7 +13,7 @@
 
          <Header></Header>
         <router-view> </router-view>
-<!--         <Footer></Footer>-->
+        <Footer></Footer>
 
     </div>
   </div>
@@ -133,7 +133,6 @@ export default {
   // background: url(../public/src/couple-bg.jpg) fixed center/cover;
   background-color: rgb(34, 34, 34);
 
-  height: 100vh;
 }
 
 

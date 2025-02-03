@@ -3,10 +3,10 @@
 <!--    <section class="main&#45;&#45;page&#45;&#45;research">-->
 
 <!--    </section>-->
-    <section class="container mx-auto px-4">
+    <section class="container p-12 mx-auto px-4">
       <!-- <div  v-if="userReady.value"> -->
-        <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" />
-        <p v-else>Chargement des utilisateurs...</p>
+        <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" :key="componentKey" />
+        <p v-else class="mt-12">Aucuns utilisateurs à afficher...</p>
 
       <!-- </div> -->
       <!-- <div v-else> -->
@@ -22,6 +22,8 @@ import { fetchData } from '../config/api';
 import { ref, computed } from "vue";
 import { onMounted } from "vue";
 import { useStore } from 'vuex';
+import { watch } from 'vue';
+
 
 export default {
   name: "MainPage",
@@ -29,11 +31,29 @@ export default {
     ProfileCard
   },
   setup() {
-    const store = useStore();
     const user = computed(() => store.state);
     const userReady = computed(() => user.value && user.value.is_ready);
+    const ws = computed(() => store.getters.getWebSocket);
+    const store = useStore();
+
 
     const tenUsers = ref([]);
+    const componentKey = ref(0);
+
+    watch(ws, (newWs) => {
+      if (newWs) {
+        console.log("✅ WebSocket disponible :", newWs);
+        newWs.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log("data", data);
+          if (data.type === "success") {
+            console.log("like", data);
+            tenUsers.value.shift();
+            componentKey.value++;
+          }
+        };
+      }
+    }, { immediate: true });
 
     const getTenUsers = async () => {
       const response = await fetchData("/browseUsers", {
@@ -47,8 +67,10 @@ export default {
       if (data) {
         console.log(data);
         tenUsers.value = data.users;
+        componentKey.value++;
       }
     };
+
 
     onMounted(() => {
       if (!userReady.value) {
@@ -58,7 +80,7 @@ export default {
       getTenUsers();
     });
 
-    return {tenUsers, userReady};
+    return {tenUsers, userReady, componentKey};
   }
 };
 </script>
@@ -96,6 +118,6 @@ button {
 }
 p {
   color: white;
-  padding-top : 150px;
+  // padding-top : 150px;
 }
 </style>

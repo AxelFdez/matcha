@@ -40,7 +40,7 @@
                 <textarea v-model="formData.biography" name="bio" id="bio" rows="3" :maxlength="maxLengthBio"
                     :placeholder="$store.getters.getBio"></textarea>
             </div>
-            <div class="btn--row">
+            <div class="btn--row pt-2">
                 <div class="btn--col">
                     <h4 class="input--needed">Genre<span v-if="!formData.gender && !$store.getters.getGender">&#9733;</span></h4>
                     <button id="male" type="button" @click="setGender('Male')" :class="{

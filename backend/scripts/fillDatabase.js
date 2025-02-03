@@ -1,16 +1,13 @@
 const { Pool } = require('pg');
 const { faker } = require('@faker-js/faker');
+require('dotenv').config();
 
 // Configuration de la base de données
 const pool = new Pool({
-  host: 'localhost',       // Adresse de la base de données
-  // user: 'postgres',       // Remplace par ton utilisateur PostgreSQL
-  // database: 'postgres', // Nom de la base de données
-  // password: 'mysecretpassword', // Mot de passe PostgreSQL
-  user: 'myuser',
-  password: 'mypassword',
-  database: 'mydatabase',
-  port: 5432,              // Port par défaut de PostgreSQL
+  host: process.env.PGHOST,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  database: process.env.PGDATABASE,
 });
 
 function generateFakeUser() {
@@ -33,8 +30,8 @@ function generateFakeUser() {
       type: 'Point',
       coordinates: [faker.address.longitude(), faker.address.latitude()]
     },
-    verified: faker.datatype.boolean(1),
-    ready : faker.datatype.boolean(1)
+    verified: true,
+    ready : true
   };
 }
 

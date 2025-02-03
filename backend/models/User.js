@@ -35,6 +35,7 @@ const userSchema = new Schema({
   viewedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Array of user IDs who viewed the profile
   likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Array of user IDs who liked the profile
   matcha: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Array of user IDs who matched each other
+  ignoredBy: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Array of user IDs who ignored the profile
   notifications: [{ // Array of notifications
 	  title: { type: String, required: true },
 	  body: { type: String, required: true },

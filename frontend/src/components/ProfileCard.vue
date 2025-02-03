@@ -1,6 +1,6 @@
 <template>
   <div class="overflow-auto justify-items-center">
-    <div class="card-container justify-items-center rounded-xl shadow-lg max-w-2xl p-4 mt-48">
+    <div class="card-container justify-items-center rounded-xl shadow-lg max-w-2xl p-4 mt-14">
       <!-- <carousel :user="user"></carousel> -->
       <swiper
         :modules="modules"
@@ -26,13 +26,13 @@
         <h2 class="text-sm text-gray-900 dark:text-white">{{ user.username }}</h2>
         <h3 class="text-3xl text-gray-900 dark:text-white">{{ user.firstname }} {{ user.lastname }}</h3>
       </div>
-      <div class="flex justify-around items-center">
+      <div class="container flex justify-around items-center">
         <button @click="like" type="button"
-          class="text-6xl p-5 ps-12 hover:scale-105 hover:no-underline transition-transform cursor-pointer duration-300">👍</button>
-        <button @click="dislike" type="button"
-          class="text-6xl p-5 pe-12 hover:scale-105 hover:no-underline transition-transform cursor-pointer duration-300">👎</button>
+          class="text-6xl p-5 ms-18 hover:scale-105 hover:bg-transparent hover:no-underline transition-transform cursor-pointer duration-300">👍</button>
+        <button @click="ignore" type="button"
+          class="text-6xl p-5 me-18 hover:scale-105 hover:bg-transparent hover:no-underline transition-transform cursor-pointer duration-300">👎</button>
       </div>
-      <div class="flex justify-end items-center">
+      <div class="container flex justify-end items-center">
         <button type="button" @click="toggleModal"
           class="flex items-center hover:scale-105 transition-transform cursor-pointer duration-300 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg px-3 py-2 text-xs me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
           Voir Profile
@@ -62,8 +62,8 @@
       </div>
     </Dialog>
   </TransitionRoot>
-    </div>
-  <!-- </div> -->
+    <!-- </div> -->
+  </div>
 </template>
 
 <script setup>
@@ -102,23 +102,29 @@ const loadImages = async (username) => {
       .catch(() => imgPlaceholder)
   );
   photos.value = await Promise.all(imagePromises);
+  console.log("photos", photos);
 };
 
 const photos = ref([]);
 const imgPlaceholder = "src/default-avatar-img.jpeg";
 
+const ws = store.getters.getWebSocket;
+const username = store.getters.getUserName;
+const userId = localStorage.getItem("userId");
 const like = () => {
-  console.log("like");
-  const ws = store.getters.getWebSocket;
-  const username = store.getters.getUserName;
-  const userId = localStorage.getItem("userId");
-  console.log("ws", ws);
-  console.log("username", username);
   ws.send(JSON.stringify({ type:"like", userId: userId, message :{ user: username, userLiked: props.user.username }}));
 };
 
-const dislike = () => {
-  console.log("dislike");
+const ignore = () => {
+  ws.send(JSON.stringify({ type:"ignore", userId: userId, message :{ user: username, userIgnored: props.user.username }}));
+};
+
+const onSwiper = (swiper) => {
+  console.log("Swiper instance:", swiper);
+};
+
+const onSlideChange = () => {
+  console.log("Slide changed");
 };
 
 const props = defineProps({

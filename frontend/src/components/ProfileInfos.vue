@@ -10,6 +10,8 @@ import "swiper/css/pagination";
 import "swiper/css/scrollbar";
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
+import { Date } from "core-js";
+import { computed } from "vue";
 
 const props = defineProps({
   user: {
@@ -48,6 +50,26 @@ const loadImages = async (username) => {
   photos.value = await Promise.all(imagePromises);
 };
 
+const calculateTimeSince = (date) => {
+  const lastConnectionDate = new Date(date);
+  const now = new Date();
+  const diffInMs = now - lastConnectionDate;
+  const diffInMinutes = Math.floor(diffInMs / 60000);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInDays > 0) {
+    return `${diffInDays} days ago`;
+  } else if (diffInHours > 0) {
+    return `${diffInHours} hours ago`;
+  } else {
+    return `${diffInMinutes} minutes ago`;
+  }
+};
+
+const lastConnectionTime = computed(() => {
+  return calculateTimeSince(props.user.lastconnection);
+});
 const photos = ref([]);
 const imgPlaceholder = "src/default-avatar-img.jpeg";
 
@@ -116,9 +138,8 @@ onMounted(() => {
           class="relative mt-4 bottom-0 right-0 w-3.5 h-3.5 bg-grey-400 border-2 border-white rounded-full"
         ></div>
         <div v-if="user.connected">connected</div>
-        <div v-else>
-          <p class="text-gray-700">Until</p>
-          <p>{{ user.lastconnection }}</p>
+        <div v-else class="flex flex-col justify-center items-center">
+          <p>{{ lastConnectionTime }}</p>
         </div>
       </div>
     </div>
@@ -142,7 +163,7 @@ onMounted(() => {
             />
             <img
               v-if="
-                user.sexualpreferences == 'fale' ||
+                user.sexualpreferences == 'male' ||
                 user.sexualpreferences == 'both'
               "
               class="inline-block me-2 size-8 sm:size-10 rounded-full ring-2 ring-white"
