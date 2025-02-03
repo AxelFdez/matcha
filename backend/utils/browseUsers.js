@@ -43,9 +43,9 @@ module.exports = async function browseUsers(req, res) {
 		// }
 
 		//test
-		const test = await pool.query(query, queryParams);
-		console.log(test.rows);
-		return res.status(200).json({ users: test.rows });
+		// const test = await pool.query(query, queryParams);
+		// console.log(test.rows);
+		// return res.status(200).json({ users: test.rows });
 
 
 		if (user.sexualPreference === 'Male' || user.sexualPreference === 'Female') {

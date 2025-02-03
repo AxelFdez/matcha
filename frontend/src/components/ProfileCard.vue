@@ -102,7 +102,7 @@ const loadImages = async (username) => {
       .catch(() => imgPlaceholder)
   );
   photos.value = await Promise.all(imagePromises);
-  console.log("photos", photos);
+  // console.log("photos", photos);
 };
 
 const photos = ref([]);
@@ -120,11 +120,11 @@ const ignore = () => {
 };
 
 const onSwiper = (swiper) => {
-  console.log("Swiper instance:", swiper);
+  // console.log("Swiper instance:", swiper);
 };
 
 const onSlideChange = () => {
-  console.log("Slide changed");
+  // console.log("Slide changed");
 };
 
 const props = defineProps({

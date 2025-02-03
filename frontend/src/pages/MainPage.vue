@@ -42,14 +42,18 @@ export default {
 
     watch(ws, (newWs) => {
       if (newWs) {
-        console.log("✅ WebSocket disponible :", newWs);
         newWs.onmessage = (event) => {
           const data = JSON.parse(event.data);
-          console.log("data", data);
           if (data.type === "success") {
-            console.log("like", data);
+            // Faire une animation de like ou matcha ici
             tenUsers.value.shift();
-            componentKey.value++;
+            if (tenUsers.value.length === 0) {
+              getTenUsers();
+            }
+            else {
+            // recree un nouveau ProfileCard
+              componentKey.value++;
+            }
           }
         };
       }
@@ -65,7 +69,6 @@ export default {
       });
       const data = await response.json();
       if (data) {
-        console.log(data);
         tenUsers.value = data.users;
         componentKey.value++;
       }
