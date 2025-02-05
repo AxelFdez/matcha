@@ -64,12 +64,10 @@ export default {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': "Bearer " + localStorage.getItem('accessToken'),
         },
       });
-      const data = await response.json();
-      if (data) {
-        tenUsers.value = data.users;
+      if (response) {
+        tenUsers.value = response.users;
         componentKey.value++;
       }
     };

@@ -201,7 +201,6 @@ export const store = createStore({
       try {
         const response = await fetchData("/login", {
           method: "POST",
-          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -260,14 +259,12 @@ export const store = createStore({
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "authorization": "bearer " + localStorage.getItem('accessToken'),
-            "refreshToken": localStorage.getItem('refreshToken'),
           },
 
 
         });
         const responseData = await response.json();
-        console.log('response = ', responseData);
+        // console.log('response = ', responseData);
         switch (response.status) {
           case 200:
             commit("setUserName", responseData.user.username);
@@ -306,8 +303,7 @@ export const store = createStore({
         const response = await fetchData("/resetPasswordSendEmail", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "authorization": "bearer " + localStorage.getItem('accessToken'),
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(formData),
         });
@@ -342,7 +338,6 @@ export const store = createStore({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "authorization": "bearer " + localStorage.getItem('accessToken'),
         },
         body: JSON.stringify(formData),
       });
@@ -383,7 +378,6 @@ export const store = createStore({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "authorization": "bearer " + localStorage.getItem('accessToken'),
         },
         body: JSON.stringify(formData),
       });

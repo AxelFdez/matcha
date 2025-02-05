@@ -2,11 +2,12 @@
 export const fetchData = async (endpoint, options = {}) => {
   const defaultHeaders = {
     'Content-Type': 'application/json',
-    // Autres en-têtes par défaut
+    'authorization': "bearer " + localStorage.getItem('accessToken'),
   };
 
   const config = {
     ...options,
+    credentials: 'include',
     headers: {
       ...defaultHeaders,
       ...options.headers,
@@ -14,12 +15,19 @@ export const fetchData = async (endpoint, options = {}) => {
   };
 
   try {
-    // console.log("api_base_url ", process.env.VUE_APP_API_URL + endpoint);
     const response = await fetch(process.env.VUE_APP_API_URL + endpoint, config);
-    // if (!response.ok) {
-    //   throw new Error(`Erreur: ${response.statusText}`);
-    // }
-    return response;
+    const data = await response.json();
+    if (!response.ok) {
+      console.log('data= ', data);
+      if (data.message === "newAccessTokenDelivered"){
+        localStorage.setItem('accessToken', data.accessToken);
+        return fetchData(endpoint, options);
+      }
+      // throw new Error(`Erreur: ${response.statusText}`);
+      // console.log('Erreur: ', await response.json());
+    }
+    // console.log('response= ', await response.json());
+    return data;
   } catch (error) {
     console.error('Erreur lors de la requête:', error);
     throw error;
