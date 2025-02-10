@@ -24,6 +24,8 @@ router.get('/', (req, res) => {
 });
 // OK
 router.post('/login', require('../utils/loginUser'), (req, res) => {});
+// KO
+router.get('/logout', verifyToken, require('../utils/logoutUser'), (req, res) => {});
 // OK
 router.post('/register-form', require('../utils/createUser'), (req, res) => {});
 // OK

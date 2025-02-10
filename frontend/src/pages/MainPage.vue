@@ -1,41 +1,44 @@
 <template>
-<!--  <div class="main&#45;&#45;page&#45;&#45;container">-->
-<!--    <section class="main&#45;&#45;page&#45;&#45;research">-->
+  <!-- Bouton pour ouvrir/fermer la Sidebar -->
+  <FwbButton @click="toggleSidebar" class="absolute mt-44">Ouvrir Sidebar</FwbButton>
+  <section class="container p-12 mx-auto px-4">
+    <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" :key="componentKey" />
+    <p v-else class="mt-12">Aucuns utilisateurs à afficher...</p>
+  </section>
 
-<!--    </section>-->
-    <section class="container p-12 mx-auto px-4">
-      <!-- <div  v-if="userReady.value"> -->
-        <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" :key="componentKey" />
-        <p v-else class="mt-12">Aucuns utilisateurs à afficher...</p>
 
-      <!-- </div> -->
-      <!-- <div v-else> -->
-        <!-- <p>Your Profile is not fill</p> -->
-      <!-- </div> -->
-    </section>
-<!--  </div>-->
+  <!-- Sidebar affichée dynamiquement -->
+  <Sidebar v-if="open" @close="toggleSidebar"></Sidebar>
 </template>
 
 <script>
 import ProfileCard from '@/components/ProfileCard.vue';
+import Sidebar from '@/components/sidebar.vue';
 import { fetchData } from '../config/api';
-import { ref, computed } from "vue";
-import { onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useStore } from 'vuex';
-import { watch } from 'vue';
-
+import { FwbButton } from 'flowbite-vue';
 
 export default {
   name: "MainPage",
   components: {
-    ProfileCard
+    ProfileCard,
+    Sidebar,
+    FwbButton
   },
   setup() {
+    const store = useStore();
     const user = computed(() => store.state);
     const userReady = computed(() => user.value && user.value.is_ready);
     const ws = computed(() => store.getters.getWebSocket);
-    const store = useStore();
 
+    // État pour la Sidebar
+    const open = ref(false);
+
+    // Fonction pour ouvrir/fermer la Sidebar
+    const toggleSidebar = () => {
+      open.value = !open.value;
+    };
 
     const tenUsers = ref([]);
     const componentKey = ref(0);
@@ -45,13 +48,10 @@ export default {
         newWs.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data.type === "success") {
-            // Faire une animation de like ou matcha ici
             tenUsers.value.shift();
             if (tenUsers.value.length === 0) {
               getTenUsers();
-            }
-            else {
-            // recree un nouveau ProfileCard
+            } else {
               componentKey.value++;
             }
           }
@@ -67,11 +67,10 @@ export default {
         },
       });
       if (response) {
-        tenUsers.value = response.users;
+        tenUsers.value = response.data.users;
         componentKey.value++;
       }
     };
-
 
     onMounted(() => {
       if (!userReady.value) {
@@ -81,44 +80,13 @@ export default {
       getTenUsers();
     });
 
-    return {tenUsers, userReady, componentKey};
+    return {
+      tenUsers,
+      userReady,
+      componentKey,
+      open, // Ajout de `open` pour gérer l'affichage de la Sidebar
+      toggleSidebar
+    };
   }
 };
 </script>
-
-<style lang="scss">
-.main--page--container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  //height: 100vh;
-
-  h1 {
-    font-size: 5rem;
-    font-weight: 900;
-    color: white;
-  }
-}
-
-button {
-  position: relative;
-  margin-top: 100px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  background-color: #ff24a7d3;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: 0.3s;
-
-  &:hover {
-    background-color: #8890fee5;
-  }
-}
-p {
-  color: white;
-  // padding-top : 150px;
-}
-</style>

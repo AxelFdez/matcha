@@ -18,7 +18,7 @@ export const fetchData = async (endpoint, options = {}) => {
     const response = await fetch(process.env.VUE_APP_API_URL + endpoint, config);
     const data = await response.json();
     if (!response.ok) {
-      console.log('data= ', data);
+      // console.log('data= ', data);
       if (data.message === "newAccessTokenDelivered"){
         localStorage.setItem('accessToken', data.accessToken);
         return fetchData(endpoint, options);
@@ -27,7 +27,7 @@ export const fetchData = async (endpoint, options = {}) => {
       // console.log('Erreur: ', await response.json());
     }
     // console.log('response= ', await response.json());
-    return data;
+    return {response, data};
   } catch (error) {
     console.error('Erreur lors de la requête:', error);
     throw error;

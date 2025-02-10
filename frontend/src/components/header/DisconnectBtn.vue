@@ -7,6 +7,7 @@
 <script>
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { fetchData } from "../../config/api";
 export default {
   name: "DisconnectBtn",
 
@@ -18,10 +19,17 @@ export default {
       store.commit("setIsLoading", true);
       console.log("logout function");
 
-      setTimeout(() => {
+      setTimeout( async () => {
+        await fetchData("/logout", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
         store.commit("setIsConnected", false);
         store.commit("setUserName", "");
         localStorage.clear();
+        document.cookie = "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         if (store.getters.getWebSocket) {
           store.getters.getWebSocket.close();
         }
@@ -61,7 +69,7 @@ export default {
     margin-top: 1px;
 
     &:hover {
-      
+
       background-image: linear-gradient(to right, #ff24a796, #8890fe8e);
       box-shadow: 0 0 8px #0000008c;
     }

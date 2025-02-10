@@ -88,10 +88,10 @@ const imgPlaceholder = 'src/default-avatar-img.jpeg';
 
 const loadImages = async (username) => {
   const imagePromises = props.user.photos.map((_, index) =>
-      fetchData(`/getPhotos/${username}?index=${index}`, {
-        method: "GET",
+    fetch(`${process.env.VUE_APP_API_URL}/getPhotos/${username}?index=${index}`, {
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
         },
       })
           .then((response) => response.ok ? response.blob() : null)
@@ -100,6 +100,7 @@ const loadImages = async (username) => {
   );
   photos.value = await Promise.all(imagePromises);
 };
+
 
 
 onMounted(() => {

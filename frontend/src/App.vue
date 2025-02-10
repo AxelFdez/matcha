@@ -44,18 +44,18 @@ export default {
 
   setup() {
     const store = useStore();
-    console.log('store ', store);
+    // console.log('store ', store);
     onMounted(() => {
 
       store.commit('setIsLoadingStartApp', true);
       setTimeout(() => {
         if (localStorage.getItem('accessToken')) {
-          console.log('AAAAA');
+          // console.log('AAAAA');
           checkAccessToken();
           store.commit('setIsLoadingStartApp', false);
 
         } else {
-          console.log('BBBBB');
+          // console.log('BBBBB');
 
           store.commit('setIsReady', true);
           store.commit('setIsLoadingStartApp', false);
@@ -71,12 +71,12 @@ export default {
         const response = await fetchData("/verifyToken", {
           method: 'GET',
           headers: {
-            'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
+            // 'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
             'refreshToken': localStorage.getItem('refreshToken'),
           },
         });
-        const responseData = await response.json();
-        if (response.status === 200) {
+        const responseData = response.data;
+        if (response.response.status === 200) {
 
           if (responseData.accessToken) {
             localStorage.setItem('accessToken', responseData.accessToken)
@@ -115,6 +115,7 @@ export default {
 <style lang="scss">
 @import url("./style/reset.css");
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+@import '../node_modules/flowbite-vue/dist/index.css';
 
 :root {
   --gray: rgb(103, 102, 102);

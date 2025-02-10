@@ -65,7 +65,7 @@ export default {
     },
 
     getPhoto(index) {
-      fetchData('/getPhotos/' + localStorage.getItem('userName') + "?index=" + index, {
+      fetch(process.env.VUE_APP_API_URL + '/getPhotos/' + localStorage.getItem('userName') + "?index=" + index, {
         method: 'GET',
         headers: {
           'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),

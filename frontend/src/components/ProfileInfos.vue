@@ -37,12 +37,18 @@ const modules = [Navigation, Pagination, Scrollbar, A11y];
 
 const loadImages = async (username) => {
   const imagePromises = props.user.photos.map((_, index) =>
-    fetchData(`/getPhotos/${username}?index=${index}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
-    })
+    // fetchData(`/getPhotos/${username}?index=${index}`, {
+    //   method: "GET",
+    //   headers: {
+    //     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+    //   },
+    // })
+    fetch(`${process.env.VUE_APP_API_URL}/getPhotos/${username}?index=${index}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
+        },
+      })
       .then((response) => (response.ok ? response.blob() : null))
       .then((blob) => (blob ? URL.createObjectURL(blob) : imgPlaceholder))
       .catch(() => imgPlaceholder)

@@ -168,8 +168,8 @@ export const store = createStore({
           },
           body: JSON.stringify(formData),
         });
-        const responseData = await response.json();
-        switch (response.status) {
+        const responseData = response.data;
+        switch (response.response.status) {
           case 201:
             commit('setServerMessage', 'registerSuccess');
             break;
@@ -206,9 +206,10 @@ export const store = createStore({
           },
           body: JSON.stringify(formData),
         });
-        const responseData = await response.json();
-        console.log(responseData);
-        switch (response.status) {
+        const responseData = response.data;
+        // console.log(responseData);
+        console.log(response);
+        switch (response.response.status) {
           case 201:
             localStorage.setItem("accessToken", responseData.accessToken);
             // localStorage.setItem("refreshToken", responseData.refreshToken);
@@ -263,9 +264,9 @@ export const store = createStore({
 
 
         });
-        const responseData = await response.json();
+        const responseData = response.data;
         // console.log('response = ', responseData);
-        switch (response.status) {
+        switch (response.response.status) {
           case 200:
             commit("setUserName", responseData.user.username);
             commit("setFirstName", responseData.user.firstname);
@@ -307,9 +308,9 @@ export const store = createStore({
           },
           body: JSON.stringify(formData),
         });
-        const responseData = await response.json();
-        console.log(responseData);
-        switch (response.status) {
+        const responseData = response.data;
+        // console.log(responseData);
+        switch (response.response.status) {
           case 200:
             commit("setServerMessage", "emailSent");
             break;
@@ -341,9 +342,9 @@ export const store = createStore({
         },
         body: JSON.stringify(formData),
       });
-      const responseData = await response.json();
-      console.log("responseData",responseData);
-      switch (response.status) {
+      const responseData = response.data;
+      // console.log("responseData",responseData);
+      switch (response.response.status) {
         case 200:
           commit("setServerMessage", responseData.alert);
           setTimeout(() => {
@@ -381,10 +382,9 @@ export const store = createStore({
         },
         body: JSON.stringify(formData),
       });
-      const responseData = await response.json();
-      console.log(responseData);
+      const responseData = response.data;
 
-      switch (response.status) {
+      switch (response.response.status) {
         case 200:
           console.log("profil Updated");
           commit('setAlertMessage', responseData.alert);
