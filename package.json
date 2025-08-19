@@ -1,5 +1,25 @@
 {
-  "dependencies": {
-    "pg": "^8.13.1"
-  }
+  "name": "matcha-docker",
+  "version": "1.0.0",
+  "description": "Scripts Docker pour le projet Matcha",
+  "scripts": {
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "docker:clean": "docker-compose down -v --remove-orphans && docker system prune -f",
+    "docker:db:init": "docker-compose exec backend node scripts/createTables.js",
+    "docker:db:seed": "docker-compose exec backend node scripts/fillDatabase.js",
+    "docker:backend:logs": "docker-compose logs -f backend",
+    "docker:frontend:logs": "docker-compose logs -f frontend",
+    "docker:postgres:logs": "docker-compose logs -f postgres",
+    "docker:adminer": "echo 'Adminer accessible sur http://localhost:8081'",
+    "dev": "npm run docker:up && npm run docker:logs",
+    "setup": "npm run docker:build && npm run docker:up && npm run docker:db:init && npm run docker:db:seed",
+    "stop": "npm run docker:down"
+  },
+  "keywords": ["docker", "matcha", "nodejs", "vue", "postgresql"],
+  "author": "Axel Fernandez",
+  "license": "MIT"
 }

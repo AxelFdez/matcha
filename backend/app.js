@@ -14,12 +14,41 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
-// Désactive CORS pour toutes les requêtes
-// app.use(cors());
-app.use(cors({
-  origin: process.env.FRONT_URL,  // Remplace par le domaine d'où viennent les requêtes
-  credentials: true,                 // Permet l'envoi et la réception des cookies
-}));
+// Configuration CORS
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permettre les requêtes sans origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.FRONT_URL,
+      'http://localhost:8080',
+      'http://127.0.0.1:8080',
+      'http://frontend:8080'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,                    // Permet l'envoi et la réception des cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'Pragma'
+  ],
+  exposedHeaders: ['set-cookie'],
+  maxAge: 86400                        // Cache preflight pendant 24h
+};
+
+app.use(cors(corsOptions));
 
 
 // view engine setup

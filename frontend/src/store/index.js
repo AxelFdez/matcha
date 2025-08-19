@@ -158,7 +158,7 @@ export const store = createStore({
 
     async submitRegisterForm({commit}, formData) {
       // store.commit('setIsLoading', true);
-      console.log(formData);
+      console.log("submitRegisterForm", formData);
       try {
         // Envoyer les données du formulaire au backend Node.js
         const response = await fetchData("/register-form", {

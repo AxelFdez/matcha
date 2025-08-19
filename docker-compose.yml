@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - VUE_APP_API_URL=http://backend:3000
+      - VUE_APP_WS_URL=ws://backend:3000
+      - PORT=8080
+    depends_on:
+      - backend
+    networks:
+      - matcha-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=matcha
+      - PGPASSWORD=matcha_password
+      - PGPORT=5432
+      - FRONT_URL=http://frontend:8080
+      - JWT_SECRET=your_jwt_secret_key_here
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=your_email@gmail.com
+      - EMAIL_PASS=your_email_password
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/photos:/app/photos
+    networks:
+      - matcha-network
+
+  postgres:
+    image: postgres:17.4
+    environment:
+      - POSTGRES_DB=matcha
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=matcha_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts:/docker-entrypoint-initdb.d
+    networks:
+      - matcha-network
+
+  adminer:
+    image: adminer:4.8.1
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
+    networks:
+      - matcha-network
+
+volumes:
+  postgres_data:
+
+networks:
+  matcha-network:
+    driver: bridge
