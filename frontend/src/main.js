@@ -13,7 +13,6 @@ import "@flaticon/flaticon-uicons/css/all/all.css";
 import 'vue-multiselect/dist/vue-multiselect.css'
 import './index.css'
 
-import '../node_modules/flowbite-vue/dist/index.css';
 
 
 const VueApp = createApp(App);

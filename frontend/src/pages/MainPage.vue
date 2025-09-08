@@ -1,6 +1,6 @@
 <template>
   <!-- Bouton pour ouvrir/fermer la Sidebar -->
-  <FwbButton @click="toggleSidebar" class="absolute mt-44">Ouvrir Sidebar</FwbButton>
+  <button @click="toggleSidebar" class="absolute mt-44 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Ouvrir Sidebar</button>
   <section class="container p-12 mx-auto px-4">
     <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" :key="componentKey" />
     <p v-else class="mt-12">Aucuns utilisateurs à afficher...</p>
@@ -17,14 +17,12 @@ import Sidebar from '@/components/sidebar.vue';
 import { fetchData } from '../config/api';
 import { ref, computed, watch, onMounted } from "vue";
 import { useStore } from 'vuex';
-import { FwbButton } from 'flowbite-vue';
 
 export default {
   name: "MainPage",
   components: {
     ProfileCard,
     Sidebar,
-    FwbButton
   },
   setup() {
     const store = useStore();

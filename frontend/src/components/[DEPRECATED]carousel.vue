@@ -71,7 +71,6 @@
 
 <script setup>
 import { defineProps, onMounted } from 'vue';
-import { Carousel } from 'flowbite';
 import { ref } from 'vue';
 import {fetchData} from "@/config/api";
 
