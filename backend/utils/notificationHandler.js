@@ -1,6 +1,6 @@
+require('dotenv').config({ path: '../../.env' });
 const WebSocket = require('ws');
-const connectBdd = require('../config/connectBdd');
-
+const pool = require('../config/connectBdd');
 
 async function notificationViewed(userId) {
 	const { clients } = require('./websockets');
@@ -9,24 +9,48 @@ async function notificationViewed(userId) {
 		return;
 	}
 
-	const User = require('../models/User');
-	connectBdd();
-	user = await User.findOne({ _id: userId });
-	if (!user) {
+	try {
+		// Get current notifications
+		const result = await pool.query(
+			'SELECT notifications FROM users WHERE id = $1',
+			[userId]
+		);
+
+		if (result.rows.length === 0) {
+			ws.send(JSON.stringify({
+				type: 'error',
+				userId: userId,
+				message: {
+					title: 'user not found',
+				}
+			}));
+			return;
+		}
+
+		let notifications = result.rows[0].notifications || [];
+		
+		// Mark all notifications as viewed
+		const updatedNotifications = notifications.map(notification => ({
+			...notification,
+			viewed: true
+		}));
+
+		// Update notifications in database - PostgreSQL expects individual JSONB objects
+		await pool.query(
+			'UPDATE users SET notifications = $1 WHERE id = $2',
+			[updatedNotifications, userId]
+		);
+
+	} catch (error) {
+		console.error('Error marking notifications as viewed:', error);
 		ws.send(JSON.stringify({
 			type: 'error',
 			userId: userId,
 			message: {
-				title: 'user not found',
+				title: 'database error',
 			}
 		}));
-		return;
 	}
-
-	for (let i = 0; i < user.notifications.length; i++) {
-		user.notifications[i].viewed = true;
-	}
-	await user.save();
 }
 
 async function deleteNotification(userId, message) {
@@ -35,7 +59,8 @@ async function deleteNotification(userId, message) {
 	if (!ws) {
 		return;
 	}
-	else if (!message.notification) {
+	
+	if (!message.notificationId) {
 		ws.send(JSON.stringify({
 			type: 'error',
 			userId: userId,
@@ -46,27 +71,51 @@ async function deleteNotification(userId, message) {
 		return;
 	}
 
-	const User = require('../models/User');
-	connectBdd();
-	user = await User.findOne({ _id: userId });
-	if (!user) {
+	try {
+		// Get current notifications
+		const result = await pool.query(
+			'SELECT notifications FROM users WHERE id = $1',
+			[userId]
+		);
+
+		if (result.rows.length === 0) {
+			ws.send(JSON.stringify({
+				type: 'error',
+				userId: userId,
+				message: {
+					title: 'user not found',
+				}
+			}));
+			return;
+		}
+
+		let notifications = result.rows[0].notifications || [];
+		
+		// Find and remove the notification
+		const originalLength = notifications.length;
+		const updatedNotifications = notifications.filter(notification => notification !== message.notification);
+		
+		if (updatedNotifications.length === originalLength) {
+			console.log('notification not found');
+			return;
+		}
+
+		// Update notifications in database - PostgreSQL expects individual JSONB objects
+		await pool.query(
+			'UPDATE users SET notifications = $1 WHERE id = $2',
+			[updatedNotifications, userId]
+		);
+
+	} catch (error) {
+		console.error('Error deleting notification:', error);
 		ws.send(JSON.stringify({
 			type: 'error',
 			userId: userId,
 			message: {
-				title: 'user not found',
+				title: 'database error',
 			}
 		}));
-		return;
 	}
-
-	let index = user.notifications.findIndex(item => item === message.notification);
-	if (index > -1) {
-		user.notifications.splice(index, 1);
-	}
-	else
-		console.log('notification not found');
-	await user.save();
 }
 
 module.exports = { notificationViewed, deleteNotification };

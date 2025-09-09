@@ -68,7 +68,7 @@ async function insertUser(user) {
 (async function () {
   try {
     console.log('Insertion des utilisateurs...');
-    const fakeUsers = Array.from({ length: 100 }, generateFakeUser);
+    const fakeUsers = Array.from({ length: 500 }, generateFakeUser);
     for (const user of fakeUsers) {
       await insertUser(user);
     }

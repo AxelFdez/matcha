@@ -46,8 +46,8 @@ async function setupWebSocket(server) {
 				viewedUser(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'notification') {
 				notificationViewed(parsedMessage.userId);
-			} else if (parsedMessage.type === 'deleteNotification') {
-				deleteNotification(parsedMessage.userId, parsedMessage.message);
+			// } else if (parsedMessage.type === 'deleteNotification') {
+			// 	deleteNotification(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'chat') {
 				chatUser(parsedMessage.userId, parsedMessage.message);
 			// } else if (parsedMessage.type === 'newLocation') {

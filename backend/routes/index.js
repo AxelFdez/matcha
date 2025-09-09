@@ -52,4 +52,29 @@ router.get('/getPhotos/:username', verifyToken, require('../utils/getUserPhotos'
 // KO
 router.get('/browseUsers', verifyToken, require('../utils/browseUsers'), (req, res) => {});
 
+// Notifications endpoints
+router.get('/notifications', verifyToken, require('../utils/getNotifications'), (req, res) => {});
+router.post('/notifications/mark-viewed', verifyToken, require('../utils/markNotificationsViewed'), (req, res) => {});
+router.delete('/notifications/:id', verifyToken, require('../utils/deleteNotification'), (req, res) => {});
+
+// Chat endpoints
+router.get('/conversations', verifyToken, require('../utils/getConversations'), (req, res) => {});
+router.get('/conversations/:conversationId/messages', verifyToken, require('../utils/getMessages'), (req, res) => {});
+
+// Admin endpoint to create missing conversations for existing matches
+router.post('/admin/create-missing-conversations', async (req, res) => {
+    try {
+        const { createMissingConversations } = require('../utils/createMissingConversations');
+        const result = await createMissingConversations();
+        res.status(200).json({ 
+            message: 'Missing conversations created successfully',
+            conversationsCreated: result.length,
+            details: result
+        });
+    } catch (error) {
+        console.error('Error creating missing conversations:', error);
+        res.status(500).json({ message: 'Error creating missing conversations' });
+    }
+});
+
 module.exports = router;

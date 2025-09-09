@@ -130,7 +130,6 @@ import {
 import profileInfos from "./ProfileInfos.vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
-import { fetchData } from "@/config/api";
 import { useStore } from "vuex";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -168,9 +167,9 @@ const loadImages = async (username) => {
 const photos = ref([]);
 const imgPlaceholder = "src/default-avatar-img.jpeg";
 
-const ws = store.getters.getWebSocket;
 const username = store.getters.getUserName;
 const userId = localStorage.getItem("userId");
+const ws = store.getters.getWebSocket;
 const like = () => {
   ws.send(
     JSON.stringify({

@@ -69,11 +69,7 @@ export default {
 
       try {
         const response = await fetchData("/verifyToken", {
-          method: 'GET',
-          headers: {
-            // 'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
-            'refreshToken': localStorage.getItem('refreshToken'),
-          },
+          method: 'GET'
         });
         const responseData = response.data;
         if (response.response.status === 200) {

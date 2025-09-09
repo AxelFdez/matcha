@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 
 var createError = require('http-errors');
 var express = require('express');
@@ -10,7 +10,6 @@ const session = require('express-session');
 const helmet = require('helmet');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
 
 var app = express();
 
@@ -42,7 +41,8 @@ const corsOptions = {
     'Accept',
     'Authorization',
     'Cache-Control',
-    'Pragma'
+    'Pragma',
+    'refreshtoken'
   ],
   exposedHeaders: ['set-cookie'],
   maxAge: 86400                        // Cache preflight pendant 24h
@@ -81,7 +81,6 @@ app.use(express.json());
 
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

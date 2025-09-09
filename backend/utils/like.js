@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 const pool = require('../config/connectBdd');
+const { createConversation } = require('./createConversation');
 
 async function likeUser(userId, message) {
 	console.log('likeUser');
@@ -98,6 +99,15 @@ async function likeUser(userId, message) {
 		userliked.famerating += 50;
 		await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [user.famerating, user.id]);
 		await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [userliked.famerating, userliked.id]);
+
+		// Create conversation automatically on match
+		try {
+			const conversation = await createConversation(user.id, userliked.id);
+			console.log(`Match detected! Conversation ${conversation.id} created between ${user.username} and ${userliked.username}`);
+		} catch (error) {
+			console.error('Failed to create conversation on match:', error);
+			// Continue execution even if conversation creation fails
+		}
 
 		if (ws && ws.readyState === WebSocket.OPEN) {
 			ws.send(JSON.stringify({

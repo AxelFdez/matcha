@@ -95,8 +95,75 @@ const createUsersTable = async () => {
     }
 };
 
+// Fonction pour créer les tables de chat
+const createChatTables = async () => {
+    const client = new Client({
+        host: process.env.PGHOST,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: dbName,
+        port: 5432,
+    });
+
+    try {
+        await client.connect();
+        console.log("Connexion à la base de données réussie pour les tables de chat.");
+
+        // Table pour les conversations
+        const createConversationsTableQuery = `
+            CREATE TABLE IF NOT EXISTS chat_conversations (
+                id SERIAL PRIMARY KEY,
+                user1_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                user2_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user1_id, user2_id),
+                CHECK (user1_id < user2_id)
+            );
+        `;
+        await client.query(createConversationsTableQuery);
+        console.log("Table 'chat_conversations' créée ou déjà existante.");
+
+        // Table pour les messages
+        const createMessagesTableQuery = `
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id SERIAL PRIMARY KEY,
+                conversation_id INTEGER NOT NULL REFERENCES chat_conversations(id) ON DELETE CASCADE,
+                sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                message TEXT NOT NULL,
+                sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        await client.query(createMessagesTableQuery);
+        console.log("Table 'chat_messages' créée ou déjà existante.");
+
+        // Index pour optimiser les requêtes de conversation
+        const createConversationIndexQuery = `
+            CREATE INDEX IF NOT EXISTS idx_conversations_users 
+            ON chat_conversations(user1_id, user2_id);
+        `;
+        await client.query(createConversationIndexQuery);
+        console.log("Index pour les conversations créé.");
+
+        // Index pour optimiser les requêtes de messages
+        const createMessagesIndexQuery = `
+            CREATE INDEX IF NOT EXISTS idx_messages_conversation_sent 
+            ON chat_messages(conversation_id, sent_at DESC);
+        `;
+        await client.query(createMessagesIndexQuery);
+        console.log("Index pour les messages créé.");
+
+    } catch (err) {
+        console.error("Erreur lors de la création des tables de chat :", err);
+    } finally {
+        await client.end();
+        console.log("Connexion fermée pour les tables de chat.");
+    }
+};
+
 // Exécuter les fonctions
 (async () => {
     // await createDatabase();
     await createUsersTable();
+    await createChatTables();
 })();
