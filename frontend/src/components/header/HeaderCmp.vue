@@ -1,16 +1,24 @@
 <template>
-  <div class="header-container" :style="{ opacity: headerOpacity }" :class="{ 'hidden-element': headerOpacity === 0 }">
-
+  <div class="header-container bg-zinc-900">
     <div class="header">
-      <TitleCmp></TitleCmp>
+      <TitleCmp />
 
       <div class="buttons--container">
         <div class="buttons">
-          <LangSelectBtn></LangSelectBtn>
+          <LangSelectBtn />
 
-          <ProfileBtn v-if="$store.getters.getIsConnected"></ProfileBtn>
-          <ConnectBtn v-if="!$store.getters.getIsConnected"></ConnectBtn>
-          <DisconnectBtn v-if="$store.getters.getIsConnected"></DisconnectBtn>
+          <ConnectBtn v-if="!$store.getters.getIsConnected" />
+          <button v-if="$store.getters.getIsConnected" @click="toggleSidebar" class="burger-btn">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </span>
+          </button>
+
+          <Sidebar v-if="$store.getters.getIsConnected && open" @close="toggleSidebar" />
         </div>
       </div>
     </div>
@@ -18,14 +26,11 @@
 </template>
 
 <script>
+import { ref, onMounted, onUnmounted } from 'vue';
 import TitleCmp from "./TitleCmp.vue";
 import LangSelectBtn from "./LangSelectBtn.vue";
 import ConnectBtn from "./ConnectBtn.vue";
-import DisconnectBtn from "./DisconnectBtn.vue";
-import ProfileBtn from "./ProfileBtn.vue";
-// import { useStore } from "vuex";
-
-// import { mapGetters } from "vuex";
+import Sidebar from '@/components/sidebar.vue';
 
 export default {
   name: "HeaderCmp",
@@ -33,52 +38,45 @@ export default {
     TitleCmp,
     LangSelectBtn,
     ConnectBtn,
-    ProfileBtn,
-    DisconnectBtn,
+    Sidebar
   },
-  data() {
-    // const store = useStore();
-    return {
-      headerOpacity: 1,
-      //   connectionState: store.getters.getConnectionState,
+  setup() {
+    const headerOpacity = ref(1);
+    const open = ref(false);
+
+    const toggleSidebar = () => {
+      open.value = !open.value;
     };
-  },
-  //   setup() {
 
-  //   },
-  //   computed: {
-  //     ...mapGetters(["getConnectionState"]),
-  //   },
-
-  mounted() {
-    window.addEventListener("scroll", this.handleScroll); // Ajoute un écouteur d'événements pour le défilement de la page lors de l'initialisation du composant
-  },
-  methods: {
-    handleScroll() {
-      // Obtenez la position verticale de défilement de la fenêtre
+    const handleScroll = () => {
       const scrollPosition = window.scrollY;
+      headerOpacity.value = 1 - scrollPosition / 500;
+      headerOpacity.value = Math.min(Math.max(headerOpacity.value, 0), 1);
+    };
 
-      // Calculer l'opacité en fonction de la position de défilement
-      // Par exemple, vous pouvez réduire progressivement l'opacité à mesure que vous faites défiler vers le haut
-      this.headerOpacity = 1 - scrollPosition / 500; // 500 est la valeur de défilement à partir de laquelle vous voulez que le header soit complètement transparent
+    onMounted(() => {
+      window.addEventListener("scroll", handleScroll);
+    });
 
-      // Assurez-vous que l'opacité est toujours comprise entre 0 et 1
-      this.headerOpacity = Math.min(Math.max(this.headerOpacity, 0), 1);
-    },
-  },
+    onUnmounted(() => {
+      window.removeEventListener("scroll", handleScroll);
+    });
+
+    return {
+      headerOpacity,
+      open,
+      toggleSidebar
+    };
+  }
 };
 </script>
 
-<style lang=scss>
+<style lang="scss">
 .header-container {
   position: fixed;
   z-index: 1000;
   width: 100%;
-  height: 100px;
-
-  background-image: linear-gradient(to bottom,
-      rgb(0, 0, 0) 5%,
-      rgba(0, 0, 0, 0));
+  height: 90px;
 
   .header {
     position: fixed;
@@ -125,6 +123,54 @@ export default {
           display: grid;
           align-items: center;
         }
+      }
+    }
+  }
+}
+.burger-btn {
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  margin: 0 5px 0 10px;
+  border: none;
+  background: transparent;
+
+  span {
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 45px;
+    border-radius: 8px;
+    background-image: linear-gradient(to right, #ff24a7, #8890fe);
+    cursor: pointer;
+    user-select: none;
+    opacity: 1;
+    transition: all 0.2s;
+    color: white;
+    margin-top: 1px;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover {
+      background-image: linear-gradient(to right, #ff24a796, #8890fe8e);
+      box-shadow: 0 0 8px #0000008c;
+    }
+  }
+
+  @media (min-width: 200px) and (max-width: 700px) {
+    margin: 10px 10px 0 10px;
+
+    span {
+      width: 35px;
+      height: 35px;
+
+      svg {
+        width: 18px;
+        height: 18px;
       }
     }
   }

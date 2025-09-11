@@ -1,6 +1,5 @@
 const { sendEmailResetPassword } = require('./sendEmailVerification');
 const pool = require('../config/connectBdd');
-const { UUID } = require('mongodb');
 
 async function resetPasswordSendEmail(req, res) {
 	try {

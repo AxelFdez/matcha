@@ -1,21 +1,25 @@
 <template>
-  <button data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar"
+  <!-- <button data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar"
     type="button"
-    class="ml-3 mt-2 inline-flex items-center rounded-lg p-2 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 sm:hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+    class="ml-40 mt-40 inline-flex items-center rounded-lg p-2 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 sm:hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
     <span class="sr-only">Open sidebar</span>
     <svg class="size-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
       <path clip-rule="evenodd" fill-rule="evenodd"
         d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z">
       </path>
     </svg>
-  </button>
+  </button> -->
 
   <aside id="default-sidebar"
-    class="fixed right-0 top-20 z-40 h-screen w-64 -translate-x-full transition-transform sm:translate-x-0"
+    class="fixed right-0 top-20 z-50 h-screen w-64 -translate-x-full transition-transform sm:translate-x-0"
     aria-label="Sidenav">
     <div
-      class="h-full overflow-y-auto border-r border-gray-200 bg-white px-3 py-5 dark:border-gray-700 dark:bg-gray-800">
+      class="h-full overflow-y-auto border-r border-gray-900 bg-zinc-900 px-3 py-5">
       <!-- Main Sidebar Content -->
+      <div class="mb-4 flex items-center justify-around border-b border-gray-200 pb-4 dark:border-gray-600">
+        <ProfileBtn v-if="$store.getters.getIsConnected" @click="closeSidebar" />
+        <DisconnectBtn v-if="$store.getters.getIsConnected" @click="closeSidebar" />
+      </div>
       <div v-if="!showNotifications && !showChat">
         <ul class="space-y-2">
           <li>
@@ -257,15 +261,28 @@
   </aside>
 </template>
 
-<script setup>
+<script>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { fetchData } from '../config/api.js'
 import { useStore } from 'vuex'
+import DisconnectBtn from "./header/DisconnectBtn.vue";
+import ProfileBtn from "./header/ProfileBtn.vue";
 
-// Declare custom events
-const emit = defineEmits(['close'])
+export default {
+  name: 'Sidebar',
+  components: {
+    ProfileBtn,
+    DisconnectBtn,
+  },
+  emits: ['close'],
+  setup(props, { emit }) {
 
 const store = useStore();
+
+// Close sidebar function
+const closeSidebar = () => {
+  emit('close')
+}
 
 // Notifications
 const showNotifications = ref(false)
@@ -573,4 +590,37 @@ onMounted(() => {
     }
   }
 })
+
+    // Return all reactive references and functions
+    return {
+      closeSidebar,
+      showNotifications,
+      notifications,
+      loading,
+      showChat,
+      showChatMessages,
+      conversations,
+      selectedConversation,
+      messages,
+      newMessage,
+      chatLoading,
+      messagesLoading,
+      sendingMessage,
+      messagesContainer,
+      notificationCount,
+      unreadMessagesCount,
+      currentUserId,
+      openNotifications,
+      openChat,
+      openChatMessages,
+      backToMain,
+      backToConversations,
+      deleteNotification,
+      sendMessage,
+      formatDate,
+      formatMessageTime
+    }
+  }
+}
 </script>
+

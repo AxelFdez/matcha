@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "nodemon ./bin/www"
+    "start": "cross-env PGPORT=5435 PGHOST=localhost nodemon ./bin/www"
   },
   "dependencies": {
     "@faker-js/faker": "^9.3.0",
@@ -17,8 +17,6 @@
     "helmet": "^7.1.0",
     "http-errors": "~1.6.3",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.6.0",
-    "mongoose": "^8.9.5",
     "morgan": "~1.9.1",
     "multer": "^2.0.2",
     "node-ipinfo": "^3.5.1",
@@ -27,6 +25,7 @@
     "pg": "^8.13.1",
     "sharp": "^0.33.3",
     "twig": "^1.17.1",
-    "ws": "^8.17.0"
+    "ws": "^8.17.0",
+    "cross-env": "^10.0.0"
   }
 }

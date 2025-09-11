@@ -1,6 +1,5 @@
 <template>
   <!-- Bouton pour ouvrir/fermer la Sidebar -->
-  <button @click="toggleSidebar" class="absolute mt-44 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Ouvrir Sidebar</button>
   <section class="container p-12 mx-auto px-4">
     <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" :key="componentKey" />
     <p v-else class="mt-12">Aucuns utilisateurs à afficher...</p>
@@ -8,12 +7,11 @@
 
 
   <!-- Sidebar affichée dynamiquement -->
-  <Sidebar v-if="open" @close="toggleSidebar"></Sidebar>
+  <!-- <Sidebar v-if="open" @close="toggleSidebar"></Sidebar> -->
 </template>
 
 <script>
 import ProfileCard from '@/components/ProfileCard.vue';
-import Sidebar from '@/components/sidebar.vue';
 import { fetchData } from '../config/api';
 import { ref, computed, watch, onMounted } from "vue";
 import { useStore } from 'vuex';
@@ -22,21 +20,12 @@ export default {
   name: "MainPage",
   components: {
     ProfileCard,
-    Sidebar,
   },
   setup() {
     const store = useStore();
     const user = computed(() => store.state);
     const userReady = computed(() => user.value && user.value.is_ready);
     const ws = computed(() => store.getters.getWebSocket);
-
-    // État pour la Sidebar
-    const open = ref(false);
-
-    // Fonction pour ouvrir/fermer la Sidebar
-    const toggleSidebar = () => {
-      open.value = !open.value;
-    };
 
     const tenUsers = ref([]);
     const componentKey = ref(0);
@@ -82,8 +71,6 @@ export default {
       tenUsers,
       userReady,
       componentKey,
-      open, // Ajout de `open` pour gérer l'affichage de la Sidebar
-      toggleSidebar
     };
   }
 };

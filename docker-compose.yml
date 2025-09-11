@@ -49,7 +49,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=matcha_password
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/scripts:/docker-entrypoint-initdb.d
@@ -69,6 +69,7 @@ services:
 
 volumes:
   postgres_data:
+    
 
 networks:
   matcha-network:
