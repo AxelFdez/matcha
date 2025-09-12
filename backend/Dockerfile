@@ -17,5 +17,5 @@ RUN mkdir -p photos/tmp
 # Exposer le port
 EXPOSE 3000
 
-# Démarrer l'application
-CMD ["npm", "start"]
+# Démarrer l'application directement avec node
+CMD ["node", "./bin/www"]

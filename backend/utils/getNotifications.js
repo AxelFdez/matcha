@@ -19,7 +19,7 @@ async function getNotifications(req, res) {
         console.log(`Found ${notifications.length} notifications for userId ${userId}`);
         console.log('Notifications:', notifications);
         
-        // Transform notifications to include proper structure
+        // format notifications
         const formattedNotifications = notifications.map((notification, index) => ({
             id: notification.id || index,
             title: notification.title || notification.type || 'Notification',
@@ -28,7 +28,7 @@ async function getNotifications(req, res) {
             createdAt: notification.createdAt || notification.date || new Date().toISOString()
         }));
         
-        // Sort by creation date (newest first)
+        // trie les notifications par date décroissante
         formattedNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         
         res.status(200).json(formattedNotifications);

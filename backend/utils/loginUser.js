@@ -11,7 +11,6 @@ const REFRESH_TOKEN_EXPIRES_IN = "7d";
 
 async function loginUser(req, res) {
   try {
-    // await connectBdd();
     // console.log(req.body);
     const { username, password } = req.body;
     // const user = await User.findOne({ username });
@@ -22,21 +21,17 @@ async function loginUser(req, res) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // console.log(user.rows[0]);
-
     const isMatch = await bcrypt.compare(password, user.rows[0].password);
     if (!isMatch) {
       return res.status(401).json({ message: "Wrong Password" });
     }
 
-    // Création du access token
     const accessToken = jwt.sign(
       { userId: user.rows[0]._id, email: user.rows[0].email },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
 
-    // Création du refresh token
     const refreshToken = jwt.sign(
       { userId: user.rows[0]._id },
       REFRESH_TOKEN_SECRET,
@@ -61,7 +56,6 @@ async function loginUser(req, res) {
 
     //  Séparation de la chaîne en latitude et longitude
     if (req.body.location) {
-      // console.log(req.body.location);
       const latitude = parseFloat(req.body.location.latitude);
       const longitude = parseFloat(req.body.location.longitude);
       user.rows[0].location.coordinates = [latitude, longitude];
@@ -69,13 +63,10 @@ async function loginUser(req, res) {
     } else {
       user.rows[0].location.authorization = false;
     }
-
-    // user.connected = true;
     pool.query(
       "UPDATE users SET refreshToken = $1, location = $2, connected = $3 WHERE username = $4",
       [refreshToken, JSON.stringify(user.rows[0].location), true, username]
     );
-    // await user.save();
 
     // Envoyer les tokens au client
     // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8082');  // Origine spécifique

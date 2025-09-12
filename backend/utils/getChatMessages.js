@@ -3,7 +3,7 @@ const Chat = require('../models/Chat');
 
 async function getChatMessages(req, res) {
     try {
-        const userId = req.userId; // From JWT middleware
+        const userId = req.userId;
         const { username } = req.params;
         const { limit = 50, offset = 0 } = req.query;
 
@@ -18,7 +18,6 @@ async function getChatMessages(req, res) {
         
         const otherUserId = userResult.rows[0].id;
 
-        // Check if users are matched (users can only chat if they matched)
         const currentUserResult = await pool.query('SELECT matcha FROM users WHERE id = $1', [userId]);
         const currentUser = currentUserResult.rows[0];
         const userMatcha = currentUser.matcha || [];
@@ -30,7 +29,6 @@ async function getChatMessages(req, res) {
             });
         }
 
-        // Find conversation between users
         const { user1_id, user2_id } = Chat.normalizeUserIds(userId, otherUserId);
         
         const conversationResult = await pool.query(
@@ -48,7 +46,6 @@ async function getChatMessages(req, res) {
 
         const conversationId = conversationResult.rows[0].id;
         
-        // Get messages for this conversation
         const messages = await Chat.getMessages(conversationId, parseInt(limit), parseInt(offset));
         
         res.status(200).json({

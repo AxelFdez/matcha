@@ -1,5 +1,4 @@
 require('dotenv').config({ path: '../../.env' });
-const WebSocket = require('ws');
 const pool = require('../config/connectBdd');
 
 async function notificationViewed(userId) {
@@ -10,7 +9,6 @@ async function notificationViewed(userId) {
 	}
 
 	try {
-		// Get current notifications
 		const result = await pool.query(
 			'SELECT notifications FROM users WHERE id = $1',
 			[userId]
@@ -29,13 +27,12 @@ async function notificationViewed(userId) {
 
 		let notifications = result.rows[0].notifications || [];
 		
-		// Mark all notifications as viewed
+		// marque toutes les notifications comme vues
 		const updatedNotifications = notifications.map(notification => ({
 			...notification,
 			viewed: true
 		}));
 
-		// Update notifications in database - PostgreSQL expects individual JSONB objects
 		await pool.query(
 			'UPDATE users SET notifications = $1 WHERE id = $2',
 			[updatedNotifications, userId]
@@ -91,7 +88,7 @@ async function deleteNotification(userId, message) {
 
 		let notifications = result.rows[0].notifications || [];
 		
-		// Find and remove the notification
+		// efface la notification specifique
 		const originalLength = notifications.length;
 		const updatedNotifications = notifications.filter(notification => notification !== message.notification);
 		
@@ -100,7 +97,6 @@ async function deleteNotification(userId, message) {
 			return;
 		}
 
-		// Update notifications in database - PostgreSQL expects individual JSONB objects
 		await pool.query(
 			'UPDATE users SET notifications = $1 WHERE id = $2',
 			[updatedNotifications, userId]

@@ -5,7 +5,6 @@ async function markNotificationsViewed(req, res) {
     try {
         const userId = req.user.userId;
         
-        // Get current notifications
         const result = await pool.query(
             'SELECT notifications FROM users WHERE id = $1',
             [userId]
@@ -17,13 +16,12 @@ async function markNotificationsViewed(req, res) {
         
         let notifications = result.rows[0].notifications || [];
         
-        // Mark all notifications as viewed
+        // Marque toutes les notifications comme vues
         const updatedNotifications = notifications.map(notification => ({
             ...notification,
             viewed: true
         }));
-        
-        // Update notifications in database - PostgreSQL expects individual JSONB objects
+    
         await pool.query(
             'UPDATE users SET notifications = $1 WHERE id = $2',
             [updatedNotifications, userId]

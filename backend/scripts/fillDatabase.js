@@ -2,6 +2,34 @@ const { Pool } = require('pg');
 const { faker } = require('@faker-js/faker');
 require('dotenv').config();
 
+const USERS_TO_CREATE = 500;
+
+// Fonction pour attendre que PostgreSQL soit prêt
+const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const pool = new Pool({
+                host: process.env.PGHOST,
+                user: process.env.PGUSER,
+                password: process.env.PGPASSWORD,
+                database: process.env.PGDATABASE,
+                connectionTimeoutMillis: 5000,
+            });
+            
+            await pool.query('SELECT 1');
+            await pool.end();
+            console.log('PostgreSQL is ready for seeding!');
+            return true;
+        } catch (err) {
+            console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for PostgreSQL... (${err.message})`);
+            if (i < maxRetries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    throw new Error('PostgreSQL is not ready after maximum retries');
+};
+
 // Configuration de la base de données
 const pool = new Pool({
   host: process.env.PGHOST,
@@ -58,23 +86,29 @@ async function insertUser(user) {
       user.verified, user.ready
     ];
     const result = await pool.query(query, values);
-    console.log(`Utilisateur inséré avec ID : ${result.rows[0].id}`);
+    if (!result.rows.length) {
+      throw new Error('Insertion échouée');
+    }
   } catch (err) {
-    console.error('Erreur lors de l\'insertion de l\'utilisateur :', err.message);
+    throw err;
   }
 }
 
 // Fonction principale
 (async function () {
   try {
+    console.log('Waiting for PostgreSQL to be ready for seeding...');
+    await waitForPostgres();
+    
     console.log('Insertion des utilisateurs...');
-    const fakeUsers = Array.from({ length: 500 }, generateFakeUser);
+    const fakeUsers = Array.from({ length: USERS_TO_CREATE }, generateFakeUser);
     for (const user of fakeUsers) {
       await insertUser(user);
     }
-    console.log('Tous les utilisateurs ont été insérés avec succès.');
+    console.log(`${USERS_TO_CREATE} utilisateurs ont été insérés avec succès.`);
   } catch (err) {
     console.error('Erreur lors de l\'insertion :', err.message);
+    process.exit(1);
   } finally {
     await pool.end(); // Fermer le pool de connexions
   }

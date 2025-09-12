@@ -10,7 +10,7 @@ const getConversations = async (req, res) => {
       });
     }
 
-    // Get all conversations for the user with the last message and unread count
+    // Récupérer les conversations de l'utilisateur
     const conversationsQuery = `
       SELECT 
         cc.id as conversation_id,
@@ -56,8 +56,8 @@ const getConversations = async (req, res) => {
         username: row.other_username,
         avatar: row.other_user_avatar
       },
-      lastMessage: null, // Will be populated in a future enhancement
-      unreadCount: 0, // Will be populated in a future enhancement
+      lastMessage: null, // possible amelioration future
+      unreadCount: 0, // possible amelioration future
       hasUnreadMessages: false,
       createdAt: row.created_at,
       updatedAt: row.updated_at

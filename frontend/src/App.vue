@@ -44,18 +44,15 @@ export default {
 
   setup() {
     const store = useStore();
-    // console.log('store ', store);
     onMounted(() => {
 
       store.commit('setIsLoadingStartApp', true);
       setTimeout(() => {
         if (localStorage.getItem('accessToken')) {
-          // console.log('AAAAA');
           checkAccessToken();
           store.commit('setIsLoadingStartApp', false);
 
         } else {
-          // console.log('BBBBB');
 
           store.commit('setIsReady', true);
           store.commit('setIsLoadingStartApp', false);

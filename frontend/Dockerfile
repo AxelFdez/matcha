@@ -11,6 +11,14 @@ RUN npm ci && npm cache clean --force
 # Copier le code source
 COPY . .
 
+# Arguments de build pour les variables d'environnement
+ARG VUE_APP_API_URL
+ARG VUE_APP_WS_URL
+
+# Les passer en variables d'environnement pour le build
+ENV VUE_APP_API_URL=$VUE_APP_API_URL
+ENV VUE_APP_WS_URL=$VUE_APP_WS_URL
+
 # Construire l'application pour la production
 RUN npm run build
 

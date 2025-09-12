@@ -9,6 +9,8 @@
         :modules="modules"
         :slides-per-view="1"
         :loop="true"
+        :initial-slide="0"
+        :allow-touch-move="true"
         navigation
         :pagination="{ clickable: true }"
         :scrollbar="{ draggable: true }"
@@ -119,8 +121,7 @@
 </template>
 
 <script setup>
-import { defineProps, onMounted } from "vue";
-import { ref } from "vue";
+import { defineProps, onMounted, ref, nextTick, watch } from "vue";
 import {
   Dialog,
   DialogPanel,
@@ -144,6 +145,7 @@ const toggleModal = () => {
 const store = useStore();
 
 const modules = [Navigation, Pagination, Scrollbar, A11y];
+const swiperInstance = ref(null);
 
 const loadImages = async (username) => {
   const imagePromises = props.user.photos.map((_, index) =>
@@ -161,7 +163,6 @@ const loadImages = async (username) => {
       .catch(() => imgPlaceholder)
   );
   photos.value = await Promise.all(imagePromises);
-  // console.log("photos", photos);
 };
 
 const photos = ref([]);
@@ -191,7 +192,7 @@ const ignore = () => {
 };
 
 const onSwiper = (swiper) => {
-  // console.log("Swiper instance:", swiper);
+  swiperInstance.value = swiper;
 };
 
 const onSlideChange = () => {
@@ -205,6 +206,22 @@ const props = defineProps({
     default: () => ({ photos: {} }),
   },
 });
+// Watch pour recalibrer Swiper quand les photos changent
+watch(photos, () => {
+  nextTick(() => {
+    if (swiperInstance.value && photos.value.length > 0) {
+      swiperInstance.value.update();
+      swiperInstance.value.updateSize();
+      swiperInstance.value.updateSlides();
+      swiperInstance.value.updateProgress();
+      swiperInstance.value.updateSlidesClasses();
+      
+      // Force slide to index 0 to "activate" the slider
+      swiperInstance.value.slideTo(0, 0);
+    }
+  });
+}, { deep: true });
+
 onMounted(() => {
   if (props.user.username) {
     loadImages(props.user.username);

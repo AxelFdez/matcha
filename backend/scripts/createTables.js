@@ -1,36 +1,62 @@
 const { Client } = require('pg');
 require('dotenv').config();
 
-const dbName = process.env.PGDATABASE;
+// Fonction pour attendre que PostgreSQL soit prêt
+const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const client = new Client({
+                host: process.env.PGHOST,
+                user: process.env.PGUSER,
+                password: process.env.PGPASSWORD,
+                database: process.env.PGDATABASE,
+                connectionTimeoutMillis: 5000,
+            });
+            
+            await client.connect();
+            await client.query('SELECT 1');
+            await client.end();
+            console.log('PostgreSQL is ready!');
+            return true;
+        } catch (err) {
+            console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for PostgreSQL... (${err.message})`);
+            if (i < maxRetries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    throw new Error('PostgreSQL is not ready after maximum retries');
+};
+
 
 // Connexion sans base spécifique pour créer la base si elle n'existe pas
-const createDatabase = async () => {
-    const client = new Client({
-        host: process.env.PGHOST,
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD,
-        port: 5432, // Port PostgreSQL
-        database: 'template1' // Connexion à la base système par défaut
-    });
+// const createDatabase = async () => {
+//     const client = new Client({
+//         host: process.env.PGHOST,
+//         user: process.env.PGUSER,
+//         password: process.env.PGPASSWORD,
+//         port: process.env.PGPORT,
+//         database: 'template1'
+//     });
 
-    try {
-        await client.connect();
-        console.log("Connexion réussie à PostgreSQL.");
+//     try {
+//         await client.connect();
+//         console.log("Connexion réussie à PostgreSQL.");
 
-        // Vérifier si la base existe déjà
-        const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
-        if (res.rowCount === 0) {
-            await client.query(`CREATE DATABASE ${dbName}`);
-            console.log(`Base de données '${dbName}' créée.`);
-        } else {
-            console.log(`La base de données '${dbName}' existe déjà.`);
-        }
-    } catch (err) {
-        console.error("Erreur lors de la création de la base de données :", err);
-    } finally {
-        await client.end();
-    }
-};
+//         // Vérifier si la base existe déjà
+//         const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [DBNAME]);
+//         if (res.rowCount === 0) {
+//             await client.query(`CREATE DATABASE ${DBNAME}`);
+//             console.log(`Base de données '${DBNAME}' créée.`);
+//         } else {
+//             console.log(`La base de données '${DBNAME}' existe déjà.`);
+//         }
+//     } catch (err) {
+//         console.error("Erreur lors de la création de la base de données :", err);
+//     } finally {
+//         await client.end();
+//     }
+// };
 
 // Fonction pour créer la table users
 const createUsersTable = async () => {
@@ -38,8 +64,7 @@ const createUsersTable = async () => {
         host: process.env.PGHOST,
         user: process.env.PGUSER,
         password: process.env.PGPASSWORD,
-        database: dbName,
-        port: 5432,
+        database: process.env.PGDATABASE,
     });
 
     try {
@@ -101,8 +126,7 @@ const createChatTables = async () => {
         host: process.env.PGHOST,
         user: process.env.PGUSER,
         password: process.env.PGPASSWORD,
-        database: dbName,
-        port: 5432,
+        database: process.env.PGDATABASE,
     });
 
     try {
@@ -163,7 +187,17 @@ const createChatTables = async () => {
 
 // Exécuter les fonctions
 (async () => {
-    // await createDatabase();
-    await createUsersTable();
-    await createChatTables();
+    try {
+        console.log('Waiting for PostgreSQL to be ready...');
+        await waitForPostgres();
+        
+        console.log('Creating database tables...');
+        await createUsersTable();
+        await createChatTables();
+        
+        console.log('Database initialization completed successfully!');
+    } catch (err) {
+        console.error('Database initialization failed:', err);
+        process.exit(1);
+    }
 })();

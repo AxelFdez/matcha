@@ -1,4 +1,4 @@
-import vue from "eslint-plugin-vue";
+zimport vue from "eslint-plugin-vue";
 import tailwind from "eslint-plugin-tailwindcss";
 
 export default [

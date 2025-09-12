@@ -1,11 +1,8 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const saltRounds = 10;
 const { sendEmail } = require('./sendEmailVerification');
-const twig = require('twig');
-const path = require('path');
 const pool = require('../config/connectBdd');
-
-// COMMENTED OUT BECAUSE OF THE USE OF POSTGRESQL INSTEAD OF MONGODB
 
 class DuplicationError extends Error {
     constructor(message) {
@@ -18,15 +15,11 @@ async function createUser(req, res) {
     try {
         let ipAddress = req.ip;
 
-        // Si derrière un reverse proxy comme Nginx ou un load balancer, utilise :
         ipAddress = req.headers['x-forwarded-for'] || req.ip;
-        // await connectBdd();
         const hash = await bcrypt.hash(req.body.password, saltRounds);
         if (!hash) {
             throw new Error('Password hashing failed');
         }
-        // const emailExist = await User.findOne({ email: req.body.email });
-        // const usernameExist = await User.findOne({ username: req.body.userName });
         const result = await pool.query(
             'SELECT * FROM users WHERE email = $1 OR username = $2',
             [req.body.email, req.body.userName]
@@ -40,18 +33,8 @@ async function createUser(req, res) {
                 throw new DuplicationError('Username already exists');
             }
         }
-        // const user = new User({
-        //     username: req.body.userName,
-        //     email: req.body.email,
-        //     password: hash,
-        //     firstname: req.body.firstName,
-        //     lastname: req.body.lastName,
-        //     refreshToken: new UUID().toString(),
-        // });
         const user = await pool.query('INSERT INTO users (username, email, password, firstname, lastname, refreshToken) VALUES ($1, $2, $3, $4, $5, $6)',
-            [req.body.userName, req.body.email, hash, req.body.firstName, req.body.lastName, new UUID().toString()]);
-        // await sendEmail(user.email, user.refreshToken);
-        // await user.save();
+            [req.body.userName, req.body.email, hash, req.body.firstName, req.body.lastName, crypto.randomUUID()]);
         res.status(201).json({ message: "User created" });
     } catch (error) {
         console.log("Error in createUser", error);
@@ -63,7 +46,6 @@ async function createUser(req, res) {
         else
         {
             res.status(503).json({ message:  error.message });
-            // await User.deleteOne({ email: req.body.email });
             await pool.query('DELETE FROM users WHERE email = $1', [req.body.email]);
         }
     }

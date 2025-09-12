@@ -29,7 +29,7 @@ matcha/
 ### Démarrage rapide avec Docker
 ```bash
 # Installation complète (build + démarrage + initialisation BDD)
-npm run setup
+npm run docker:setup
 
 # Ou étape par étape :
 npm run docker:build     # Construire les images
@@ -148,5 +148,5 @@ psql -h localhost -p 5435 -U postgres -d matcha
 ### Reset complet
 ```bash
 npm run docker:clean    # Supprime tout (containers, volumes, images)
-npm run setup           # Réinstallation complète
+npm run docker:setup           # Réinstallation complète
 ```

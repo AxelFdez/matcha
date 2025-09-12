@@ -11,7 +11,7 @@ const getMessages = async (req, res) => {
       });
     }
 
-    // Verify user has access to this conversation
+    // Vérifier que l'utilisateur fait partie de la conversation
     const conversationCheck = `
       SELECT id FROM chat_conversations 
       WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)
@@ -24,7 +24,7 @@ const getMessages = async (req, res) => {
       });
     }
 
-    // Get all messages for this conversation
+    // Recupérer les messages de la conversation
     const messagesQuery = `
       SELECT 
         cm.id,

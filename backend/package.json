@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "cross-env PGPORT=5435 PGHOST=localhost nodemon ./bin/www"
+    "start": "cross-env PGPORT=5432 PGHOST=localhost nodemon ./bin/www"
   },
   "dependencies": {
     "@faker-js/faker": "^9.3.0",

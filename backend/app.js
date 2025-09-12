@@ -23,7 +23,8 @@ const corsOptions = {
       process.env.FRONT_URL,
       'http://localhost:8080',
       'http://127.0.0.1:8080',
-      'http://frontend:8080'
+      'http://frontend:8080',
+      'http://localhost:8082',
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -32,7 +33,7 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,                    // Permet l'envoi et la réception des cookies
+  credentials: true, // Permet l'envoi et la réception des cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Origin',

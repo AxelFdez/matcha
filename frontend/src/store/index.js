@@ -1,6 +1,5 @@
 import { createStore } from "vuex";
 import { fetchData } from "../config/api";
-// import { get, set } from "core-js/core/dict";
 
 export const store = createStore({
   state: {
@@ -107,12 +106,9 @@ export const store = createStore({
 
     initWebSocket({ commit, state }) {
       const userId = localStorage.getItem("userId");
-      console.log ( "userId on websocket = ", userId);
       commit(
         "setWebSocket",
-        new WebSocket(
-          process.env.VUE_APP_API_URL + "?id=" + userId
-        )
+        new WebSocket(process.env.VUE_APP_WS_URL + '?id=' + userId)
       );
 
       state.ws.onopen = function () {
@@ -160,7 +156,6 @@ export const store = createStore({
       // store.commit('setIsLoading', true);
       console.log("submitRegisterForm", formData);
       try {
-        // Envoyer les données du formulaire au backend Node.js
         const response = await fetchData("/register-form", {
           method: "POST",
           headers: {
@@ -195,7 +190,6 @@ export const store = createStore({
 
 
     async submitLoginForm({ commit, dispatch }, formData) {
-      // commit('setIsLoading', true);
       console.log("submitLoginForm");
 
       try {
@@ -207,7 +201,6 @@ export const store = createStore({
           body: JSON.stringify(formData),
         });
         const responseData = response.data;
-        // console.log(responseData);
         console.log(response);
         switch (response.response.status) {
           case 201:
@@ -241,7 +234,6 @@ export const store = createStore({
             commit("setServerMessage", "serverError");
             break;
         }
-        // Gérer la réponse du backend si nécessaire
       } catch (error) {
         console.error("Error submitting form:", error);
       } finally {
@@ -289,7 +281,6 @@ export const store = createStore({
             console.log('Server Error');
             break;
         }
-        // Gérer la réponse du backend si nécessaire
       } catch (error) {
         console.error("Error submitting form:", error);
       }
@@ -309,7 +300,6 @@ export const store = createStore({
           body: JSON.stringify(formData),
         });
         const responseData = response.data;
-        // console.log(responseData);
         switch (response.response.status) {
           case 200:
             commit("setServerMessage", "emailSent");
@@ -321,7 +311,6 @@ export const store = createStore({
             commit("setServerMessage", "serverError");
             break;
         }
-        // Gérer la réponse du backend si nécessaire
       } catch (error) {
         console.error("Error submitting form:", error);
       } finally {
@@ -361,7 +350,6 @@ export const store = createStore({
           commit("setServerMessage", responseData.alert);
           break;
         }
-        // Gérer la réponse du backend si nécessaire
       } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -373,7 +361,6 @@ export const store = createStore({
   async updateUserInfosForm({ commit }, formData ) {
 
     console.log("updateUserInfosForm");
-    // console.log(formData);
     try {
       const response = await fetchData("/updateUser", {
         method: "POST",
@@ -396,12 +383,10 @@ export const store = createStore({
 
           break;
         }
-        // Gérer la réponse du backend si nécessaire
       } catch (error) {
       console.error("Error submitting form:", error);
       commit('setAlertMessage', 'Une erreur est survenue lors de la soumission du formulaire.');
     } finally {
-      // commit("setIsFormSent", true);
       commit("setIsLoading", false);
       setTimeout(() => {
         commit("clearAlertMessage");

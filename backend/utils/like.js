@@ -100,13 +100,12 @@ async function likeUser(userId, message) {
 		await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [user.famerating, user.id]);
 		await pool.query('UPDATE users SET famerating = $1 WHERE id = $2', [userliked.famerating, userliked.id]);
 
-		// Create conversation automatically on match
+		// Cree la conversation si match
 		try {
 			const conversation = await createConversation(user.id, userliked.id);
 			console.log(`Match detected! Conversation ${conversation.id} created between ${user.username} and ${userliked.username}`);
 		} catch (error) {
 			console.error('Failed to create conversation on match:', error);
-			// Continue execution even if conversation creation fails
 		}
 
 		if (ws && ws.readyState === WebSocket.OPEN) {
