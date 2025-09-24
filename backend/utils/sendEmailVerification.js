@@ -1,16 +1,8 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const twig = require('twig');
 const path = require('path');
 
-let transporter = nodemailer.createTransport({
-  host: 'smtp-mail.outlook.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function renderHTML(template, data) {
   return new Promise((resolve, reject) => {
@@ -28,13 +20,16 @@ async function sendEmail(to, refreshToken) {
 	let subject = 'Matcha : Verify Your Email';
 	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/#/verifyEmail', token: refreshToken});
 	console.log('sending email');
-    let info = await transporter.sendMail({
-      from: '"Matcha Email-Vérif" transcendence-pong@outlook.com',
-      to: to,
+    const { data, error } = await resend.emails.send({
+      from: 'Matcha <onboarding@resend.dev>',
+      to: [to],
       subject: subject,
       html: html
     });
-	console.log('Message sent: %s', info.messageId);
+    if (error) {
+      throw error;
+    }
+	console.log('Message sent: %s', data.id);
   } catch (error) {
 	  console.error(error);
 	throw new Error('Error sending email');
@@ -46,13 +41,16 @@ async function sendEmailResetPassword(to, refreshToken) {
   let subject = 'Matcha : Reset Password';
   let html = await renderHTML('passwordForgot.twig', { url: process.env.FRONT_URL + '/#/resetPasswordPage', token: refreshToken, email: to});
   console.log('sending email');
-    let info = await transporter.sendMail({
-      from: '"Matcha Email-Vérif" transcendence-pong@outlook.com',
-      to: to,
+    const { data, error } = await resend.emails.send({
+      from: 'Matcha <onboarding@resend.dev>',
+      to: [to],
       subject: subject,
       html: html
     });
-	console.log('Message sent: %s', info.messageId);
+    if (error) {
+      throw error;
+    }
+	console.log('Message sent: %s', data.id);
   } catch (error) {
 	console.error(error);
 	throw new Error('Error sending email');

@@ -19,7 +19,16 @@
     "dev": "npm run docker:up && npm run docker:logs",
     "stop": "npm run docker:down"
   },
-  "keywords": ["docker", "matcha", "nodejs", "vue", "postgresql"],
+  "keywords": [
+    "docker",
+    "matcha",
+    "nodejs",
+    "vue",
+    "postgresql"
+  ],
   "author": "Axel Fernandez",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "resend": "^6.1.0"
+  }
 }
