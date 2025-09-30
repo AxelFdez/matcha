@@ -1,184 +1,242 @@
-const pool = require('../config/connectBdd');
+const pool = require("../config/connectBdd");
 
 module.exports = async function browseUsers(req, res) {
-	const { location, tags, ageGap, fameRatingGap, filterBy, sortBy } = req.query;
+  let { location, tags, ageGap, fameRatingGap, filterBy, sortBy } = req.query;
 
-	try {
-		const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [req.user.username]);
-		const user = userResult.rows[0];
+  console.log("BrowseUsers called with:", {
+    location,
+    tags,
+    ageGap,
+    fameRatingGap,
+    filterBy,
+    sortBy,
+  });
 
-		if (!user) {
-			return res.status(404).json({ message: "User not found" });
-		}
+  // Parse les paramètres si nécessaire
+  if (typeof ageGap === "string") {
+    ageGap = JSON.parse(ageGap);
+  }
+  if (typeof fameRatingGap === "string") {
+    fameRatingGap = JSON.parse(fameRatingGap);
+  }
+  if (typeof tags === "string") {
+    tags = JSON.parse(tags);
+  }
+  if (typeof filterBy === "string") {
+    filterBy = JSON.parse(filterBy);
+  }
 
-		const userTags = user.interests;
-		const userLocation = user.location.coordinates;
-		const userId = user.id; // Ensure this is a UUID
+  console.log("Parsed filters:", {
+    location,
+    tags,
+    ageGap,
+    fameRatingGap,
+    filterBy,
+    sortBy,
+  });
 
-	// recupere les utilisateurs qui ont un profil complet et qui n'ont pas été ignorés, likés, matchés ou vus par l'utilisateur courant, et qui ne l'ont pas blacklisté
-		let query = `
+  try {
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [req.user.username]
+    );
+    const user = userResult.rows[0];
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userTags = user.interests;
+    const userLocation = user.location.coordinates;
+    const userId = user.id; // Ensure this is a UUID
+
+    // recupere les utilisateurs qui ont un profil complet et qui n'ont pas été ignorés, likés, matchés ou vus par l'utilisateur courant, et qui ne l'ont pas blacklisté
+    let query = `
       SELECT * FROM users
       WHERE ready = true
       AND id::text != $1::text
 	  AND NOT COALESCE($1::text = ANY(ignoredby), FALSE)
 	  AND NOT COALESCE($1::text = ANY(likedBy), FALSE)
 	  AND NOT COALESCE($1::text = ANY(matcha), FALSE)
---	  AND NOT COALESCE($1::text = ANY(viewedBy), FALSE)
+	  AND NOT COALESCE($1::text = ANY(viewedBy), FALSE)
 	  AND NOT COALESCE($1::text = ANY(blacklist), FALSE)
     `;
 
-		const queryParams = [userId];
-		let paramIndex = 2;
-		let preparedQuery;
+    const queryParams = [userId];
+    let paramIndex = 2;
+    let preparedQuery;
 
-		// ignore les utilisateurs ignorés precedemment
-		// if (user.ignoredby && user.ignoredby.length > 0) {
-		// 	// console.log(user.ignoredby);
-		// 	// query += ' AND id::text != ANY($2::text[])';
-		// query += ` AND id::text != ANY($${paramIndex}::text[])`;
-		// preparedQuery = ' AND $1::text != ANY(ignoreby::text[])';
-		// paramIndex++;
-		// query += preparedQuery;
-		// queryParams.push();
-		// }
+    // ignore les utilisateurs ignorés precedemment
+    if (user.ignoredby && user.ignoredby.length > 0) {
+      // console.log(user.ignoredby);
+      // query += ' AND id::text != ANY($2::text[])';
+      query += ` AND id::text != ANY($${paramIndex}::text[])`;
+      preparedQuery = " AND $1::text != ANY(ignoreby::text[])";
+      paramIndex++;
+      query += preparedQuery;
+      queryParams.push();
+    }
 
-		//test
-		// const test = await pool.query(query, queryParams);
-		// console.log(test.rows);
-		// return res.status(200).json({ users: test.rows });
+    if (
+      user.sexualPreference === "Male" ||
+      user.sexualPreference === "Female"
+    ) {
+      // query += ' AND gender = $2';
+      preparedQuery = " AND gender = $" + paramIndex;
+      paramIndex++;
+      query += preparedQuery;
+      queryParams.push(user.sexualPreference);
+    }
 
+    if (ageGap && (ageGap.min || ageGap.max)) {
+      if (ageGap.min) {
+        preparedQuery = " AND age >= $" + paramIndex;
+        paramIndex++;
+        query += preparedQuery;
+        queryParams.push(ageGap.min);
+      }
+      if (ageGap.max) {
+        preparedQuery = " AND age <= $" + paramIndex;
+        paramIndex++;
+        query += preparedQuery;
+        queryParams.push(ageGap.max);
+      }
+    }
 
-		if (user.sexualPreference === 'Male' || user.sexualPreference === 'Female') {
-			// query += ' AND gender = $2';
-			preparedQuery = ' AND gender = $' + paramIndex;
-			paramIndex++;
-			query += preparedQuery;
-			queryParams.push(user.sexualPreference);
-		}
+    if (fameRatingGap && (fameRatingGap.min || fameRatingGap.max)) {
+      if (fameRatingGap.min) {
+        preparedQuery = " AND fameRating >= $" + paramIndex;
+        paramIndex++;
+        query += preparedQuery;
+        queryParams.push(fameRatingGap.min);
+      }
+      if (fameRatingGap.max) {
+        preparedQuery = " AND fameRating <= $" + paramIndex;
+        paramIndex++;
+        query += preparedQuery;
+        queryParams.push(fameRatingGap.max);
+      }
+    }
 
-		if (ageGap && (ageGap.min || ageGap.max)) {
-			if (ageGap.min) {
-				preparedQuery = ' AND age >= $' + paramIndex;
-				paramIndex++;
-				query += preparedQuery;
-				queryParams.push(ageGap.min);
-			}
-			if (ageGap.max) {
-				preparedQuery = ' AND age <= $' + paramIndex;
-				paramIndex++;
-				query += preparedQuery;
-				queryParams.push(ageGap.max);
-			}
-		}
+    if (tags) {
+      preparedQuery = " AND interests && $" + paramIndex;
+      paramIndex++;
+      query += preparedQuery;
+      queryParams.push(tags);
+    }
 
-		if (fameRatingGap && (fameRatingGap.min || fameRatingGap.max)) {
-			if (fameRatingGap.min) {
-				preparedQuery = ' AND fameRating >= $' + paramIndex;
-				paramIndex++;
-				query += preparedQuery;
-				queryParams.push(fameRatingGap.min);
-			}
-			if (fameRatingGap.max) {
-				preparedQuery = ' AND fameRating <= $' + paramIndex;
-				paramIndex++;
-				query += preparedQuery;
-				queryParams.push(fameRatingGap.max);
-			}
-		}
+    if (location) {
+      const [longitude, latitude] = location.split(",");
+      preparedQuery =
+        " AND ST_DWithin(ST_SetSRID(ST_MakePoint($" +
+        paramIndex +
+        ", $" +
+        (paramIndex + 1) +
+        "), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, 10000)";
+      paramIndex += 2;
+      query += preparedQuery;
+      // 		query += `
+      //     AND ST_DWithin(
+      //       ST_SetSRID(ST_MakePoint($8, $9), 4326)::geography,
+      //       ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
+      //       10000
+      //     )
+      //   `;
+      queryParams.push(longitude, latitude);
+    }
 
-		if (tags) {
-			preparedQuery = ' AND interests && $' + paramIndex;
-			paramIndex++;
-			query += preparedQuery;
-			queryParams.push(tags);
-		}
-
-		if (location) {
-			const [longitude, latitude] = location.split(',');
-			preparedQuery = ' AND ST_DWithin(ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, 10000)';
-			paramIndex += 2;
-			query += preparedQuery;
-	// 		query += `
-    //     AND ST_DWithin(
-    //       ST_SetSRID(ST_MakePoint($8, $9), 4326)::geography,
-    //       ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
-    //       10000
-    //     )
-    //   `;
-			queryParams.push(longitude, latitude);
-		}
-
-		if (filterBy) {
-			if (filterBy.type === 'age') {
-				preparedQuery = ' AND age = $' + paramIndex;
-				paramIndex++;
-				query += preparedQuery;
-				queryParams.push(filterBy.value);
-			} else if (filterBy.type === 'fameRating') {
-				preparedQuery = ' AND fameRating BETWEEN $' + paramIndex + ' AND $' + (paramIndex + 1);
-				paramIndex += 2;
-				query += preparedQuery;
-				queryParams.push(filterBy.value, parseInt(filterBy.value) + 50);
-			} else if (filterBy.type === 'tags') {
-				preparedQuery = ' AND interests && $' + paramIndex;
-				paramIndex++;
-				query += preparedQuery;
-				queryParams.push(filterBy.value);
-			} else if (filterBy.type === 'location') {
-				preparedQuery = ' AND ST_DWithin(ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, $' + (paramIndex + 2) + ')';
-				paramIndex += 3;
-				query += preparedQuery;
-				// query += `
+    if (filterBy) {
+      if (filterBy.type === "age") {
+        preparedQuery = " AND age = $" + paramIndex;
+        paramIndex++;
+        query += preparedQuery;
+        queryParams.push(filterBy.value);
+      } else if (filterBy.type === "fameRating") {
+        preparedQuery =
+          " AND fameRating BETWEEN $" +
+          paramIndex +
+          " AND $" +
+          (paramIndex + 1);
+        paramIndex += 2;
+        query += preparedQuery;
+        queryParams.push(filterBy.value, parseInt(filterBy.value) + 50);
+      } else if (filterBy.type === "tags") {
+        preparedQuery = " AND interests && $" + paramIndex;
+        paramIndex++;
+        query += preparedQuery;
+        queryParams.push(filterBy.value);
+      } else if (filterBy.type === "location") {
+        preparedQuery =
+          " AND ST_DWithin(ST_SetSRID(ST_MakePoint($" +
+          paramIndex +
+          ", $" +
+          (paramIndex + 1) +
+          "), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, $" +
+          (paramIndex + 2) +
+          ")";
+        paramIndex += 3;
+        query += preparedQuery;
+        // query += `
         //   AND ST_DWithin(
         //     ST_SetSRID(ST_MakePoint($14, $15), 4326)::geography,
         //     ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
         //     $16
         //   )
         // `;
-				queryParams.push(userLocation[0], userLocation[1], filterBy.value);
-			}
-		}
+        queryParams.push(userLocation[0], userLocation[1], filterBy.value);
+      }
+    }
 
-		if (sortBy) {
-			if (sortBy === 'ageIncreasing') {
-				query += ' ORDER BY age ASC';
-			} else if (sortBy === 'ageDecreasing') {
-				query += ' ORDER BY age DESC';
-			} else if (sortBy === 'fameRatingIncreasing') {
-				query += ' ORDER BY fameRating ASC';
-			} else if (sortBy === 'fameRatingDecreasing') {
-				query += ' ORDER BY fameRating DESC';
-			} else if (sortBy === 'locationIncreasing') {
-				preparedQuery = ' ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)) ASC';
-				paramIndex += 2;
-				query += preparedQuery;
-				queryParams.push(userLocation[0], userLocation[1]);
-			} else if (sortBy === 'locationDecreasing') {
-				preparedQuery = ' ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($' + paramIndex + ', $' + (paramIndex + 1) + '), 4326)) DESC';
-				paramIndex += 2;
-				query += preparedQuery;
-				queryParams.push(userLocation[0], userLocation[1]);
-			} else if (sortBy === 'tagsIncreasing') {
-				query += ' ORDER BY array_length(interests, 1) ASC';
-			} else if (sortBy === 'tagsDecreasing') {
-				query += ' ORDER BY array_length(interests, 1) DESC';
-			}
-		}
+    if (sortBy) {
+      if (sortBy === "ageIncreasing") {
+        query += " ORDER BY age ASC";
+      } else if (sortBy === "ageDecreasing") {
+        query += " ORDER BY age DESC";
+      } else if (sortBy === "fameRatingIncreasing") {
+        query += " ORDER BY fameRating ASC";
+      } else if (sortBy === "fameRatingDecreasing") {
+        query += " ORDER BY fameRating DESC";
+      } else if (sortBy === "locationIncreasing") {
+        preparedQuery =
+          " ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($" +
+          paramIndex +
+          ", $" +
+          (paramIndex + 1) +
+          "), 4326)) ASC";
+        paramIndex += 2;
+        query += preparedQuery;
+        queryParams.push(userLocation[0], userLocation[1]);
+      } else if (sortBy === "locationDecreasing") {
+        preparedQuery =
+          " ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($" +
+          paramIndex +
+          ", $" +
+          (paramIndex + 1) +
+          "), 4326)) DESC";
+        paramIndex += 2;
+        query += preparedQuery;
+        queryParams.push(userLocation[0], userLocation[1]);
+      } else if (sortBy === "tagsIncreasing") {
+        query += " ORDER BY array_length(interests, 1) ASC";
+      } else if (sortBy === "tagsDecreasing") {
+        query += " ORDER BY array_length(interests, 1) DESC";
+      }
+    }
 
-		query += ' LIMIT 10';
+    query += " LIMIT 10";
 
-		const usersResult = await pool.query(query, queryParams);
-		// console.log(usersResult.rows);
-		const users = usersResult.rows;
+    const usersResult = await pool.query(query, queryParams);
+    // console.log(usersResult.rows);
+    const users = usersResult.rows;
 
-		if (!users.length) {
-			return res.status(404).json({ message: "No users found" });
-		}
-		return res.status(200).json({ users });
-	} catch (error) {
-		console.error("Error in browseUsers:", error);
-		return res.status(500).json({ message: "Internal server error" });
-	}
+    if (!users.length) {
+      return res.status(404).json({ message: "No users found" });
+    }
+    return res.status(200).json({ users });
+  } catch (error) {
+    console.error("Error in browseUsers:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 // const User = require('../models/User');

@@ -4,11 +4,23 @@ const path = require('path');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+async function renderHTML(template, data) {
+	return new Promise((resolve, reject) => {
+		twig.renderFile(path.join(__dirname, '../templates', template), data, (err, html) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(html);
+			}
+		});
+	});
+}
+
 async function sendEmail(to, refreshToken) {
   try {
-	let subject = 'Matcha : Verify Your Email';
-	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/verifyEmailPage', token: refreshToken});
-	console.log('sending email');
+	let subject = 'Matcha : Vérification de votre email';
+	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/VerifyEmailPage/', token: refreshToken});
+	console.log('Sending verification email to:', to);
     const { data, error } = await resend.emails.send({
       from: 'Matcha <onboarding@resend.dev>',
       to: [to],
@@ -18,19 +30,19 @@ async function sendEmail(to, refreshToken) {
     if (error) {
       throw error;
     }
-	console.log('Message sent: %s', data.id);
+	console.log('Verification email sent successfully:', data.id);
   return data;
   } catch (error) {
-	  console.error(error);
+	  console.error('Error sending verification email:', error);
 	throw new Error('Error sending email');
   }
 }
 
 async function sendEmailResetPassword(to, refreshToken) {
   try {
-  let subject = 'Matcha : Reset Password';
-  let html = await renderHTML('passwordForgot.twig', { url: process.env.FRONT_URL + '/#/resetPasswordPage', token: refreshToken, email: to});
-  console.log('sending email');
+  let subject = 'Matcha : Réinitialisation de votre mot de passe';
+  let html = await renderHTML('passwordForgot.twig', { url: process.env.FRONT_URL + '/ResetPasswordPage/', token: refreshToken, email: to});
+  console.log('Sending password reset email to:', to);
     const { data, error } = await resend.emails.send({
       from: 'Matcha <onboarding@resend.dev>',
       to: [to],
@@ -40,11 +52,12 @@ async function sendEmailResetPassword(to, refreshToken) {
     if (error) {
       throw error;
     }
-	console.log('Message sent: %s', data.id);
+	console.log('Password reset email sent successfully:', data.id);
+	return data;
   } catch (error) {
-	console.error(error);
+	console.error('Error sending password reset email:', error);
 	throw new Error('Error sending email');
   }
 }
 
-module.exports = { sendEmail, sendEmailResetPassword };
+module.exports = { sendEmail, sendEmailResetPassword, renderHTML };
