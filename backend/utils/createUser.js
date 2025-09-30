@@ -33,8 +33,13 @@ async function createUser(req, res) {
                 throw new DuplicationError('Username already exists');
             }
         }
+        const verificationToken = crypto.randomUUID();
         const user = await pool.query('INSERT INTO users (username, email, password, firstname, lastname, refreshToken) VALUES ($1, $2, $3, $4, $5, $6)',
-            [req.body.userName, req.body.email, hash, req.body.firstName, req.body.lastName, crypto.randomUUID()]);
+            [req.body.userName, req.body.email, hash, req.body.firstName, req.body.lastName, verificationToken]);
+        const emailSent = await sendEmail(req.body.email, verificationToken);
+        if (!emailSent) {
+            throw new Error('Failed to send verification email');
+        }
         res.status(201).json({ message: "User created" });
     } catch (error) {
         console.log("Error in createUser", error);

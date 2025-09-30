@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Scripts Docker pour le projet Matcha",
   "scripts": {
-    "docker:setup": "npm run docker:build && npm run docker:up && npm run docker:db:init && npm run docker:db:seed",
+    "docker:setup": "test -f .env && npm run docker:build && npm run docker:up && npm run docker:db:init && npm run docker:db:seed || (echo 'Erreur: le fichier .env est manquant' && exit 1)",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

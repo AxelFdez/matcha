@@ -37,7 +37,7 @@ router.post('/reSendEmail', verifyToken, require('../utils/reSendEmail'), (req, 
 // OK
 router.post('/resetEmail', verifyToken, require('../utils/resetEmail'), (req, res) => {});
 // OK
-router.get('/verifyEmail', require('../utils/verifyEmail'), (req, res) => {});
+router.post('/verifyEmail', require('../utils/verifyEmail'), (req, res) => {});
 // OK
 router.post('/updateUser', verifyToken, upload.array('photos', 5), require('../utils/updateUser'), (req, res) => {});
 // OK

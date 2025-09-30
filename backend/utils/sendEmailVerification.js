@@ -4,21 +4,10 @@ const path = require('path');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-async function renderHTML(template, data) {
-  return new Promise((resolve, reject) => {
-	twig.renderFile(path.join(__dirname, '../templates/' + template), data, (err, html) => {
-	  if (err) {
-		reject(err);
-	  }
-	  resolve(html);
-	});
-  });
-}
-
 async function sendEmail(to, refreshToken) {
   try {
 	let subject = 'Matcha : Verify Your Email';
-	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/#/verifyEmail', token: refreshToken});
+	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/verifyEmailPage', token: refreshToken});
 	console.log('sending email');
     const { data, error } = await resend.emails.send({
       from: 'Matcha <onboarding@resend.dev>',
@@ -30,6 +19,7 @@ async function sendEmail(to, refreshToken) {
       throw error;
     }
 	console.log('Message sent: %s', data.id);
+  return data;
   } catch (error) {
 	  console.error(error);
 	throw new Error('Error sending email');

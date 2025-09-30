@@ -30,11 +30,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - IPINFO_TOKEN=${IPINFO_TOKEN}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_PORT=${EMAIL_PORT}
-      - EMAIL_USER=${EMAIL_USER}
-      - EMAIL_PASS=${EMAIL_PASS}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
