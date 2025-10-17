@@ -20,7 +20,6 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      process.env.FRONT_URL,
       'http://localhost:8080',
       'http://127.0.0.1:8080',
       'http://frontend:8080',

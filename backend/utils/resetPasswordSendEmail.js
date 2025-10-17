@@ -10,7 +10,7 @@ async function resetPasswordSendEmail(req, res) {
 			return res.status(404).json({ message: "email not match" });
 		}
 
-		const newToken = new UUID().toString();
+		const newToken = require('crypto').randomUUID();
 		await pool.query('UPDATE users SET refreshToken = $1 WHERE email = $2', [newToken, email]);
 
 		await sendEmailResetPassword(email, newToken);

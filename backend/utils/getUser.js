@@ -15,8 +15,9 @@ async function getUser(req, res) {
 			return res.status(401).json({ message: "User not verified" });
 		}
 
-		userProfile = new UserProfile(user);
-		res.status(200).json({ user: userProfile.getProfile() });
+		const userProfile = new UserProfile(user);
+		const profile = userProfile.getProfile();
+		res.status(200).json({ user: profile });
 	} catch (error) {
 		console.error("Error in getUser:", error);
 		res.status(500).json({ message: "Server error" });

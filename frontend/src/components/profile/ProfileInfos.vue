@@ -42,7 +42,7 @@
             </div>
             <div class="btn--row pt-2">
                 <div class="btn--col">
-                    <h4 class="input--needed">Genre<span v-if="!formData.gender && !$store.getters.getGender">&#9733;</span></h4>
+                    <h4 class="input--needed">Genre<span v-if="!formData.gender && $store.getters.getGender === 'None'">&#9733;</span></h4>
                     <button id="male" type="button" @click="setGender('Male')" :class="{
                         'btn--pushed':
                             formData.gender === 'Male' ||

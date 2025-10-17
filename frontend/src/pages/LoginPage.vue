@@ -6,10 +6,29 @@
 
   <script>
   import LoginForm from '../components/forms/LoginForm.vue';
+  import { computed, onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { useStore } from 'vuex';
+
   export default {
     name: "LoginPage",
     components: {
       LoginForm,
+    },
+    setup() {
+      const router = useRouter();
+      const store = useStore();
+      const isConnected = computed(() => store.state.is_connected);
+
+      onMounted(() => {
+        // Vérifier si l'utilisateur est déjà connecté
+        if (isConnected.value) {
+          console.log('User already logged in, redirecting to MainPage...');
+          router.push('/');
+        }
+      });
+
+      return {};
     }
   };
   </script>

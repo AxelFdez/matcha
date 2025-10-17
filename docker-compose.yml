@@ -30,7 +30,7 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - IPINFO_TOKEN=${IPINFO_TOKEN}
-      - RESEND_API_KEY=${RESEND_API_KEY}
+      - BREVO_API_KEY=${BREVO_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

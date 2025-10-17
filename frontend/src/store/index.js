@@ -8,6 +8,7 @@ export const store = createStore({
     first_name: "",
     last_name: "",
     verified: false,
+    ready: false,
     email: "",
     age: '',
     gender: '',
@@ -36,6 +37,7 @@ export const store = createStore({
     getFirstName(state) { return state.first_name; },
     getLastName(state) { return state.last_name; },
     getVerified(state) { return state.verified; },
+    getReady(state) { return state.ready; },
     getEmail(state) { return state.email; },
     getAge(state) { return state.age; },
     getGender(state) { return state.gender; },
@@ -68,6 +70,7 @@ export const store = createStore({
     setLastName(state, value) { state.last_name = value; },
     setEmail(state, value) { state.email = value; },
     setVerified(state, value) { state.verified = value; },
+    setReady(state, value) { state.ready = value; },
     setAge(state, value) { state.age = value; },
     setGender(state, value) { state.gender = value; },
     setSexPref(state, value) { state.sex_pref = value; },
@@ -209,7 +212,6 @@ export const store = createStore({
             localStorage.setItem("userId", responseData.user.id);
             localStorage.setItem("userName", responseData.user.username);
             localStorage.setItem("is_ready", responseData.user.ready);
-            console.log("is_ready = ", responseData.user.ready);
             commit("setUserName", localStorage.getItem("userName"));
             if (responseData.user.verified === false) {
               commit("setServerMessage", "emailNotVerif");
@@ -242,7 +244,7 @@ export const store = createStore({
       }
     },
 
-    async getUserInfos({commit, dispatch}, username ) {
+    async getUserInfos({commit, dispatch, state}, username ) {
 
       console.log("getUserInfos");
       dispatch("initWebSocket");
@@ -257,7 +259,7 @@ export const store = createStore({
 
         });
         const responseData = response.data;
-        // console.log('response = ', responseData);
+        console.log('[DEBUG getUserInfos] responseData.user.ready:', responseData.user.ready, 'type:', typeof responseData.user.ready);
         switch (response.response.status) {
           case 200:
             commit("setUserName", responseData.user.username);
@@ -265,10 +267,10 @@ export const store = createStore({
             commit("setLastName", responseData.user.lastname);
             commit("setEmail", responseData.user.email);
             commit("setVerified", responseData.user.verified);
-            commit("setIsReady", responseData.user.ready);
-            console.log("is_ready = ", responseData.user.ready);
+            commit("setReady", responseData.user.ready);
             commit("setAge", responseData.user.age);
             commit("setGender", responseData.user.gender);
+            console.log('[DEBUG getUserInfos] Gender:', responseData.user.gender);
             commit("setSexPref", responseData.user.sexualPreferences);
             commit("setBio", responseData.user.biography);
             commit("setInterests", responseData.user.interests);

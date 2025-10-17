@@ -101,7 +101,7 @@ Environment variables required:
 - `VUE_APP_API_URL` for frontend API calls
 - `VUE_APP_WS_URL` for WebSocket connections
 - `JWT_SECRET` for token signing
-- `RESEND_API_KEY` for email sending via Resend
+- `BREVO_API_KEY` for email sending via Brevo API
 
 ### Docker Services
 The application runs in containers with the following services:

@@ -1,5 +1,14 @@
-a<template>
+<template>
   <div v-if="this.$store.getters.getIsConnected" class="profile--page fade-In">
+    <InfoModal
+      :show="showInfoModal"
+      title="Complétez votre profil"
+      message="Pour accéder à la plateforme et découvrir d'autres utilisateurs, vous devez d'abord compléter votre profil avec les informations suivantes :"
+      :requirements="profileRequirements"
+      buttonText="Compris, je complète mon profil"
+      iconClass="fas fa-info-circle info-icon"
+      @close="handleModalClose"
+    />
     <div class="profile--main--container">
       <div v-if="alert" :class="['alert', alert.type]">
         {{ alert.message }}
@@ -19,11 +28,25 @@ a<template>
 <script>
 import ProfileInfos from '@/components/profile/ProfileInfos.vue'
 import ProfilePictures from '@/components/profile/ProfilePictures.vue'
+import InfoModal from '@/components/InfoModal.vue'
+
 export default {
-  name: "MainPage",
+  name: "ProfilePage",
   components: {
     ProfileInfos,
     ProfilePictures,
+    InfoModal,
+  },
+  data() {
+    return {
+      showInfoModal: false,
+      profileRequirements: [
+        'Âge renseigné',
+        'Genre défini',
+        'Au moins un centre d\'intérêt',
+        'Au moins une photo de profil'
+      ]
+    };
   },
   computed: {
     alert() {
@@ -31,7 +54,24 @@ export default {
       return this.$store.getters.getAlertMessage;
     }
   },
+  mounted() {
+    // Vérifier si le paramètre setup=true est présent dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const setupComplete = urlParams.get('setup');
 
+    if (setupComplete === 'true') {
+      this.showInfoModal = true;
+      // Nettoyer l'URL en enlevant le paramètre
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  },
+  methods: {
+    handleModalClose() {
+      this.showInfoModal = false;
+      // L'utilisateur reste sur la ProfilePage pour compléter son profil
+    }
+  }
 };
 </script>
 

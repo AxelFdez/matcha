@@ -21,9 +21,8 @@
 
 <script>
 import { ref, computed } from "vue";
-import { useStore } from "vuex"; // Importer useStore
-import { useRouter } from "vue-router"; // Importer useRouter pour la navigation
-// import TextButton from '@/components/TextButton.vue';
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 import { fetchData } from "@/config/api";
 import { useRoute } from 'vue-router';
 
@@ -34,8 +33,8 @@ export default {
   // TextButton,
   // },
   setup() {
-    const store = useStore(); // Obtenir l'instance du store
-    const router = useRouter(); // Obtenir l'instance du routeur
+    const store = useStore();
+    const router = useRouter();
     const route = useRoute();
 
     const maxLength = 15;
@@ -54,7 +53,7 @@ export default {
     });
 
     // Propriété pour afficher un message de succès
-    const passwordResetAction = ref(0);
+    const passwordResetAction = ref({ type: null, message: '' });
 
     // Méthode asynchrone pour soumettre le formulaire
     async function submitForm(event) {
@@ -91,7 +90,7 @@ export default {
       } finally {
         store.commit('setIsLoading', false);
         setTimeout(() => {
-          passwordResetAction.value = 0;
+          passwordResetAction.value = { type: null, message: '' };
           // Naviguer vers la page de connexion après le message
           router.push({ name: "LoginPage" });
         }, 5000);

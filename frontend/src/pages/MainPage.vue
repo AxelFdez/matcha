@@ -20,6 +20,7 @@ import FilterBar from '@/components/FilterBar.vue';
 import { fetchData } from '../config/api';
 import { ref, computed, watch, onMounted } from "vue";
 import { useStore } from 'vuex';
+import { useRouter } from 'vue-router';
 
 export default {
   name: "MainPage",
@@ -29,8 +30,9 @@ export default {
   },
   setup() {
     const store = useStore();
+    const router = useRouter();
     const user = computed(() => store.state);
-    const userReady = computed(() => user.value && user.value.is_ready);
+    const userReady = computed(() => user.value?.ready);
     const ws = computed(() => store.getters.getWebSocket);
 
     const tenUsers = ref([]);
@@ -104,6 +106,7 @@ export default {
     onMounted(() => {
       if (!userReady.value) {
         store.commit('setIsLoadingStartApp', false);
+        router.push('/ProfilePage?setup=true');
         return;
       }
       getTenUsers();

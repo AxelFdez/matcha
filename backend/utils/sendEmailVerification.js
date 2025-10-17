@@ -1,8 +1,9 @@
-const { Resend } = require('resend');
+const brevo = require('@getbrevo/brevo');
 const twig = require('twig');
 const path = require('path');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 async function renderHTML(template, data) {
 	return new Promise((resolve, reject) => {
@@ -19,19 +20,18 @@ async function renderHTML(template, data) {
 async function sendEmail(to, refreshToken) {
   try {
 	let subject = 'Matcha : Vérification de votre email';
-	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/VerifyEmailPage/', token: refreshToken});
+	let html = await renderHTML('mailVerif.twig', { url: process.env.FRONT_URL + '/VerifyEmailPage', token: refreshToken});
 	console.log('Sending verification email to:', to);
-    const { data, error } = await resend.emails.send({
-      from: 'Matcha <onboarding@resend.dev>',
-      to: [to],
-      subject: subject,
-      html: html
-    });
-    if (error) {
-      throw error;
-    }
-	console.log('Verification email sent successfully:', data.id);
-  return data;
+
+	const sendSmtpEmail = new brevo.SendSmtpEmail();
+	sendSmtpEmail.sender = { name: 'Matcha', email: 'axesnake06@gmail.com' };
+	sendSmtpEmail.to = [{ email: to }];
+	sendSmtpEmail.subject = subject;
+	sendSmtpEmail.htmlContent = html;
+
+	const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+	console.log('Verification email sent successfully:', data);
+	return data;
   } catch (error) {
 	  console.error('Error sending verification email:', error);
 	throw new Error('Error sending email');
@@ -40,19 +40,18 @@ async function sendEmail(to, refreshToken) {
 
 async function sendEmailResetPassword(to, refreshToken) {
   try {
-  let subject = 'Matcha : Réinitialisation de votre mot de passe';
-  let html = await renderHTML('passwordForgot.twig', { url: process.env.FRONT_URL + '/ResetPasswordPage/', token: refreshToken, email: to});
-  console.log('Sending password reset email to:', to);
-    const { data, error } = await resend.emails.send({
-      from: 'Matcha <onboarding@resend.dev>',
-      to: [to],
-      subject: subject,
-      html: html
-    });
-    if (error) {
-      throw error;
-    }
-	console.log('Password reset email sent successfully:', data.id);
+	let subject = 'Matcha : Réinitialisation de votre mot de passe';
+	let html = await renderHTML('passwordForgot.twig', { url: process.env.FRONT_URL + '/ResetPasswordPage', token: refreshToken, email: to});
+	console.log('Sending password reset email to:', to);
+
+	const sendSmtpEmail = new brevo.SendSmtpEmail();
+	sendSmtpEmail.sender = { name: 'Matcha', email: 'axesnake06@gmail.com' };
+	sendSmtpEmail.to = [{ email: to }];
+	sendSmtpEmail.subject = subject;
+	sendSmtpEmail.htmlContent = html;
+
+	const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+	console.log('Password reset email sent successfully:', data.messageId);
 	return data;
   } catch (error) {
 	console.error('Error sending password reset email:', error);
