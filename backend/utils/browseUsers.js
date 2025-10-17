@@ -35,6 +35,8 @@ module.exports = async function browseUsers(req, res) {
     sortBy,
   });
 
+  console.log("Requesting browseUsers for:", req.user.username);  
+
   try {
     const userResult = await pool.query(
       "SELECT * FROM users WHERE username = $1",
@@ -48,7 +50,7 @@ module.exports = async function browseUsers(req, res) {
 
     const userTags = user.interests;
     const userLocation = user.location.coordinates;
-    const userId = user.id; // Ensure this is a UUID
+    const userId = user.id;
 
     // recupere les utilisateurs qui ont un profil complet et qui n'ont pas été ignorés, likés, matchés ou vus par l'utilisateur courant, et qui ne l'ont pas blacklisté
     let query = `
@@ -63,19 +65,8 @@ module.exports = async function browseUsers(req, res) {
     `;
 
     const queryParams = [userId];
-    let paramIndex = 2;
+    let paramIndex = 1;
     let preparedQuery;
-
-    // ignore les utilisateurs ignorés precedemment
-    if (user.ignoredby && user.ignoredby.length > 0) {
-      // console.log(user.ignoredby);
-      // query += ' AND id::text != ANY($2::text[])';
-      query += ` AND id::text != ANY($${paramIndex}::text[])`;
-      preparedQuery = " AND $1::text != ANY(ignoreby::text[])";
-      paramIndex++;
-      query += preparedQuery;
-      queryParams.push();
-    }
 
     if (
       user.sexualPreference === "Male" ||

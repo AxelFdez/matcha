@@ -1,11 +1,10 @@
 <template>
-  <div class="header-container bg-zinc-900">
-    <div class="header">
+  <div class="header bg-zinc-900">
       <TitleCmp />
 
       <div class="buttons--container">
         <div class="buttons">
-          <LangSelectBtn />
+          <!-- <LangSelectBtn /> -->
 
           <ConnectBtn v-if="!$store.getters.getIsConnected" />
           <button v-if="$store.getters.getIsConnected" @click="toggleSidebar" class="burger-btn">
@@ -22,7 +21,6 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script>
@@ -72,45 +70,27 @@ export default {
 </script>
 
 <style lang="scss">
-.header-container {
-  position: fixed;
-  z-index: 1000;
-  width: 100%;
-  height: 90px;
 
   .header {
     position: fixed;
 
     width: 100%;
     max-width: 1600px;
-    height: 100px;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    box-sizing: border-box;
     display: flex;
     align-items: top;
     justify-content: space-between;
 
     z-index: 1100;
-    /* Ajoutez le dégradé noir transparent */
-    // background-image: linear-gradient(
-    //   to bottom,
-    //   rgb(0, 0, 0) 5%,
-    //   rgba(0, 0, 0, 0)
-    //   );
 
     .buttons--container {
       display: flex;
       align-items: top;
-      margin-top: 15px;
 
       .buttons {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-right: 10px;
-        height: fit-content;
         width: auto;
       }
 
@@ -119,14 +99,12 @@ export default {
 
         .buttons {
           margin-right: 10px;
-          margin-top: 0px;
           display: grid;
           align-items: center;
         }
       }
     }
   }
-}
 .burger-btn {
   text-decoration: none;
   display: flex;

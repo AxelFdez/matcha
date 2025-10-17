@@ -192,7 +192,7 @@ export default {
 <style scoped>
 .filter-bar {
   width: 100%;
-  margin-bottom: 2rem;
+  margin-top: 3rem;
 }
 
 .filter-container {
