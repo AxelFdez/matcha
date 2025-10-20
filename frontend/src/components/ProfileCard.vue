@@ -2,9 +2,8 @@
 <template>
   <div class="justify-items-center overflow-auto">
     <div
-      class="card-container mt-14 max-w-2xl justify-items-center rounded-xl p-4 shadow-lg"
+      class="card-container mt-8 max-w-2xl justify-items-center rounded-xl p-4 shadow-lg"
     >
-      <!-- <carousel :user="user"></carousel> -->
       <swiper
         :modules="modules"
         :slides-per-view="1"

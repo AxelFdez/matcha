@@ -57,7 +57,7 @@ async function updateUser(req, res) {
 			updates.age = req.body.age;
 		}
 		if (req.body.interests) {
-			// console.log(req.body.interests);
+			console.log(req.body.interests);
 			for (let i = 0; i < req.body.interests.length; i++) {
 				if (!req.body.interests[i].startsWith("#")) {
 					return res.status(400).json({ alert: { type: "warning", message: "Invalid interest" } });

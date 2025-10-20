@@ -259,7 +259,6 @@ export const store = createStore({
 
         });
         const responseData = response.data;
-        console.log('[DEBUG getUserInfos] responseData.user.ready:', responseData.user.ready, 'type:', typeof responseData.user.ready);
         switch (response.response.status) {
           case 200:
             commit("setUserName", responseData.user.username);
@@ -270,7 +269,6 @@ export const store = createStore({
             commit("setReady", responseData.user.ready);
             commit("setAge", responseData.user.age);
             commit("setGender", responseData.user.gender);
-            console.log('[DEBUG getUserInfos] Gender:', responseData.user.gender);
             commit("setSexPref", responseData.user.sexualPreferences);
             commit("setBio", responseData.user.biography);
             commit("setInterests", responseData.user.interests);
@@ -362,7 +360,7 @@ export const store = createStore({
 
   async updateUserInfosForm({ commit }, formData ) {
 
-    console.log("updateUserInfosForm");
+    console.log("updateUserInfosForm", JSON.stringify(formData));
     try {
       const response = await fetchData("/updateUser", {
         method: "POST",

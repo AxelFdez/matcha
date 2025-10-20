@@ -15,9 +15,15 @@ module.exports = async function browseUsers(req, res) {
   // Parse les paramètres si nécessaire
   if (typeof ageGap === "string") {
     ageGap = JSON.parse(ageGap);
+    // Convert string values to numbers
+    if (ageGap && ageGap.min !== undefined) ageGap.min = Number(ageGap.min);
+    if (ageGap && ageGap.max !== undefined) ageGap.max = Number(ageGap.max);
   }
   if (typeof fameRatingGap === "string") {
     fameRatingGap = JSON.parse(fameRatingGap);
+    // Convert string values to numbers
+    if (fameRatingGap && fameRatingGap.min !== undefined) fameRatingGap.min = Number(fameRatingGap.min);
+    if (fameRatingGap && fameRatingGap.max !== undefined) fameRatingGap.max = Number(fameRatingGap.max);
   }
   if (typeof tags === "string") {
     tags = JSON.parse(tags);
@@ -65,7 +71,7 @@ module.exports = async function browseUsers(req, res) {
     `;
 
     const queryParams = [userId];
-    let paramIndex = 1;
+    let paramIndex = 2; // Start at 2 because $1 is already used for userId
     let preparedQuery;
 
     if (
@@ -81,12 +87,14 @@ module.exports = async function browseUsers(req, res) {
 
     if (ageGap && (ageGap.min || ageGap.max)) {
       if (ageGap.min) {
+        console.log('Pushing ageGap.min:', ageGap.min, 'type:', typeof ageGap.min);
         preparedQuery = " AND age >= $" + paramIndex;
         paramIndex++;
         query += preparedQuery;
         queryParams.push(ageGap.min);
       }
       if (ageGap.max) {
+        console.log('Pushing ageGap.max:', ageGap.max, 'type:', typeof ageGap.max);
         preparedQuery = " AND age <= $" + paramIndex;
         paramIndex++;
         query += preparedQuery;
@@ -216,6 +224,9 @@ module.exports = async function browseUsers(req, res) {
 
     query += " LIMIT 10";
 
+    console.log('SQL Query:', query);
+    console.log('Query Params:', queryParams);
+    console.log('Query Params types:', queryParams.map(p => typeof p));
     const usersResult = await pool.query(query, queryParams);
     // console.log(usersResult.rows);
     const users = usersResult.rows;

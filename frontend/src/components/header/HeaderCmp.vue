@@ -75,7 +75,6 @@ export default {
     position: fixed;
 
     width: 100%;
-    max-width: 1600px;
     display: flex;
     align-items: top;
     justify-content: space-between;

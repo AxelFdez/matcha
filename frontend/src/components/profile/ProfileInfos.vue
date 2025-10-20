@@ -103,7 +103,6 @@ import { ref, watch } from "vue";
 import { useStore } from "vuex";
 import TextButton from "@/components/TextButton.vue";
 import { fetchData } from "@/config/api";
-// import { set } from "core-js/core/dict";
 
 export default {
     name: "ProfileInfos",
@@ -129,7 +128,6 @@ export default {
             setTimeout(() => {
                 passwordResetAction.value = false;
             }, 5000);
-        //  const responseData = await response.json();
         }
 
         const formData = ref({
@@ -192,7 +190,9 @@ export default {
             passwordResetAction,
         };
     },
-    mounted() {
+    async mounted() {
+        // Load available tags from API
+        await this.loadAvailableTags();
         // add existing interests
         this.addTags();
     },
@@ -204,6 +204,21 @@ export default {
         };
     },
     methods: {
+        async loadAvailableTags() {
+            try {
+                const response = await fetchData('/getAllTags', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                if (response && response.data && response.data.tags) {
+                    this.options = response.data.tags;
+                }
+            } catch (error) {
+                console.error('Error loading tags:', error);
+            }
+        },
         addNewTag(newTag) {
             const tag = newTag.startsWith("#") ? newTag : `#${newTag}`;
             if (!this.options.includes(tag)) {
