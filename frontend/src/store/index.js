@@ -269,7 +269,7 @@ export const store = createStore({
             commit("setReady", responseData.user.ready);
             commit("setAge", responseData.user.age);
             commit("setGender", responseData.user.gender);
-            commit("setSexPref", responseData.user.sexualPreferences);
+            commit("setSexPref", responseData.user.sexualpreferences);
             commit("setBio", responseData.user.biography);
             commit("setInterests", responseData.user.interests);
             commit("setPhotos", responseData.user.photos);
@@ -283,6 +283,22 @@ export const store = createStore({
         }
       } catch (error) {
         console.error("Error submitting form:", error);
+      } finally {
+        console.groupCollapsed("User Infos fetched");
+        console.log("Username:", state.user_name);
+        console.log("First Name:", state.first_name);
+        console.log("Last Name:", state.last_name);
+        console.log("Email:", state.email);
+        console.log("Verified:", state.verified);
+        console.log("Ready:", state.ready);
+        console.log("Age:", state.age);
+        console.log("Gender:", state.gender);
+        console.log("Sexual Preferences:", state.sex_pref);
+        console.log("Bio:", state.bio);
+        console.log("Interests:", state.interests);
+        console.log("Photos:", state.photos);
+        console.groupEnd();
+        // commit("setIsLoading", false);
       }
     },
 

@@ -5,12 +5,12 @@
             <div class="form-row">
                 <div class="form-col">
                     <label for="firstName">Prénom</label>
-                    <input v-model="formData.firstName" id="firstName" type="text" name="firstName"
+                    <input v-model="formData.firstname" id="firstname" type="text" name="firstname"
                         :placeholder="$store.getters.getFirstName" :maxlength="15" />
                 </div>
                 <div class="form-col">
                     <label for="lastName">Nom</label>
-                    <input v-model="formData.lastName" id="lastName" type="text" name="lastName"
+                    <input v-model="formData.lastname" id="lastname" type="text" name="lastname"
                         :placeholder="$store.getters.getLastName" :maxlength="15" />
                 </div>
             </div>
@@ -43,34 +43,34 @@
             <div class="btn--row pt-2">
                 <div class="btn--col">
                     <h4 class="input--needed">Genre<span v-if="!formData.gender && $store.getters.getGender === 'None'">&#9733;</span></h4>
-                    <button id="male" type="button" @click="setGender('Male')" :class="{
+                    <button id="male" type="button" @click="setGender('male')" :class="{
                         'btn--pushed':
-                            formData.gender === 'Male' ||
-                            $store.getters.getGender === 'Male',
+                            formData.gender === 'male' ||
+                            $store.getters.getGender === 'male',
                     }">
                         Homme
                     </button>
-                    <button id="female" type="button" @click="setGender('Female')" :class="{
+                    <button id="female" type="button" @click="setGender('female')" :class="{
                         'btn--pushed':
-                            formData.gender === 'Female' ||
-                            $store.getters.getGender === 'Female',
+                            formData.gender === 'female' ||
+                            $store.getters.getGender === 'female',
                     }">
                         Femme
                     </button>
                 </div>
                 <div class="btn--col">
                     <h4>Intéressé(e) par</h4>
-                    <button type="button" @click="setSexualPref('Male', 0)" :class="{
+                    <button type="button" @click="setSexualPref('male', 0)" :class="{
                         'btn--pushed':
-                            formData.sexualPreferences[0] === 'Male' ||
-                            $store.getters.getSexPref === 'Male',
+                            formData.sexualpreferences[0] === 'male' ||
+                            $store.getters.getSexPref === 'male',
                     }">
                         Homme
                     </button>
-                    <button type="button" @click="setSexualPref('Female', 1)" :class="{
+                    <button type="button" @click="setSexualPref('female', 1)" :class="{
                         'btn--pushed':
-                            formData.sexualPreferences[1] === 'Female' ||
-                            $store.getters.getSexPref === 'Female',
+                            formData.sexualpreferences[1] === 'female' ||
+                            $store.getters.getSexPref === 'female',
                     }">
                         Femme
                     </button>
@@ -131,21 +131,24 @@ export default {
         }
 
         const formData = ref({
-            firstName: "",
-            lastName: "",
+            firstname: "",
+            lastname: "",
             biography: "",
             gender: "",
-            sexualPreferences: ["", ""],
+            sexualpreferences: ["", ""],
             age: "",
             interests: [],
         });
 
-        const sexualPreferences = store.getters.getSexPref;
-        if (sexualPreferences === "Female") {
-            formData.value.sexualPreferences[1] = sexualPreferences;
+        const sexualpreferences = store.getters.getSexPref;
+        if (sexualpreferences.includes("female")) {
+            formData.value.sexualpreferences[1] = sexualpreferences;
         }
-        else if (sexualPreferences === "Male") {
-            formData.value.sexualPreferences[0] = sexualPreferences;
+        else if (sexualpreferences.includes("male")) {
+            formData.value.sexualpreferences[0] = sexualpreferences;
+        } else if (sexualpreferences === "both") {
+            formData.value.sexualpreferences[0] = "male";
+            formData.value.sexualpreferences[1] = "female";
         }
 
         const agePlaceholder = store.getters.getAge;
@@ -242,21 +245,21 @@ export default {
         setSexualPref(value, index) {
             const store = this.$store;
             if (store.getters.getSexPref === value) {
-                this.formData.sexualPreferences[index] = store.getters.getSexPref;
+                this.formData.sexualpreferences[index] = store.getters.getSexPref;
                 store.commit("setSexPref", "");
             }
-            console.log("setSexualPref function ", value, index);
+            // console.log("setSexualPref function ", value, index);
             // console.log("store.getters.getSexPref = ", store.getters.getSexPref);
-            // if (store.getters.getSexPref === value) {
-                // store.commit("setSexPref", "");
-            // }
+            if (store.getters.getSexPref === value) {
+                store.commit("setSexPref", "");
+            }
             // console.log("store.getters.getSexPref = ", store.getters.getSexPref);
             // console.log("form before ", this.formData.sexualPreferences[index]);
-            if (!this.formData.sexualPreferences[index]) {
-                this.formData.sexualPreferences[index] = value;
+            if (!this.formData.sexualpreferences[index]) {
+                this.formData.sexualpreferences[index] = value;
             } else {
                 console.log("I passed here")
-                this.formData.sexualPreferences[index] = "";
+                this.formData.sexualpreferences[index] = "";
             }
             // console.log("form ", this.formData.sexualPreferences[index]);
         },
@@ -283,16 +286,16 @@ export default {
             }
             if (
                 this.formData.age ||
-                this.formData.firstName ||
-                this.formData.lastName ||
+                this.formData.firstname ||
+                this.formData.lastname ||
                 this.formData.biography ||
                 this.formData.interests.length !== this.$store.getters.getInterests.length ||
-                this.formData.sexualPreferences[0] ||
-                this.formData.sexualPreferences[1] ||
+                this.formData.sexualpreferences[0] ||
+                this.formData.sexualpreferences[1] ||
 
                 // (!this.formData.sexualPreferences[0] && !this.formData.sexualPreferences[1]) ||
                 this.formData.gender ||
-                (!this.formData.sexualPreferences[0] && !this.formData.sexualPreferences[1])
+                (!this.formData.sexualpreferences[0] && !this.formData.sexualpreferences[1])
             ) {
                 return true;
             }
