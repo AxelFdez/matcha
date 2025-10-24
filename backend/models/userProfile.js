@@ -8,17 +8,17 @@ class UserProfile {
 		this.verified = user.verified;
 		this.ready = user.ready;
 		this.email = user.email;
-		this.lastConnection = user.lastConnection;
+		this.lastconnection = user.lastconnection;
 		this.gender = user.gender;
-		this.sexualPreferences = user.sexualPreferences;
+		this.sexualpreferences = user.sexualpreferences;
 		this.biography = user.biography;
 		this.age = user.age;
 		this.interests = user.interests;
 		this.photos = user.photos;
-		this.profilePicture = user.profilePicture;
-		this.fameRating = user.fameRating;
+		this.profilepicture = user.profilepicture;
+		this.famerating = user.famerating;
 		this.location = user.location;
-		this.createdAt = user.createdAt;
+		this.createdat = user.createdat;
 	}
 
 	getProfile(){
@@ -30,17 +30,17 @@ class UserProfile {
 			connected: this.connected,
 			verified: this.verified,
 			ready: this.ready,
-			lastConnection: this.lastConnection,
+			lastconnection: this.lastconnection,
 			gender: this.gender,
-			sexualPreferences: this.sexualPreferences,
+			sexualpreferences: this.sexualpreferences,
 			biography: this.biography,
 			age: this.age,
 			interests: this.interests,
 			photos: this.photos,
-			profilePicture: this.profilePicture,
-			fameRating: this.fameRating,
+			profilepicture: this.profilepicture,
+			famerating: this.famerating,
 			location: this.location,
-			createdAt: this.createdAt
+			createdat: this.createdat
 		};
 	}
 

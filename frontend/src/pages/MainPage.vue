@@ -59,7 +59,10 @@ export default {
       const params = new URLSearchParams();
 
       if (filters.ageGap && (filters.ageGap.min || filters.ageGap.max)) {
-        params.append('ageGap', JSON.stringify(filters.ageGap));
+        console.log('ageGap before stringify:', filters.ageGap, 'types:', typeof filters.ageGap.min, typeof filters.ageGap.max);
+        const stringified = JSON.stringify(filters.ageGap);
+        console.log('ageGap after stringify:', stringified);
+        params.append('ageGap', stringified);
       }
 
       if (filters.fameRatingGap && (filters.fameRatingGap.min || filters.fameRatingGap.max)) {
@@ -81,12 +84,18 @@ export default {
       const queryString = buildQueryString(filters);
       const url = queryString ? `/browseUsers?${queryString}` : '/browseUsers';
 
+      console.log('getTenUsers - URL:', url);
+      console.log('getTenUsers - filters:', filters);
+
       const response = await fetchData(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+
+      console.log('getTenUsers - response:', response);
+
       if (response) {
         tenUsers.value = response.data.users;
         componentKey.value++;
@@ -94,6 +103,7 @@ export default {
     };
 
     const onApplyFilters = (filters) => {
+      console.log('onApplyFilters received:', filters);
       currentFilters.value = filters;
       getTenUsers(filters);
     };

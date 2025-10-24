@@ -5,6 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET; // Clé secrète pour le access token
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET; // Clé secrète pour le refresh token
 
 const verifyToken = async (req, res, next) => {
+  console.log('req.user= ', req.user);
   // console.log('req.cookies= ', req.cookies);
   const authHeader = req.headers.authorization;
   const refreshToken = req.cookies.refreshToken; // Supposons que le refresh token soit envoyé via cookies

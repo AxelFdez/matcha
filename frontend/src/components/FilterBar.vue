@@ -3,56 +3,37 @@
     <div class="filter-container">
       <!-- Age Range -->
       <div class="filter-group">
-        <label class="filter-label">Âge</label>
-        <div class="range-inputs">
-          <input
-            type="number"
-            v-model.number="filters.ageGap.min"
-            placeholder="Min"
-            class="filter-input range-input"
-            min="18"
-            max="99"
-          />
-          <span class="range-separator">-</span>
-          <input
-            type="number"
-            v-model.number="filters.ageGap.max"
-            placeholder="Max"
-            class="filter-input range-input"
-            min="18"
-            max="99"
-          />
-        </div>
+        <RangeSlider
+          range
+          :min="18"
+          :max="99"
+          :step="1"
+          v-model:min-value="filters.ageGap.min"
+          v-model:max-value="filters.ageGap.max"
+          label="Âge"
+          suffix=" ans"
+          @change="applyFilters"
+        />
       </div>
 
       <!-- Fame Rating Range -->
       <div class="filter-group">
-        <label class="filter-label">Popularité</label>
-        <div class="range-inputs">
-          <input
-            type="number"
-            v-model.number="filters.fameRatingGap.min"
-            placeholder="Min"
-            class="filter-input range-input"
-            min="0"
-            max="1000"
-          />
-          <span class="range-separator">-</span>
-          <input
-            type="number"
-            v-model.number="filters.fameRatingGap.max"
-            placeholder="Max"
-            class="filter-input range-input"
-            min="0"
-            max="1000"
-          />
-        </div>
+        <RangeSlider
+          range
+          :min="0"
+          :max="1000"
+          :step="10"
+          v-model:min-value="filters.fameRatingGap.min"
+          v-model:max-value="filters.fameRatingGap.max"
+          label="Popularité"
+          @change="applyFilters"
+        />
       </div>
 
       <!-- Sort By -->
       <div class="filter-group">
         <label class="filter-label">Trier par</label>
-        <select v-model="filters.sortBy" class="filter-select">
+        <select v-model="filters.sortBy" @change="applyFilters" class="filter-select">
           <option value="">Par défaut</option>
           <option value="ageIncreasing">Âge croissant</option>
           <option value="ageDecreasing">Âge décroissant</option>
@@ -68,32 +49,29 @@
       <!-- Tags Filter -->
       <div class="filter-group tags-group">
         <label class="filter-label">Centres d'intérêt</label>
-        <input
-          type="text"
-          v-model="tagInput"
-          @keydown.enter.prevent="addTag"
-          placeholder="Ajouter un tag..."
-          class="filter-input"
-        />
-        <div v-if="filters.tags.length > 0" class="tags-container">
-          <span
-            v-for="(tag, index) in filters.tags"
-            :key="index"
-            class="tag-chip"
-          >
-            {{ tag }}
-            <button @click="removeTag(index)" class="tag-remove">×</button>
-          </span>
-        </div>
+        <multiselect
+          v-model="filters.tags"
+          :options="availableTags"
+          :multiple="true"
+          :taggable="true"
+          :close-on-select="false"
+          @tag="addTag"
+          @select="applyFilters"
+          @remove="applyFilters"
+          placeholder="Chercher tags..."
+          tag-placeholder="Appuyez sur Entrée pour ajouter"
+          select-label=""
+          deselect-label=""
+          selected-label=""
+        >
+        </multiselect>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="filter-actions">
-        <button @click="applyFilters" class="btn-apply">
-          Appliquer
-        </button>
-        <button @click="resetFilters" class="btn-reset">
-          Réinitialiser
+      <!-- Reset Icon -->
+      <div class="filter-group reset-group">
+        <label class="filter-label">&nbsp;</label>
+        <button @click="resetFilters" class="btn-reset-icon" title="Réinitialiser les filtres">
+          <i class="fas fa-redo-alt"></i>
         </button>
       </div>
     </div>
@@ -101,55 +79,61 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
+import Multiselect from 'vue-multiselect';
+import RangeSlider from './RangeSlider.vue';
+import { fetchData } from '../config/api';
 
 export default {
   name: 'FilterBar',
+  components: {
+    Multiselect,
+    RangeSlider
+  },
   emits: ['apply-filters', 'reset-filters'],
 
   setup(props, { emit }) {
-    const tagInput = ref('');
+    // Liste des tags disponibles (chargés depuis l'API)
+    const availableTags = ref([]);
 
     const filters = reactive({
       ageGap: {
-        min: null,
-        max: null
+        min: 18,
+        max: 99
       },
       fameRatingGap: {
-        min: null,
-        max: null
+        min: 0,
+        max: 1000
       },
       tags: [],
       sortBy: ''
     });
 
-    const addTag = () => {
-      const tag = tagInput.value.trim();
+    const addTag = (newTag) => {
+      const tag = newTag.trim();
       if (tag && !filters.tags.includes(tag)) {
         filters.tags.push(tag);
-        tagInput.value = '';
+        applyFilters();
       }
-    };
-
-    const removeTag = (index) => {
-      filters.tags.splice(index, 1);
     };
 
     const applyFilters = () => {
       const appliedFilters = {};
 
-      // Age gap
-      if (filters.ageGap.min || filters.ageGap.max) {
-        appliedFilters.ageGap = {};
-        if (filters.ageGap.min) appliedFilters.ageGap.min = filters.ageGap.min;
-        if (filters.ageGap.max) appliedFilters.ageGap.max = filters.ageGap.max;
+      // Age gap - only apply if different from defaults
+      if (filters.ageGap.min !== 18 || filters.ageGap.max !== 99) {
+        appliedFilters.ageGap = {
+          min: Number(filters.ageGap.min),
+          max: Number(filters.ageGap.max)
+        };
       }
 
-      // Fame rating gap
-      if (filters.fameRatingGap.min || filters.fameRatingGap.max) {
-        appliedFilters.fameRatingGap = {};
-        if (filters.fameRatingGap.min) appliedFilters.fameRatingGap.min = filters.fameRatingGap.min;
-        if (filters.fameRatingGap.max) appliedFilters.fameRatingGap.max = filters.fameRatingGap.max;
+      // Fame rating gap - only apply if different from defaults
+      if (filters.fameRatingGap.min !== 0 || filters.fameRatingGap.max !== 1000) {
+        appliedFilters.fameRatingGap = {
+          min: Number(filters.fameRatingGap.min),
+          max: Number(filters.fameRatingGap.max)
+        };
       }
 
       // Tags
@@ -166,22 +150,42 @@ export default {
     };
 
     const resetFilters = () => {
-      filters.ageGap.min = null;
-      filters.ageGap.max = null;
-      filters.fameRatingGap.min = null;
-      filters.fameRatingGap.max = null;
+      filters.ageGap.min = 18;
+      filters.ageGap.max = 99;
+      filters.fameRatingGap.min = 0;
+      filters.fameRatingGap.max = 1000;
       filters.tags = [];
       filters.sortBy = '';
-      tagInput.value = '';
 
       emit('reset-filters');
     };
 
+    // Charger les tags disponibles depuis l'API
+    const loadAvailableTags = async () => {
+      try {
+        const response = await fetchData('/getAllTags', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response && response.data && response.data.tags) {
+          availableTags.value = response.data.tags;
+        }
+      } catch (error) {
+        console.error('Error loading tags:', error);
+      }
+    };
+
+    // Charger les tags au montage du composant
+    onMounted(() => {
+      loadAvailableTags();
+    });
+
     return {
       filters,
-      tagInput,
+      availableTags,
       addTag,
-      removeTag,
       applyFilters,
       resetFilters
     };
@@ -193,6 +197,8 @@ export default {
 .filter-bar {
   width: 100%;
   margin-top: 3rem;
+  position: relative;
+  z-index: 100;
 }
 
 .filter-container {
@@ -204,6 +210,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
+  position: relative;
 }
 
 .filter-group {
@@ -219,7 +226,7 @@ export default {
 .filter-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: white;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -256,97 +263,144 @@ export default {
   color: white;
 }
 
-.range-inputs {
+.reset-group {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
-.range-input {
-  flex: 1;
-  min-width: 0;
-}
-
-.range-separator {
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 500;
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(255, 36, 167, 0.2), rgba(136, 144, 254, 0.2));
-  border: 1px solid rgba(255, 36, 167, 0.3);
-  border-radius: 1rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+.btn-reset-icon {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.625rem;
   color: white;
-}
-
-.tag-remove {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.25rem;
-  line-height: 1;
+  font-size: 1rem;
   cursor: pointer;
-  padding: 0;
-  transition: color 0.2s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
 }
 
-.tag-remove:hover {
+.btn-reset-icon:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 36, 167, 0.5);
   color: #ff24a7;
 }
 
-.filter-actions {
-  grid-column: span 2;
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.btn-apply,
-.btn-reset {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.625rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.btn-apply {
-  background: linear-gradient(to right, #ff24a7, #8890fe);
-  color: white;
-}
-
-.btn-apply:hover {
-  opacity: 0.8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 36, 167, 0.3);
-}
-
-.btn-reset {
+/* Vue Multiselect Custom Styles */
+.tags-group :deep(.multiselect) {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: white;
+  min-height: 38px;
 }
 
-.btn-reset:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
+.tags-group :deep(.multiselect__tags) {
+  background: transparent;
+  border: none;
+  padding: 0.375rem 2.5rem 0 0.5rem;
+  min-height: 38px;
+}
+
+.tags-group :deep(.multiselect__input) {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 0 0 0 0.375rem;
+  margin-bottom: 0;
+}
+
+.tags-group :deep(.multiselect__input)::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tags-group :deep(.multiselect__placeholder) {
+  color: rgba(255, 255, 255, 0.4);
+  padding-left: 0.375rem;
+  margin-bottom: 0;
+}
+
+.tags-group :deep(.multiselect__tag) {
+  background: linear-gradient(135deg, rgba(255, 36, 167, 0.3), rgba(136, 144, 254, 0.3));
+  border: 1px solid rgba(255, 36, 167, 0.4);
+  color: white;
+  padding: 0.25rem 1.625rem 0.25rem 0.625rem;
+  margin-bottom: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.tags-group :deep(.multiselect__tag-icon) {
+  background: transparent;
+  line-height: 20px;
+}
+
+.tags-group :deep(.multiselect__tag-icon:hover) {
+  background: rgba(255, 36, 167, 0.3);
+}
+
+.tags-group :deep(.multiselect__tag-icon:after) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tags-group :deep(.multiselect__tag-icon:hover:after) {
+  color: #ff24a7;
+}
+
+.tags-group :deep(.multiselect__select) {
+  height: 38px;
+  padding: 0;
+  width: 40px;
+  background: transparent;
+}
+
+.tags-group :deep(.multiselect__select:before) {
+  border-color: rgba(255, 255, 255, 0.6) transparent transparent;
+  top: 60%;
+}
+
+.tags-group :deep(.multiselect__content-wrapper) {
+  background: rgba(30, 30, 30, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  position: absolute;
+}
+
+.tags-group :deep(.multiselect__content) {
+  background: transparent;
+}
+
+.tags-group :deep(.multiselect__option) {
+  color: white;
+  padding: 0.75rem;
+  min-height: auto;
+}
+
+.tags-group :deep(.multiselect__option--highlight) {
+  background: linear-gradient(to right, rgba(255, 36, 167, 0.2), rgba(136, 144, 254, 0.2));
+  color: white;
+}
+
+.tags-group :deep(.multiselect__option--selected) {
+  background: rgba(255, 36, 167, 0.3);
+  color: white;
+  font-weight: 500;
+}
+
+.tags-group :deep(.multiselect__option--selected.multiselect__option--highlight) {
+  background: rgba(255, 36, 167, 0.4);
+  color: white;
+}
+
+.tags-group :deep(.multiselect--active) {
+  border-color: rgba(255, 36, 167, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 36, 167, 0.1);
 }
 
 /* Responsive */
@@ -355,13 +409,8 @@ export default {
     grid-template-columns: 1fr;
   }
 
-  .tags-group,
-  .filter-actions {
+  .tags-group {
     grid-column: span 1;
-  }
-
-  .filter-actions {
-    flex-direction: column;
   }
 }
 </style>

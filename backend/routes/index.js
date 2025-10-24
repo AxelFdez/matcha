@@ -51,6 +51,8 @@ router.get('/getPhotos/:username', verifyToken, require('../utils/getUserPhotos'
 // router.get('/browseUsers', verifyToken, require('../utils/browseUsers'), (req, res) => {});
 // KO
 router.get('/browseUsers', verifyToken, require('../utils/browseUsers'), (req, res) => {});
+// OK
+router.get('/getAllTags', verifyToken, require('../utils/getAllTags'), (req, res) => {});
 
 // Notifications endpoints
 router.get('/notifications', verifyToken, require('../utils/getNotifications'), (req, res) => {});
