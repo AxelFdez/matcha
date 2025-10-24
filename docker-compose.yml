@@ -31,11 +31,13 @@ services:
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - IPINFO_TOKEN=${IPINFO_TOKEN}
       - BREVO_API_KEY=${BREVO_API_KEY}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./backend/photos:/app/photos
     networks:
       - matcha-network
 
