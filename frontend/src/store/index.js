@@ -10,13 +10,13 @@ export const store = createStore({
     verified: false,
     ready: false,
     email: "",
-    age: '',
-    gender: '',
-    sex_pref: '',
-    bio: '',
-    interests: [''],
+    age: "",
+    gender: "",
+    sex_pref: "",
+    bio: "",
+    interests: [""],
     photos: [],
-    alertMessage: '',
+    alertMessage: "",
 
     // Website initialize
     is_ready: false,
@@ -33,71 +33,159 @@ export const store = createStore({
 
   getters: {
     // User Informations
-    getUserName(state) { return state.user_name; },
-    getFirstName(state) { return state.first_name; },
-    getLastName(state) { return state.last_name; },
-    getVerified(state) { return state.verified; },
-    getReady(state) { return state.ready; },
-    getEmail(state) { return state.email; },
-    getAge(state) { return state.age; },
-    getGender(state) { return state.gender; },
-    getSexPref(state) { return state.sex_pref; },
-    getBio(state) { return state.bio; },
-    getInterests(state) { return state.interests; },
-    getPhotos(state) { return state.photos; },
+    getUserName(state) {
+      return state.user_name;
+    },
+    getFirstName(state) {
+      return state.first_name;
+    },
+    getLastName(state) {
+      return state.last_name;
+    },
+    getVerified(state) {
+      return state.verified;
+    },
+    getReady(state) {
+      return state.ready;
+    },
+    getEmail(state) {
+      return state.email;
+    },
+    getAge(state) {
+      return state.age;
+    },
+    getGender(state) {
+      return state.gender;
+    },
+    getSexPref(state) {
+      return state.sex_pref;
+    },
+    getBio(state) {
+      return state.bio;
+    },
+    getInterests(state) {
+      return state.interests;
+    },
+    getPhotos(state) {
+      return state.photos;
+    },
 
     // Website initialize
-    getIsReady(state) { return state.is_ready; },
-    getIsLoading(state) { return state.isLoading; },
-    getIsLoadingStartApp(state) { return state.isLoadingStartApp; },
-    getIsConnected(state) { return state.is_connected; },
-    getWebSocket(state) { return state.ws; },
-    getIsLoginFormSent(state) { return state.is_login_form_sent; },
-    getIsRegisterFormSent(state) { return state.is_register_form_sent; },
-    getIsForgotFormSent(state) { return state.is_forgot_form_sent; },
+    getIsReady(state) {
+      return state.is_ready;
+    },
+    getIsLoading(state) {
+      return state.isLoading;
+    },
+    getIsLoadingStartApp(state) {
+      return state.isLoadingStartApp;
+    },
+    getIsConnected(state) {
+      return state.is_connected;
+    },
+    getWebSocket(state) {
+      return state.ws;
+    },
+    getIsLoginFormSent(state) {
+      return state.is_login_form_sent;
+    },
+    getIsRegisterFormSent(state) {
+      return state.is_register_form_sent;
+    },
+    getIsForgotFormSent(state) {
+      return state.is_forgot_form_sent;
+    },
 
-    getIsFormSent(state) { return state.is_form_sent; },
+    getIsFormSent(state) {
+      return state.is_form_sent;
+    },
 
-    getServerMessage(state) { return state.server_message; },
+    getServerMessage(state) {
+      return state.server_message;
+    },
 
     getAlertMessage: (state) => state.alertMessage,
   },
 
   mutations: {
     // User Informations
-    setUserName(state, value) { state.user_name = value; },
-    setFirstName(state, value) { state.first_name = value; },
-    setLastName(state, value) { state.last_name = value; },
-    setEmail(state, value) { state.email = value; },
-    setVerified(state, value) { state.verified = value; },
-    setReady(state, value) { state.ready = value; },
-    setAge(state, value) { state.age = value; },
-    setGender(state, value) { state.gender = value; },
-    setSexPref(state, value) { state.sex_pref = value; },
-    setBio(state, value) { state.bio = value; },
-    setInterests(state, value) { state.interests = value; },
-    setPhotos(state, value) { state.photos = value; },
+    setUserName(state, value) {
+      state.user_name = value;
+    },
+    setFirstName(state, value) {
+      state.first_name = value;
+    },
+    setLastName(state, value) {
+      state.last_name = value;
+    },
+    setEmail(state, value) {
+      state.email = value;
+    },
+    setVerified(state, value) {
+      state.verified = value;
+    },
+    setReady(state, value) {
+      state.ready = value;
+    },
+    setAge(state, value) {
+      state.age = value;
+    },
+    setGender(state, value) {
+      state.gender = value;
+    },
+    setSexPref(state, value) {
+      state.sex_pref = value;
+    },
+    setBio(state, value) {
+      state.bio = value;
+    },
+    setInterests(state, value) {
+      state.interests = value;
+    },
+    setPhotos(state, value) {
+      state.photos = value;
+    },
 
     // Website initialize
-    setIsReady(state, value) { state.is_ready = value; },
-    setIsLoading(state, value) { state.isLoading = value; },
-    setIsLoadingStartApp(state, value) { state.isLoadingStartApp = value; },
-    setIsConnected(state, value) { state.is_connected = value; },
-    setWebSocket(state, ws) { state.ws = ws; },
-    setIsLoginFormSent(state, value) { state.is_login_form_sent = value; },
-    setIsRegisterFormSent(state, value) { state.is_register_form_sent = value; },
+    setIsReady(state, value) {
+      state.is_ready = value;
+    },
+    setIsLoading(state, value) {
+      state.isLoading = value;
+    },
+    setIsLoadingStartApp(state, value) {
+      state.isLoadingStartApp = value;
+    },
+    setIsConnected(state, value) {
+      state.is_connected = value;
+    },
+    setWebSocket(state, ws) {
+      state.ws = ws;
+    },
+    setIsLoginFormSent(state, value) {
+      state.is_login_form_sent = value;
+    },
+    setIsRegisterFormSent(state, value) {
+      state.is_register_form_sent = value;
+    },
 
-    setIsForgotFormSent(state, value) { state.is_forgot_form_sent = value; },
+    setIsForgotFormSent(state, value) {
+      state.is_forgot_form_sent = value;
+    },
 
-    setIsFormSent(state, value) { state.is_form_sent = value; },
+    setIsFormSent(state, value) {
+      state.is_form_sent = value;
+    },
 
-    setServerMessage(state, value) { state.server_message = value; },
+    setServerMessage(state, value) {
+      state.server_message = value;
+    },
 
     setAlertMessage(state, message) {
       state.alertMessage = message;
     },
     clearAlertMessage(state) {
-      state.alertMessage = '';
+      state.alertMessage = "";
     },
   },
 
@@ -106,12 +194,11 @@ export const store = createStore({
     //   state.ws.close();
     // },
 
-
     initWebSocket({ commit, state }) {
       const userId = localStorage.getItem("userId");
       commit(
         "setWebSocket",
-        new WebSocket(process.env.VUE_APP_WS_URL + '?id=' + userId)
+        new WebSocket(process.env.VUE_APP_WS_URL + "?id=" + userId)
       );
 
       state.ws.onopen = function () {
@@ -145,7 +232,10 @@ export const store = createStore({
               console.log("Envoyé newLocation :", message);
             },
             function (error) {
-              console.error("Erreur lors de la récupération de la position :", error);
+              console.error(
+                "Erreur lors de la récupération de la position :",
+                error
+              );
             }
           );
         }
@@ -155,7 +245,7 @@ export const store = createStore({
       };
     },
 
-    async submitRegisterForm({commit}, formData) {
+    async submitRegisterForm({ commit }, formData) {
       // store.commit('setIsLoading', true);
       console.log("submitRegisterForm", formData);
       try {
@@ -169,28 +259,28 @@ export const store = createStore({
         const responseData = response.data;
         switch (response.response.status) {
           case 201:
-            commit('setServerMessage', 'registerSuccess');
+            commit("setServerMessage", "registerSuccess");
             break;
           case 409:
-            if (responseData.message === 'Username already exists') {
-              commit('setServerMessage', 'userExist');
+            if (responseData.message === "Username already exists") {
+              commit("setServerMessage", "userExist");
             }
-            if (responseData.message === 'Email already exists') {
-              commit('setServerMessage', 'emailExist');
+            if (responseData.message === "Email already exists") {
+              commit("setServerMessage", "emailExist");
             }
-            break;true
+            break;
+            true;
           case 503:
-            commit('setServerMessage', 'serverError');
+            commit("setServerMessage", "serverError");
             break;
         }
       } catch (error) {
         console.error("Error submitting form:", error);
       } finally {
-        commit('setIsRegisterFormSent', true);
-        commit('setIsLoading', false);
+        commit("setIsRegisterFormSent", true);
+        commit("setIsLoading", false);
       }
     },
-
 
     async submitLoginForm({ commit, dispatch }, formData) {
       console.log("submitLoginForm");
@@ -244,8 +334,7 @@ export const store = createStore({
       }
     },
 
-    async getUserInfos({commit, dispatch, state}, username ) {
-
+    async getUserInfos({ commit, dispatch, state }, username) {
       console.log("getUserInfos");
       dispatch("initWebSocket");
 
@@ -255,8 +344,6 @@ export const store = createStore({
           headers: {
             "Content-Type": "application/json",
           },
-
-
         });
         const responseData = response.data;
         switch (response.response.status) {
@@ -275,10 +362,10 @@ export const store = createStore({
             commit("setPhotos", responseData.user.photos);
             break;
           case 404:
-            console.log('User not found');
+            console.log("User not found");
             break;
           case 503:
-            console.log('Server Error');
+            console.log("Server Error");
             break;
         }
       } catch (error) {
@@ -302,7 +389,6 @@ export const store = createStore({
       }
     },
 
-
     async forgotPasswordForm({ commit }, formData) {
       // commit('setIsLoading', true);
       console.log("forgotPasswordForm");
@@ -311,7 +397,7 @@ export const store = createStore({
         const response = await fetchData("/resetPasswordSendEmail", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
         });
@@ -335,82 +421,85 @@ export const store = createStore({
       }
     },
 
-  async changeEmailForm({ commit }, formData) {
-
-    console.log("changeEmailForm");
-    // console.log(formData);
-    try {
-      const response = await fetchData("/resetEmail", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const responseData = response.data;
-      // console.log("responseData",responseData);
-      switch (response.response.status) {
-        case 200:
-          commit("setServerMessage", responseData.alert);
-          setTimeout(() => {
-            store.commit("setIsConnected", false);
-            localStorage.clear();
-            // store.getters.getWebSocket.close();
-            // router.push({ name: "LoginPage" });
-          }, 5000);
-          break;
-        case 503:
-          commit("setServerMessage", responseData.alert);
-          break;
-        default :
-          commit("setServerMessage", responseData.alert);
-          break;
+    async changeEmailForm({ commit }, formData) {
+      console.log("changeEmailForm");
+      // console.log(formData);
+      try {
+        const response = await fetchData("/resetEmail", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        const responseData = response.data;
+        // console.log("responseData",responseData);
+        switch (response.response.status) {
+          case 200:
+            commit("setServerMessage", responseData.alert);
+            setTimeout(() => {
+              store.commit("setIsConnected", false);
+              localStorage.clear();
+              // store.getters.getWebSocket.close();
+              // router.push({ name: "LoginPage" });
+            }, 5000);
+            break;
+          case 503:
+            commit("setServerMessage", responseData.alert);
+            break;
+          default:
+            commit("setServerMessage", responseData.alert);
+            break;
         }
       } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
-      commit("setIsFormSent", true);
-      commit("setIsLoading", false);
-    }
-  },
+        console.error("Error submitting form:", error);
+      } finally {
+        commit("setIsFormSent", true);
+        commit("setIsLoading", false);
+      }
+    },
 
-  async updateUserInfosForm({ commit }, formData ) {
+    async updateUserInfosForm({ commit }, formData) {
+      console.log("updateUserInfosForm", JSON.stringify(formData));
+      try {
+        const response = await fetchData("/updateUser", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        const responseData = response.data;
 
-    console.log("updateUserInfosForm", JSON.stringify(formData));
-    try {
-      const response = await fetchData("/updateUser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      const responseData = response.data;
+        switch (response.response.status) {
+          case 200:
+            console.log("profil Updated");
+            commit("setAlertMessage", responseData.alert);
+            window.location.href = '/';
+            break;
+          case 503:
+            commit(
+              "setAlertMessage",
+              responseData.alert || "Erreur du serveur."
+            );
+            console.log("server error");
 
-      switch (response.response.status) {
-        case 200:
-          console.log("profil Updated");
-          commit('setAlertMessage', responseData.alert);
-          break;
-        case 503:
-          commit('setAlertMessage', responseData.alert || 'Erreur du serveur.');
-          console.log("server error");
-
-
-          break;
+            break;
         }
       } catch (error) {
-      console.error("Error submitting form:", error);
-      commit('setAlertMessage', 'Une erreur est survenue lors de la soumission du formulaire.');
-    } finally {
-      commit("setIsLoading", false);
-      setTimeout(() => {
-        commit("clearAlertMessage");
-      }, 5000);
-    }
+        console.error("Error submitting form:", error);
+        commit(
+          "setAlertMessage",
+          "Une erreur est survenue lors de la soumission du formulaire."
+        );
+      } finally {
+        commit("setIsLoading", false);
+        setTimeout(() => {
+          commit("clearAlertMessage");
+        }, 5000);
+      }
+    },
   },
-
-},
 
   modules: {},
 });
