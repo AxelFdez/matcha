@@ -1,12 +1,5 @@
 <template>
   <div class="fade-In">
-    <!-- <div class="fade-blur-bg">
-      <div class="overlay"></div>
-
-    </div>
-    <div class="centered-content">
-      <img src="../public/src/feu.png" alt="Your Image" class="animated-image" />
-    </div> -->
     <LoadingStartApp v-if="$store.getters.getIsLoadingStartApp"></LoadingStartApp>
     <LoadingCmp v-if="$store.getters.getIsLoading"></LoadingCmp>
     <div v-if="$store.getters.getIsReady">
@@ -133,7 +126,7 @@ export default {
 #app {
   font-family: "Roboto", sans-serif;
   /* padding: 0px 20px; */
-  // background: url(../public/src/couple-bg.jpg) fixed center/cover;
+  background: url(../public/src/couple-bg.jpg) fixed center/cover;
   background-color: rgb(34, 34, 34);
 
 }
