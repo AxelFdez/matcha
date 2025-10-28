@@ -28,11 +28,9 @@ async function sendEmail(to, refreshToken) {
   try {
     let subject = "Matcha : Vérification de votre email";
     let html = await renderHTML("mailVerif.twig", {
-      url: process.env.FRONT_URL + "VerifyEmailPage",
+      url: process.env.FRONT_URL + "/VerifyEmailPage",
       token: refreshToken,
     });
-    console.log("Sending verification email to:", to);
-
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     sendSmtpEmail.sender = { name: "Matcha", email: "axesnake06@gmail.com" };
     sendSmtpEmail.to = [{ email: to }];

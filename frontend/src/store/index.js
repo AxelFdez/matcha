@@ -246,8 +246,6 @@ export const store = createStore({
     },
 
     async submitRegisterForm({ commit }, formData) {
-      // store.commit('setIsLoading', true);
-      console.log("submitRegisterForm", formData);
       try {
         const response = await fetchData("/register-form", {
           method: "POST",

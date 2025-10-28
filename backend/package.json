@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "cross-env PGPORT=5432 PGHOST=localhost nodemon ./bin/www",
     "dev": "cross-env PGHOST=postgres PGPORT=5432 nodemon ./bin/www"
   },
   "dependencies": {

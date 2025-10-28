@@ -19,14 +19,14 @@ import {
 
 export const i18n = createI18n({
   legacy: false,
-  locale: 'en',
+  locale: 'fr',
   messages: {
     en: {
 			hello: 'Hello',
       send: 'Send',
       userName: 'username',
-      firstName: 'firstname',
-      lastName: 'lastname',
+      firstName: 'first name',
+      lastName: 'last name',
       password: 'password',
       passwordConfirm: 'confirm password',
       accountCreate_btn: 'Create account',
@@ -85,8 +85,8 @@ export const i18n = createI18n({
 			hello: 'Bonjour',
       send: 'Envoyer',
       userName: 'nom d\'utilisateur',
-      firstName: 'nom',
-      lastName: 'prénom',
+      firstName: 'prénom',
+      lastName: 'nom',
       password: 'mot de passe',
       passwordConfirm: 'confirmer le mot de passe',
       accountCreate_btn: 'Créer un compte',
@@ -125,7 +125,7 @@ export const i18n = createI18n({
       Veuillez saisir l\'adresse que vous avez utilisée lors de la création du compte.',
 
 
-      resetPassword: 'reinitialiser le mot de passe',
+      resetPassword: 'Reinitialiser Mdp',
       resetPasswordInfo: 'Saisissez l’adresse e‑mail que vous avez utilisé lors de la création du compte :',
       resetPasswordBtn: 'Changer mot de passe',
       changeEmailBtn: 'Changer Email',
