@@ -79,10 +79,11 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, computed } from 'vue';
 import Multiselect from 'vue-multiselect';
 import RangeSlider from './RangeSlider.vue';
 import { fetchData } from '../config/api';
+import { useStore } from "vuex";
 
 export default {
   name: 'FilterBar',
@@ -93,7 +94,11 @@ export default {
   emits: ['apply-filters', 'reset-filters'],
 
   setup(props, { emit }) {
-    // Liste des tags disponibles (chargés depuis l'API)
+    const store = useStore();
+
+    const currentUserGender = computed(() => store.getters.getGender);
+    const currentUserSexPref = computed(() => store.getters.getSexPref);
+
     const availableTags = ref([]);
 
     const filters = reactive({
@@ -106,7 +111,7 @@ export default {
         max: 1000
       },
       tags: [],
-      sortBy: ''
+      sortBy: '',
     });
 
     const addTag = (newTag) => {
@@ -120,7 +125,7 @@ export default {
     const applyFilters = () => {
       const appliedFilters = {};
 
-      // Age gap - only apply if different from defaults
+      // Age gap
       if (filters.ageGap.min !== 18 || filters.ageGap.max !== 99) {
         appliedFilters.ageGap = {
           min: Number(filters.ageGap.min),
@@ -128,7 +133,7 @@ export default {
         };
       }
 
-      // Fame rating gap - only apply if different from defaults
+      // Fame rating
       if (filters.fameRatingGap.min !== 0 || filters.fameRatingGap.max !== 1000) {
         appliedFilters.fameRatingGap = {
           min: Number(filters.fameRatingGap.min),
@@ -146,6 +151,9 @@ export default {
         appliedFilters.sortBy = filters.sortBy;
       }
 
+      appliedFilters.sexPref = currentUserSexPref.value;
+      appliedFilters.gender = currentUserGender.value;
+
       emit('apply-filters', appliedFilters);
     };
 
@@ -160,14 +168,11 @@ export default {
       emit('reset-filters');
     };
 
-    // Charger les tags disponibles depuis l'API
     const loadAvailableTags = async () => {
       try {
         const response = await fetchData('/getAllTags', {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
         if (response && response.data && response.data.tags) {
           availableTags.value = response.data.tags;
@@ -177,7 +182,6 @@ export default {
       }
     };
 
-    // Charger les tags au montage du composant
     onMounted(() => {
       loadAvailableTags();
     });
@@ -187,11 +191,14 @@ export default {
       availableTags,
       addTag,
       applyFilters,
-      resetFilters
+      resetFilters,
+      currentUserGender,
+      currentUserSexPref
     };
   }
 };
 </script>
+
 
 <style scoped>
 .filter-bar {

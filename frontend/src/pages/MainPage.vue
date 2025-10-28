@@ -29,15 +29,19 @@ export default {
     FilterBar,
   },
   setup() {
-    const store = useStore();
-    const router = useRouter();
-    const user = computed(() => store.state);
-    const userReady = computed(() => user.value?.ready);
-    const ws = computed(() => store.getters.getWebSocket);
+  const store = useStore();
+  const router = useRouter();
+  const user = computed(() => store.state);
+  const userReady = computed(() => user.value?.ready);
 
-    const tenUsers = ref([]);
-    const componentKey = ref(0);
-    const currentFilters = ref({});
+  const userGender = computed(() => user.value?.gender);
+  const userSexPref = computed(() => user.value?.sex_pref);
+
+  const ws = computed(() => store.getters.getWebSocket);
+
+  const tenUsers = ref([]);
+  const componentKey = ref(0);
+  const currentFilters = ref({});
 
     watch(ws, (newWs) => {
       if (newWs) {
@@ -77,10 +81,24 @@ export default {
         params.append('sortBy', filters.sortBy);
       }
 
+      if (filters.sexPref) {
+        params.append('sexPref', filters.sexPref);
+      }
+      if (filters.gender) {
+        params.append('gender', filters.gender);
+      }
+
       return params.toString();
     };
 
     const getTenUsers = async (filters = {}) => {
+
+
+      filters = {
+        ...filters,
+        sexPref: userSexPref.value,
+        gender: userGender.value
+      };
       const queryString = buildQueryString(filters);
       const url = queryString ? `/browseUsers?${queryString}` : '/browseUsers';
 

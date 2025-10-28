@@ -3,243 +3,115 @@ const pool = require("../config/connectBdd");
 module.exports = async function browseUsers(req, res) {
   let { location, tags, ageGap, fameRatingGap, filterBy, sortBy } = req.query;
 
-  console.log("BrowseUsers called with:", {
-    location,
-    tags,
-    ageGap,
-    fameRatingGap,
-    filterBy,
-    sortBy,
-  });
+  console.log("BrowseUsers called with:", { location, tags, ageGap, fameRatingGap, filterBy, sortBy });
 
   // Parse les paramètres si nécessaire
   if (typeof ageGap === "string") {
     ageGap = JSON.parse(ageGap);
-    // Convert string values to numbers
-    if (ageGap && ageGap.min !== undefined) ageGap.min = Number(ageGap.min);
-    if (ageGap && ageGap.max !== undefined) ageGap.max = Number(ageGap.max);
+    if (ageGap?.min !== undefined) ageGap.min = Number(ageGap.min);
+    if (ageGap?.max !== undefined) ageGap.max = Number(ageGap.max);
   }
   if (typeof fameRatingGap === "string") {
     fameRatingGap = JSON.parse(fameRatingGap);
-    // Convert string values to numbers
-    if (fameRatingGap && fameRatingGap.min !== undefined) fameRatingGap.min = Number(fameRatingGap.min);
-    if (fameRatingGap && fameRatingGap.max !== undefined) fameRatingGap.max = Number(fameRatingGap.max);
+    if (fameRatingGap?.min !== undefined) fameRatingGap.min = Number(fameRatingGap.min);
+    if (fameRatingGap?.max !== undefined) fameRatingGap.max = Number(fameRatingGap.max);
   }
-  if (typeof tags === "string") {
-    tags = JSON.parse(tags);
-  }
-  if (typeof filterBy === "string") {
-    filterBy = JSON.parse(filterBy);
-  }
-
-  console.log("Parsed filters:", {
-    location,
-    tags,
-    ageGap,
-    fameRatingGap,
-    filterBy,
-    sortBy,
-  });
-
-  console.log("Requesting browseUsers for:", req.user.username);  
+  if (typeof tags === "string") tags = JSON.parse(tags);
+  if (typeof filterBy === "string") filterBy = JSON.parse(filterBy);
 
   try {
-    const userResult = await pool.query(
-      "SELECT * FROM users WHERE username = $1",
-      [req.user.username]
-    );
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const userResult = await pool.query("SELECT * FROM users WHERE username = $1", [req.user.username]);
     const user = userResult.rows[0];
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const userId = user.id;
+    const userLocation = user.location.coordinates;
+
+    // Genres à filtrer selon la préférence de l’utilisateur
+    let genderFilterArray = [];
+    switch (user.sexualpreferences) {
+      case "male": genderFilterArray = ["male"]; break;
+      case "female": genderFilterArray = ["female"]; break;
+      case "both": genderFilterArray = ["male", "female"]; break;
+      default: genderFilterArray = ["male", "female"];
     }
 
-    const userTags = user.interests;
-    const userLocation = user.location.coordinates;
-    const userId = user.id;
-
-    // recupere les utilisateurs qui ont un profil complet et qui n'ont pas été ignorés, likés, matchés ou vus par l'utilisateur courant, et qui ne l'ont pas blacklisté
+    // Construction requête SQL
     let query = `
       SELECT * FROM users
       WHERE ready = true
-      AND id::text != $1::text
-	  AND NOT COALESCE($1::text = ANY(ignoredby), FALSE)
-	  AND NOT COALESCE($1::text = ANY(likedBy), FALSE)
-	  AND NOT COALESCE($1::text = ANY(matcha), FALSE)
-	  AND NOT COALESCE($1::text = ANY(viewedBy), FALSE)
-	  AND NOT COALESCE($1::text = ANY(blacklist), FALSE)
+        AND id::text != $1::text
+        AND NOT COALESCE($1::text = ANY(ignoredby), FALSE)
+        AND NOT COALESCE($1::text = ANY(likedBy), FALSE)
+        AND NOT COALESCE($1::text = ANY(matcha), FALSE)
+        AND NOT COALESCE($1::text = ANY(viewedBy), FALSE)
+        AND NOT COALESCE($1::text = ANY(blacklist), FALSE)
+        AND gender = ANY($2)
+        AND (sexualpreferences = 'both' OR sexualpreferences = $3)
     `;
 
-    const queryParams = [userId];
-    let paramIndex = 2; // Start at 2 because $1 is already used for userId
-    let preparedQuery;
+    const queryParams = [userId, genderFilterArray, user.gender];
+    let paramIndex = 4; // déjà 3 params utilisés
 
-    if (
-      user.sexualPreference === "Male" ||
-      user.sexualPreference === "Female"
-    ) {
-      // query += ' AND gender = $2';
-      preparedQuery = " AND gender = $" + paramIndex;
-      paramIndex++;
-      query += preparedQuery;
-      queryParams.push(user.sexualPreference);
-    }
-
-    if (ageGap && (ageGap.min || ageGap.max)) {
-      if (ageGap.min) {
-        console.log('Pushing ageGap.min:', ageGap.min, 'type:', typeof ageGap.min);
-        preparedQuery = " AND age >= $" + paramIndex;
-        paramIndex++;
-        query += preparedQuery;
-        queryParams.push(ageGap.min);
-      }
-      if (ageGap.max) {
-        console.log('Pushing ageGap.max:', ageGap.max, 'type:', typeof ageGap.max);
-        preparedQuery = " AND age <= $" + paramIndex;
-        paramIndex++;
-        query += preparedQuery;
-        queryParams.push(ageGap.max);
-      }
-    }
-
-    if (fameRatingGap && (fameRatingGap.min || fameRatingGap.max)) {
-      if (fameRatingGap.min) {
-        preparedQuery = " AND fameRating >= $" + paramIndex;
-        paramIndex++;
-        query += preparedQuery;
-        queryParams.push(fameRatingGap.min);
-      }
-      if (fameRatingGap.max) {
-        preparedQuery = " AND fameRating <= $" + paramIndex;
-        paramIndex++;
-        query += preparedQuery;
-        queryParams.push(fameRatingGap.max);
-      }
-    }
-
-    if (tags) {
-      preparedQuery = " AND interests && $" + paramIndex;
-      paramIndex++;
-      query += preparedQuery;
-      queryParams.push(tags);
-    }
+    // Filtres supplémentaires
+    if (ageGap?.min) { query += ` AND age >= $${paramIndex}`; queryParams.push(ageGap.min); paramIndex++; }
+    if (ageGap?.max) { query += ` AND age <= $${paramIndex}`; queryParams.push(ageGap.max); paramIndex++; }
+    if (fameRatingGap?.min) { query += ` AND fameRating >= $${paramIndex}`; queryParams.push(fameRatingGap.min); paramIndex++; }
+    if (fameRatingGap?.max) { query += ` AND fameRating <= $${paramIndex}`; queryParams.push(fameRatingGap.max); paramIndex++; }
+    if (tags) { query += ` AND interests && $${paramIndex}`; queryParams.push(tags); paramIndex++; }
 
     if (location) {
       const [longitude, latitude] = location.split(",");
-      preparedQuery =
-        " AND ST_DWithin(ST_SetSRID(ST_MakePoint($" +
-        paramIndex +
-        ", $" +
-        (paramIndex + 1) +
-        "), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, 10000)";
-      paramIndex += 2;
-      query += preparedQuery;
-      // 		query += `
-      //     AND ST_DWithin(
-      //       ST_SetSRID(ST_MakePoint($8, $9), 4326)::geography,
-      //       ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
-      //       10000
-      //     )
-      //   `;
+      query += ` AND ST_DWithin(
+        ST_SetSRID(ST_MakePoint($${paramIndex}, $${paramIndex+1}), 4326)::geography,
+        ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
+        10000
+      )`;
       queryParams.push(longitude, latitude);
+      paramIndex += 2;
     }
 
     if (filterBy) {
-      if (filterBy.type === "age") {
-        preparedQuery = " AND age = $" + paramIndex;
-        paramIndex++;
-        query += preparedQuery;
-        queryParams.push(filterBy.value);
-      } else if (filterBy.type === "fameRating") {
-        preparedQuery =
-          " AND fameRating BETWEEN $" +
-          paramIndex +
-          " AND $" +
-          (paramIndex + 1);
-        paramIndex += 2;
-        query += preparedQuery;
-        queryParams.push(filterBy.value, parseInt(filterBy.value) + 50);
-      } else if (filterBy.type === "tags") {
-        preparedQuery = " AND interests && $" + paramIndex;
-        paramIndex++;
-        query += preparedQuery;
-        queryParams.push(filterBy.value);
-      } else if (filterBy.type === "location") {
-        preparedQuery =
-          " AND ST_DWithin(ST_SetSRID(ST_MakePoint($" +
-          paramIndex +
-          ", $" +
-          (paramIndex + 1) +
-          "), 4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography, $" +
-          (paramIndex + 2) +
-          ")";
-        paramIndex += 3;
-        query += preparedQuery;
-        // query += `
-        //   AND ST_DWithin(
-        //     ST_SetSRID(ST_MakePoint($14, $15), 4326)::geography,
-        //     ST_SetSRID(ST_MakePoint(location[0], location[1]), 4326)::geography,
-        //     $16
-        //   )
-        // `;
-        queryParams.push(userLocation[0], userLocation[1], filterBy.value);
-      }
+      if (filterBy.type === "age") { query += ` AND age = $${paramIndex}`; queryParams.push(filterBy.value); paramIndex++; }
+      else if (filterBy.type === "fameRating") { query += ` AND fameRating BETWEEN $${paramIndex} AND $${paramIndex+1}`; queryParams.push(filterBy.value, parseInt(filterBy.value)+50); paramIndex += 2; }
+      else if (filterBy.type === "tags") { query += ` AND interests && $${paramIndex}`; queryParams.push(filterBy.value); paramIndex++; }
+      else if (filterBy.type === "location") { query += ` AND ST_DWithin(ST_SetSRID(ST_MakePoint($${paramIndex}, $${paramIndex+1}),4326)::geography, ST_SetSRID(ST_MakePoint(location[0], location[1]),4326)::geography, $${paramIndex+2})`; queryParams.push(userLocation[0], userLocation[1], filterBy.value); paramIndex += 3; }
     }
 
+    // Sorting
     if (sortBy) {
-      if (sortBy === "ageIncreasing") {
-        query += " ORDER BY age ASC";
-      } else if (sortBy === "ageDecreasing") {
-        query += " ORDER BY age DESC";
-      } else if (sortBy === "fameRatingIncreasing") {
-        query += " ORDER BY fameRating ASC";
-      } else if (sortBy === "fameRatingDecreasing") {
-        query += " ORDER BY fameRating DESC";
-      } else if (sortBy === "locationIncreasing") {
-        preparedQuery =
-          " ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($" +
-          paramIndex +
-          ", $" +
-          (paramIndex + 1) +
-          "), 4326)) ASC";
-        paramIndex += 2;
-        query += preparedQuery;
-        queryParams.push(userLocation[0], userLocation[1]);
-      } else if (sortBy === "locationDecreasing") {
-        preparedQuery =
-          " ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($" +
-          paramIndex +
-          ", $" +
-          (paramIndex + 1) +
-          "), 4326)) DESC";
-        paramIndex += 2;
-        query += preparedQuery;
-        queryParams.push(userLocation[0], userLocation[1]);
-      } else if (sortBy === "tagsIncreasing") {
-        query += " ORDER BY array_length(interests, 1) ASC";
-      } else if (sortBy === "tagsDecreasing") {
-        query += " ORDER BY array_length(interests, 1) DESC";
+      switch (sortBy) {
+        case "ageIncreasing": query += " ORDER BY age ASC"; break;
+        case "ageDecreasing": query += " ORDER BY age DESC"; break;
+        case "fameRatingIncreasing": query += " ORDER BY fameRating ASC"; break;
+        case "fameRatingDecreasing": query += " ORDER BY fameRating DESC"; break;
+        case "locationIncreasing": query += ` ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($${paramIndex}, $${paramIndex+1}),4326)) ASC`; queryParams.push(userLocation[0], userLocation[1]); paramIndex += 2; break;
+        case "locationDecreasing": query += ` ORDER BY ST_Distance(location, ST_SetSRID(ST_MakePoint($${paramIndex}, $${paramIndex+1}),4326)) DESC`; queryParams.push(userLocation[0], userLocation[1]); paramIndex += 2; break;
+        case "tagsIncreasing": query += " ORDER BY array_length(interests, 1) ASC"; break;
+        case "tagsDecreasing": query += " ORDER BY array_length(interests, 1) DESC"; break;
       }
     }
 
     query += " LIMIT 10";
 
-    console.log('SQL Query:', query);
-    console.log('Query Params:', queryParams);
-    console.log('Query Params types:', queryParams.map(p => typeof p));
+    console.log("SQL Query:", query);
+    console.log("Query Params:", queryParams);
+
     const usersResult = await pool.query(query, queryParams);
-    // console.log(usersResult.rows);
     const users = usersResult.rows;
 
-    if (!users.length) {
-      return res.status(404).json({ message: "No users found" });
-    }
+    if (!users.length) return res.status(404).json({ message: "No users found" });
     return res.status(200).json({ users });
+
   } catch (error) {
     console.error("Error in browseUsers:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 // const User = require('../models/User');
 // const connectBdd = require('../config/connectBdd');
