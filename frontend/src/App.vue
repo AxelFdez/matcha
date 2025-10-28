@@ -44,7 +44,8 @@ export default {
         '/RegisterPage',
         '/ResetPasswordPage',
         '/VerifyEmailPage',
-        '/ForgotPasswordPage'
+        '/ForgotPasswordPage',
+        '/ResearchPage'
       ];
       const currentPath = window.location.pathname;
       const isPublicPage = publicPages.some(page => currentPath.includes(page));
