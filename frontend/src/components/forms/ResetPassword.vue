@@ -223,32 +223,33 @@ export default {
         email: email
       };
       try {
-        const response = await fetchData("/resetPassword", {
+        const {response, data: responseData} = await fetchData("/resetPassword", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
         });
-        const responseData = await response.json();
         console.log("Réponse du serveur:", responseData);
 
         // Afficher un message de succès ou d'erreur
-        if (responseData.status === 200) {
-          passwordResetAction.value = responseData.alert || { type: 'success', message: 'Mot de passe réinitialisé avec succès' };
+        if (responseData && responseData.alert) {
+          passwordResetAction.value = responseData.alert;
         } else {
-          passwordResetAction.value = responseData.alert || { type: 'warning', message: 'Une erreur est survenue' };
+          passwordResetAction.value = { type: 'warning', message: 'Une erreur est survenue' };
+        }
+
+        // Rediriger vers la page de connexion après 3 secondes en cas de succès
+        if (response.ok && responseData.alert.type === 'success') {
+          setTimeout(() => {
+            router.push({ name: "LoginPage" });
+          }, 3000);
         }
       } catch (error) {
         console.error("Erreur lors de la soumission du formulaire:", error);
         passwordResetAction.value = { type: 'warning', message: 'Erreur de connexion au serveur' };
       } finally {
         store.commit('setIsLoading', false);
-        setTimeout(() => {
-          passwordResetAction.value = { type: null, message: '' };
-          // Naviguer vers la page de connexion après le message
-          router.push({ name: "LoginPage" });
-        }, 5000);
       }
     }
 
@@ -272,7 +273,7 @@ export default {
 
   .password-toggle-btn {
     position: absolute;
-    top: 5px;
+    top: 0px;
     right: 10px;
     background: none;
     border: none;
@@ -288,6 +289,14 @@ export default {
 
     &:hover {
       transform: scale(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      &:hover {
+        transform: none;
+      }
     }
   }
 }

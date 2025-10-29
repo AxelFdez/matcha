@@ -22,9 +22,10 @@
 
       onMounted(() => {
         // Vérifier si l'utilisateur est déjà connecté
-        if (isConnected.value) {
-          console.log('User already logged in, redirecting to MainPage...');
-          router.push('/');
+        const accessToken = localStorage.getItem('accessToken');
+        if (isConnected.value || accessToken) {
+          console.log('User already logged in, redirecting to HomePage...');
+          router.push({ name: 'HomePage' });
         }
       });
 

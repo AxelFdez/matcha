@@ -38,21 +38,9 @@ export default {
   setup() {
     const store = useStore();
     onMounted(() => {
-      // Pages publiques qui ne nécessitent pas de vérification de token
-      const publicPages = [
-        '/LoginPage',
-        '/RegisterPage',
-        '/ResetPasswordPage',
-        '/VerifyEmailPage',
-        '/ForgotPasswordPage',
-        '/ResearchPage'
-      ];
-      const currentPath = window.location.pathname;
-      const isPublicPage = publicPages.some(page => currentPath.includes(page));
-
       store.commit('setIsLoadingStartApp', true);
       setTimeout(() => {
-        if (localStorage.getItem('accessToken') && !isPublicPage) {
+        if (localStorage.getItem('accessToken')) {
           checkAccessToken();
           store.commit('setIsLoadingStartApp', false);
 

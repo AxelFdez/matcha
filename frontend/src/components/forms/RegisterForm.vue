@@ -368,7 +368,7 @@ export default {
 
   .password-toggle-btn {
     position: absolute;
-    top : 5px;
+    top : 0px;
     right: 10px;
     background: none;
     border: none;
