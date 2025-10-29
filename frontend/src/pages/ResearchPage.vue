@@ -1,99 +1,162 @@
 <template>
   <div class="research-page">
-    <h1>Recherche d'utilisateurs</h1>
+    <!-- 🔍 Filtres -->
+    <div class="filters space-y-6 mt-6">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Rechercher par pseudo..."
+        class="w-full max-w-md p-2 rounded-md border border-gray-300"
+      />
 
-    <!-- Filtres -->
-    <div class="filters">
-      <input v-model="searchQuery" type="text" placeholder="Rechercher par pseudo..." />
-    </div>
+      <div class="grid md:grid-cols-2 gap-6 text-white">
+        <RangeSlider
+          label="Tranche d'âge"
+          range
+          :min="18"
+          :max="100"
+          suffix=" ans"
+          v-model:minValue="ageMin"
+          v-model:maxValue="ageMax"
+        />
 
-    <!-- Vue Desktop: Tableau -->
-    <table class="users-table desktop-view" v-if="!loading && !error">
-      <thead>
-        <tr>
-          <th>Photos</th>
-          <th>Pseudo</th>
-          <th>Âge</th>
-          <th>Sexe</th>
-          <th>Préférence</th>
-          <th>Popularité</th>
-          <th>Dernière connexion</th>
-          <th>Intérêts</th>
-          <th>Distance (km)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in filteredUsers" :key="user.id">
-          <td class="all-photos">
-            <img
-              v-for="(photo, index) in user.photos.filter(p => p)"
-              :key="index"
-              :src="formatPhotoUrl(photo)"
-              class="small-photo"
-              @error="e => e.target.style.display='none'"
-            />
-          </td>
-          <td>{{ user.username }}</td>
-          <td>{{ user.age }}</td>
-          <td>{{ user.gender }}</td>
-          <td>{{ user.sexualpreferences }}</td>
-          <td>{{ user.famerating }}</td>
-          <td>{{ formatDate(user.lastconnection) }}</td>
-          <td>
-            <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
-          </td>
-          <td>{{ calculateDistance(user.location) }} km</td>
-        </tr>
-      </tbody>
-    </table>
+        <RangeSlider
+          label="Fame rating"
+          range
+          :min="0"
+          :max="1000"
+          v-model:minValue="fameMin"
+          v-model:maxValue="fameMax"
+        />
 
-    <!-- Vue Mobile: Cards -->
-    <div class="mobile-view" v-if="!loading && !error">
-      <div v-for="user in filteredUsers" :key="user.id" class="user-card">
-        <!-- Photos -->
-        <div class="card-photos">
-          <img
-            v-for="(photo, index) in user.photos.filter(p => p)"
-            :key="index"
-            :src="formatPhotoUrl(photo)"
-            class="card-photo"
-            @error="e => e.target.style.display='none'"
+        <RangeSlider
+          label="Distance maximale"
+          :min="0"
+          :max="20000"
+          suffix=" km"
+          v-model:modelValue="maxDistance"
+        />
+      </div>
+
+      <!-- 🎯 Tags + Tri -->
+      <div class="grid md:grid-cols-3 gap-6 mt-4 text-white">
+        <div>
+          <label class="block mb-1 text-sm font-semibold">Tags d'intérêt</label>
+          <multiselect
+            v-model="selectedTags"
+            :options="allTags"
+            :multiple="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            placeholder="Chercher tags..."
+            class="custom-multiselect"
           />
         </div>
 
-        <!-- Infos principales -->
-        <div class="card-header">
-          <h3>{{ user.username }}</h3>
-          <span class="badge">⭐ {{ user.famerating }}</span>
+        <div>
+          <label class="block mb-1 text-sm font-semibold">Trier par</label>
+          <select v-model="sortBy" class="w-full p-2 rounded-md border border-gray-300">
+            <option value="">Aucun</option>
+            <option value="age">Âge</option>
+            <option value="distance">Distance</option>
+            <option value="famerating">Fame rating</option>
+          </select>
         </div>
 
-        <!-- Détails -->
-        <div class="card-details">
-          <div class="detail-row">
-            <span class="label">Âge:</span>
-            <span>{{ user.age }} ans</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Sexe:</span>
-            <span>{{ user.gender }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Préférence:</span>
-            <span>{{ user.sexualpreferences }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Distance:</span>
-            <span>{{ calculateDistance(user.location) }} km</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">Dernière connexion:</span>
-            <span>{{ formatDate(user.lastconnection) }}</span>
-          </div>
+        <div>
+          <label class="block mb-1 text-sm font-semibold">Ordre</label>
+          <select v-model="sortOrder" class="w-full p-2 rounded-md border border-gray-300">
+            <option value="asc">Croissant</option>
+            <option value="desc">Décroissant</option>
+          </select>
         </div>
+      </div>
 
-        <!-- Intérêts -->
-        <div class="card-interests">
-          <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
+      <div class="mt-6">
+        <button
+          @click="resetFilters"
+          class="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition"
+        >
+          Réinitialiser les filtres
+        </button>
+      </div>
+    </div>
+
+    <!-- 🧾 Résultats -->
+    <div v-if="!loading && !error" class="mt-10 text-white">
+      <p class="mb-4 text-sm text-gray-300">
+        {{ filteredUsers.length }} utilisateur(s) trouvé(s)
+      </p>
+
+      <!-- Desktop -->
+      <table class="users-table desktop-view" v-if="filteredUsers.length">
+        <thead>
+          <tr>
+            <th>Photos</th>
+            <th>Pseudo</th>
+            <th>Âge</th>
+            <th>Sexe</th>
+            <th>Préférence</th>
+            <th>Popularité</th>
+            <th>Dernière connexion</th>
+            <th>Intérêts</th>
+            <th>Distance (km)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in filteredUsers" :key="user.id">
+            <td>
+              <img
+                v-for="(photo, i) in user.photos.filter(p => p)"
+                :key="i"
+                :src="formatPhotoUrl(photo)"
+                class="small-photo"
+                @error="e => e.target.style.display='none'"
+              />
+            </td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.age }}</td>
+            <td>{{ user.gender }}</td>
+            <td>{{ user.sexualpreferences }}</td>
+            <td>{{ user.famerating }}</td>
+            <td>{{ formatDate(user.lastconnection) }}</td>
+            <td>
+              <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
+            </td>
+            <td>{{ calculateDistance(user.location).toFixed(2) }} km</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Mobile -->
+      <div class="mobile-view" v-if="filteredUsers.length">
+        <div v-for="user in filteredUsers" :key="user.id" class="user-card">
+          <div class="user-card-header">
+            <h3>{{ user.username }}</h3>
+          </div>
+          <div class="user-card-body">
+            <div class="user-photos">
+              <img
+                v-for="(photo, i) in user.photos.filter(p => p)"
+                :key="i"
+                :src="formatPhotoUrl(photo)"
+                class="mobile-photo"
+                @error="e => e.target.style.display='none'"
+              />
+            </div>
+            <div class="user-info">
+              <p><strong>Âge:</strong> {{ user.age }}</p>
+              <p><strong>Sexe:</strong> {{ user.gender }}</p>
+              <p><strong>Préférence:</strong> {{ user.sexualpreferences }}</p>
+              <p><strong>Popularité:</strong> {{ user.famerating }}</p>
+              <p><strong>Distance:</strong> {{ calculateDistance(user.location).toFixed(2) }} km</p>
+              <p><strong>Dernière connexion:</strong> {{ formatDate(user.lastconnection) }}</p>
+              <div class="user-tags">
+                <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -106,83 +169,126 @@
 <script>
 import { ref, computed, onMounted } from "vue";
 import axios from "axios";
+import RangeSlider from "@/components/RangeSlider.vue";
+import Multiselect from "vue-multiselect";
+import "vue-multiselect/dist/vue-multiselect.min.css";
 
 export default {
   name: "ResearchPage",
+  components: { RangeSlider, Multiselect },
   setup() {
     const users = ref([]);
     const loading = ref(false);
     const error = ref(null);
     const searchQuery = ref("");
 
+    const ageMin = ref(18);
+    const ageMax = ref(100);
+    const fameMin = ref(0);
+    const fameMax = ref(1000);
+    const maxDistance = ref(20000);
+    const sortBy = ref("");
+    const sortOrder = ref("asc");
+    const selectedTags = ref([]);
+
     const currentUserLocation = ref([0, 0]);
 
-    const formatPhotoUrl = (photoPath) => {
-      if (!photoPath) return "";
-      return `http://localhost:3000${photoPath.replace("/app", "")}`;
-    };
+    const formatPhotoUrl = (photoPath) =>
+      photoPath ? `http://localhost:3000${photoPath.replace("/app", "")}` : "";
 
     const calculateDistance = (loc) => {
-      if (!loc || !loc.coordinates || !currentUserLocation.value) return "N/A";
-
+      if (!loc?.coordinates || !currentUserLocation.value) return Infinity;
       const [lon1, lat1] = currentUserLocation.value;
       const [lon2, lat2] = loc.coordinates;
-
       const toRad = (v) => (v * Math.PI) / 180;
       const R = 6371;
-
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
       const a =
         Math.sin(dLat / 2) ** 2 +
         Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-      return (R * c).toFixed(2);
+      return R * c;
     };
 
     const fetchUsers = async () => {
       loading.value = true;
       error.value = null;
-
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) throw new Error("Token manquant, utilisateur non authentifié");
-
         const response = await axios.get("http://localhost:3000/browseUsers", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         if (response.data.currentUser) {
           currentUserLocation.value = response.data.currentUser.location.coordinates;
         }
-
         users.value = response.data.users;
       } catch (err) {
-        console.error(err);
         error.value = err.response?.data?.message || "Erreur lors du chargement des utilisateurs";
       } finally {
         loading.value = false;
       }
     };
 
-    const filteredUsers = computed(() => {
-      if (!searchQuery.value) return users.value;
-      return users.value.filter((user) =>
-        user.username.toLowerCase().includes(searchQuery.value.toLowerCase())
-      );
+    const allTags = computed(() => {
+      const tags = new Set();
+      users.value.forEach((u) => {
+        u.interests?.forEach((tag) => tags.add(tag));
+      });
+      return Array.from(tags);
     });
 
-    const formatDate = (dateStr) => {
-      const d = new Date(dateStr);
-      return d.toLocaleString();
+    const filteredUsers = computed(() => {
+      let filtered = users.value.filter((user) => {
+        const matchesSearch = user.username
+          .toLowerCase()
+          .includes(searchQuery.value.toLowerCase());
+        const withinAge = user.age >= ageMin.value && user.age <= ageMax.value;
+        const withinFame =
+          user.famerating >= fameMin.value && user.famerating <= fameMax.value;
+        const distance = calculateDistance(user.location);
+        const withinDistance = distance <= maxDistance.value;
+        const tagList = selectedTags.value.map((t) => t.toLowerCase());
+        const hasTags =
+          tagList.length === 0 ||
+          tagList.every((tag) =>
+            user.interests.some((i) => i.toLowerCase().includes(tag))
+          );
+        return matchesSearch && withinAge && withinFame && withinDistance && hasTags;
+      });
+
+      if (sortBy.value) {
+        filtered.sort((a, b) => {
+          let valA, valB;
+          if (sortBy.value === "distance") {
+            valA = calculateDistance(a.location);
+            valB = calculateDistance(b.location);
+          } else {
+            valA = a[sortBy.value];
+            valB = b[sortBy.value];
+          }
+          return sortOrder.value === "asc" ? valA - valB : valB - valA;
+        });
+      }
+      return filtered;
+    });
+
+    const resetFilters = () => {
+      searchQuery.value = "";
+      ageMin.value = 18;
+      ageMax.value = 100;
+      fameMin.value = 0;
+      fameMax.value = 1000;
+      maxDistance.value = 20000;
+      selectedTags.value = [];
+      sortBy.value = "";
+      sortOrder.value = "asc";
     };
 
-    onMounted(() => {
-      fetchUsers();
-    });
+    const formatDate = (dateStr) => new Date(dateStr).toLocaleString();
+
+    onMounted(fetchUsers);
 
     return {
       users,
@@ -193,12 +299,23 @@ export default {
       formatDate,
       calculateDistance,
       formatPhotoUrl,
+      ageMin,
+      ageMax,
+      fameMin,
+      fameMax,
+      maxDistance,
+      sortBy,
+      sortOrder,
+      resetFilters,
+      selectedTags,
+      allTags,
     };
   },
 };
 </script>
 
 <style scoped>
+/* --- Général --- */
 .research-page {
   padding: 2rem;
   color: white;
@@ -207,45 +324,201 @@ export default {
 h1 {
   font-size: 2rem;
   margin-bottom: 1.5rem;
+  color: white;
 }
 
 .filters {
   margin-bottom: 1.5rem;
-  margin-top: 3rem;
+  margin-top: 5rem;
+
 }
 
-.filters input {
-  padding: 0.5rem;
-  width: 100%;
-  max-width: 300px;
-  border-radius: 0.3rem;
-  border: 1px solid #ccc;
-  font-size: 1rem;
+/* --- Input recherche --- */
+input[type="text"] {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
 }
 
-/* Vue Desktop - Tableau */
-.desktop-view {
-  display: table;
+input[type="text"]::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
-.mobile-view {
-  display: none;
+input[type="text"]:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 36, 167, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 36, 167, 0.1);
+  outline: none;
 }
 
+/* --- Select --- */
+select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+select:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 36, 167, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 36, 167, 0.1);
+  outline: none;
+}
+
+select option {
+  background: #222;
+  color: white;
+}
+
+/* --- Multiselect --- */
+.custom-multiselect {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+}
+
+.custom-multiselect :deep(.multiselect__tags) {
+  background: transparent;
+  border: none;
+  padding: 0.375rem 2.5rem 0 0.5rem;
+  min-height: 38px;
+}
+
+.custom-multiselect :deep(.multiselect__input) {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0 0 0 0.375rem;
+  margin-bottom: 0;
+}
+
+.custom-multiselect :deep(.multiselect__input)::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.custom-multiselect :deep(.multiselect__placeholder) {
+  color: rgba(255, 255, 255, 0.4);
+  padding-left: 0.375rem;
+  margin-bottom: 0;
+}
+
+.custom-multiselect :deep(.multiselect__single) {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.custom-multiselect :deep(.multiselect__tag) {
+  background: linear-gradient(135deg, rgba(255, 36, 167, 0.3), rgba(136, 144, 254, 0.3));
+  border: 1px solid rgba(255, 36, 167, 0.4);
+  color: white;
+  padding: 0.25rem 1.625rem 0.25rem 0.625rem;
+  margin-bottom: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.custom-multiselect :deep(.multiselect__tag-icon) {
+  background: transparent;
+  line-height: 20px;
+}
+
+.custom-multiselect :deep(.multiselect__tag-icon:hover) {
+  background: rgba(255, 36, 167, 0.3);
+}
+
+.custom-multiselect :deep(.multiselect__tag-icon:after) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.custom-multiselect :deep(.multiselect__tag-icon:hover:after) {
+  color: #ff24a7;
+}
+
+.custom-multiselect :deep(.multiselect__select) {
+  height: 38px;
+  padding: 0;
+  width: 40px;
+  background: transparent;
+}
+
+.custom-multiselect :deep(.multiselect__select:before) {
+  border-color: rgba(255, 255, 255, 0.6) transparent transparent;
+  top: 60%;
+}
+
+.custom-multiselect :deep(.multiselect__content-wrapper) {
+  background: rgba(30, 30, 30, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  position: absolute;
+}
+
+.custom-multiselect :deep(.multiselect__content) {
+  background: transparent;
+}
+
+.custom-multiselect :deep(.multiselect__option) {
+  color: white;
+  padding: 0.75rem;
+  min-height: auto;
+}
+
+.custom-multiselect :deep(.multiselect__option--highlight) {
+  background: linear-gradient(to right, rgba(255, 36, 167, 0.2), rgba(136, 144, 254, 0.2));
+  color: white;
+}
+
+.custom-multiselect :deep(.multiselect__option--selected) {
+  background: rgba(255, 36, 167, 0.3);
+  color: white;
+  font-weight: 500;
+}
+
+.custom-multiselect :deep(.multiselect__option--selected.multiselect__option--highlight) {
+  background: rgba(255, 36, 167, 0.4);
+  color: white;
+}
+
+.custom-multiselect :deep(.multiselect--active) {
+  border-color: rgba(255, 36, 167, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 36, 167, 0.1);
+}
+
+/* --- Tableau utilisateurs --- */
 .users-table {
   width: 100%;
   border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 .users-table th,
 .users-table td {
   border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
 }
 
 .users-table th {
   background-color: rgba(255, 255, 255, 0.1);
   text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+}
+
+.users-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .small-photo {
@@ -254,10 +527,12 @@ h1 {
   border-radius: 0.3rem;
   object-fit: cover;
   margin-right: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tag {
   background-color: rgba(136, 144, 254, 0.3);
+  border: 1px solid rgba(136, 144, 254, 0.4);
   border-radius: 0.3rem;
   padding: 0.2rem 0.5rem;
   margin-right: 0.3rem;
@@ -266,161 +541,75 @@ h1 {
   margin-bottom: 0.3rem;
 }
 
-.loading {
-  margin-top: 2rem;
-  font-weight: bold;
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.125rem;
 }
 
 .error {
-  margin-top: 2rem;
-  color: red;
-  font-weight: bold;
+  color: #ff6b6b;
 }
 
-/* Vue Mobile - Cards */
+/* --- Vue mobile --- */
+.mobile-view {
+  display: none;
+}
+
 .user-card {
-  background-color: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   padding: 1rem;
   margin-bottom: 1rem;
 }
 
-.card-photos {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
+.user-card-header h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: #ff24a7;
 }
 
-.card-photo {
+.user-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mobile-photo {
   width: 80px;
   height: 80px;
   border-radius: 0.5rem;
   object-fit: cover;
-  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.user-info p {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
 }
 
-.card-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
+.user-tags {
+  margin-top: 0.75rem;
 }
 
-.badge {
-  background-color: rgba(255, 193, 7, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
-}
-
-.card-details {
-  margin-bottom: 1rem;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.detail-row .label {
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.card-interests {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-/* Responsive Breakpoints */
-
-/* Tablette */
-@media (max-width: 1024px) {
-  .research-page {
-    padding: 1.5rem;
-  }
-
-  .users-table th,
-  .users-table td {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.9rem;
-  }
-
-  .small-photo {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-/* Mobile */
+/* --- Responsive --- */
 @media (max-width: 768px) {
-  .research-page {
-    padding: 1rem;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .filters {
-    margin-top: 1.5rem;
-  }
-
-  .filters input {
-    max-width: 100%;
-  }
-
-  /* Masquer le tableau sur mobile */
   .desktop-view {
     display: none;
   }
-
-  /* Afficher les cards sur mobile */
   .mobile-view {
     display: block;
   }
-}
-
-/* Très petits écrans */
-@media (max-width: 480px) {
+  
   .research-page {
-    padding: 0.75rem;
+    padding: 1rem;
   }
-
+  
   h1 {
-    font-size: 1.25rem;
-  }
-
-  .card-photo {
-    width: 60px;
-    height: 60px;
-  }
-
-  .card-header h3 {
-    font-size: 1.1rem;
-  }
-
-  .detail-row {
-    font-size: 0.9rem;
-  }
-
-  .tag {
-    font-size: 0.75rem;
-    padding: 0.15rem 0.4rem;
+    font-size: 1.5rem;
   }
 }
 </style>
