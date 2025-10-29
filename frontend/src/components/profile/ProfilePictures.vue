@@ -4,7 +4,13 @@
       <!-- Première image -->
       <div class="row--pictures">
         <div class="picture">
-          <span v-if="hasFirstPhoto" class="star-icon">&#9733;</span>
+          <span
+            v-if="isPhotoSet(0)"
+            @click="setProfilePicture(0)"
+            :class="['star-icon', { 'active': profilePicture === 0 }]"
+            :title="profilePicture === 0 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
+            &#9733;
+          </span>
           <img :src="images[0]" alt="" />
           <span @click="triggerFileInput(0)" class="add-icon">
             <i class="fi fi-br-add"></i>
@@ -26,6 +32,13 @@
           v-for="(image, index) in images.slice(1, 3)"
           :key="index + 1"
         >
+          <span
+            v-if="isPhotoSet(index + 1)"
+            @click="setProfilePicture(index + 1)"
+            :class="['star-icon', { 'active': profilePicture === index + 1 }]"
+            :title="profilePicture === index + 1 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
+            &#9733;
+          </span>
           <img :src="image" alt="" />
           <span
             v-if="canAddPhoto(index + 1)"
@@ -57,6 +70,13 @@
           v-for="(image, index) in images.slice(3, 5)"
           :key="index + 3"
         >
+          <span
+            v-if="isPhotoSet(index + 3)"
+            @click="setProfilePicture(index + 3)"
+            :class="['star-icon', { 'active': profilePicture === index + 3 }]"
+            :title="profilePicture === index + 3 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
+            &#9733;
+          </span>
           <img :src="image" alt="" />
           <span
             v-if="canAddPhoto(index + 3)"
@@ -104,11 +124,8 @@ export default {
     };
   },
   computed: {
-    hasFirstPhoto() {
-      const firstImageUrl = this.images[0];
-      const isDefaultImage = firstImageUrl === this.defaultImage;
-
-      return isDefaultImage;
+    profilePicture() {
+      return this.$store.getters.getProfilePicture;
     },
   },
   methods: {
@@ -224,6 +241,55 @@ export default {
         alert("Veuillez sélectionner un fichier image.");
       }
     },
+
+    setProfilePicture(index) {
+      // Envoyer la requête pour mettre à jour la photo de profil
+      fetch(process.env.VUE_APP_API_URL + "/updateUser", {
+        method: "POST",
+        body: JSON.stringify({ profilePicture: index }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          if (data.alert.type === "success") {
+            // Mettre à jour le store Vuex
+            this.$store.commit("setProfilePicture", index);
+            this.$store.commit("setAlertMessage", {
+              type: "success",
+              message: "Photo de profil mise à jour",
+            });
+            // Effacer le message après 3 secondes
+            setTimeout(() => {
+              this.$store.commit("clearAlertMessage");
+            }, 3000);
+          } else {
+            this.$store.commit("setAlertMessage", {
+              type: "warning",
+              message: data.alert.message || "Erreur lors de la mise à jour",
+            });
+            setTimeout(() => {
+              this.$store.commit("clearAlertMessage");
+            }, 3000);
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "Erreur lors de la mise à jour de la photo de profil :",
+            error
+          );
+          this.$store.commit("setAlertMessage", {
+            type: "warning",
+            message: "Erreur de connexion au serveur",
+          });
+          setTimeout(() => {
+            this.$store.commit("clearAlertMessage");
+          }, 3000);
+        });
+    },
   },
 };
 </script>
@@ -280,8 +346,22 @@ export default {
           margin-left: 5px;
           font-weight: 400;
           font-style: italic;
-          font-size: 0.7rem;
-          color: red;
+          font-size: 1.5rem;
+          color: rgba(255, 255, 255, 0.6);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
+          &:hover {
+            color: #ffd700;
+            transform: scale(1.2);
+          }
+
+          &.active {
+            color: #ffd700;
+            font-size: 1.8rem;
+            animation: pulse 2s infinite;
+          }
         }
 
         @keyframes pulse {

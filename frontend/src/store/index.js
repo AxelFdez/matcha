@@ -16,6 +16,7 @@ export const store = createStore({
     bio: "",
     interests: [""],
     photos: [],
+    profilePicture: 0,
     alertMessage: "",
 
     // Website initialize
@@ -68,6 +69,9 @@ export const store = createStore({
     },
     getPhotos(state) {
       return state.photos;
+    },
+    getProfilePicture(state) {
+      return state.profilePicture;
     },
 
     // Website initialize
@@ -144,6 +148,9 @@ export const store = createStore({
     },
     setPhotos(state, value) {
       state.photos = value;
+    },
+    setProfilePicture(state, value) {
+      state.profilePicture = value;
     },
 
     // Website initialize
@@ -358,6 +365,7 @@ export const store = createStore({
             commit("setBio", responseData.user.biography);
             commit("setInterests", responseData.user.interests);
             commit("setPhotos", responseData.user.photos);
+            commit("setProfilePicture", responseData.user.profilepicture || 0);
             break;
           case 404:
             console.log("User not found");

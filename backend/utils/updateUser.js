@@ -91,8 +91,8 @@ async function updateUser(req, res) {
 			user.photos[imageIndex] = newPhotoPath;
 			updates.photos = user.photos;
 		}
-		if (req.body.profilePicture) {
-			if (req.body.profilePicture < 1 || req.body.profilePicture > user.photos.length) {
+		if (req.body.profilePicture !== undefined) {
+			if (req.body.profilePicture < 0 || req.body.profilePicture >= user.photos.length) {
 				return res.status(400).json({ alert: { type: "warning", message: "Invalid profile picture index" } });
 			}
 			updates.profilePicture = req.body.profilePicture;
