@@ -26,10 +26,22 @@ async function setupWebSocket(server) {
 		const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
 		const user = userResult.rows[0];
 
-		if (user && user.location.authorization) {
+		// Parser le JSON location si nécessaire
+		let locationData = user.location;
+		if (typeof locationData === 'string') {
+			locationData = JSON.parse(locationData);
+		}
+
+		// Ne pinger que si l'utilisateur a autorisé et n'a PAS défini sa position manuellement
+		const shouldPingLocation = user && locationData && locationData.authorization && !locationData.manualMode;
+
+		if (shouldPingLocation) {
+			console.log(`📍 Starting location ping for user ${userId} (manualMode: false)`);
 			setInterval(() => {
 				pingClientForCurrentLocation(userId);
 			}, 100000);
+		} else if (locationData && locationData.manualMode) {
+			console.log(`🔒 Skipping location ping for user ${userId} (manualMode: true)`);
 		}
 
 		ws.on('message', async function incoming(message) {
@@ -50,8 +62,29 @@ async function setupWebSocket(server) {
 			// 	deleteNotification(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'chat') {
 				chatUser(parsedMessage.userId, parsedMessage.message);
-			// } else if (parsedMessage.type === 'newLocation') {
-			// 	await pool.query('UPDATE users SET location = $1 WHERE id = $2', [[parsedMessage.location.latitude, parsedMessage.location.longitude], userId]);
+			} else if (parsedMessage.type === 'newLocation') {
+				// Récupérer l'utilisateur pour vérifier manualMode
+				const userResult = await pool.query('SELECT location FROM users WHERE id = $1', [userId]);
+				if (userResult.rows.length > 0) {
+					let locationData = userResult.rows[0].location;
+
+					// Parser le JSON si nécessaire
+					if (typeof locationData === 'string') {
+						locationData = JSON.parse(locationData);
+					}
+
+					// Ne mettre à jour que si manualMode est false ou n'existe pas
+					if (!locationData.manualMode) {
+						locationData.coordinates = [parsedMessage.location.latitude, parsedMessage.location.longitude];
+						locationData.latitude = parsedMessage.location.latitude;
+						locationData.longitude = parsedMessage.location.longitude;
+
+						await pool.query('UPDATE users SET location = $1 WHERE id = $2', [JSON.stringify(locationData), userId]);
+						console.log(`📍 Location updated for user ${userId} via WebSocket (manualMode: false)`);
+					} else {
+						console.log(`🔒 Location update ignored for user ${userId} (manualMode: true)`);
+					}
+				}
 			} else if (parsedMessage.type === 'test') {
 				console.log('Test received:', parsedMessage.message);
 			}

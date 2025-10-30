@@ -63,7 +63,7 @@ const createUsersTable = async () => {
                 profilePicture INTEGER DEFAULT 0,
                 fameRating INTEGER DEFAULT 0,
                 reported INTEGER DEFAULT 0,
-                location JSONB DEFAULT '{"authorization": false, "type": "Point", "coordinates": [0, 0]}',
+                location JSONB DEFAULT '{"manualMode" : false, "authorization": false, "type": "Point", "coordinates": [0, 0]}',
                 blackList TEXT[],
                 viewedBy TEXT[],
                 likedBy TEXT[],

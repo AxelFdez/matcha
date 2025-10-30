@@ -18,6 +18,16 @@ export const store = createStore({
     photos: [],
     profilePicture: 0,
     alertMessage: "",
+    profileVisitors: [],
+    profileLikes: [],
+    location: {
+      coordinates: [48.8566, 2.3522],
+      city: "Paris",
+      country: "France",
+      latitude: 48.8566,
+      longitude: 2.3522,
+      manualMode: false
+    },
 
     // Website initialize
     is_ready: false,
@@ -109,6 +119,17 @@ export const store = createStore({
     },
 
     getAlertMessage: (state) => state.alertMessage,
+
+    getProfileVisitors(state) {
+      return state.profileVisitors;
+    },
+
+    getProfileLikes(state) {
+      return state.profileLikes;
+    },
+    getLocation(state) {
+      return state.location;
+    },
   },
 
   mutations: {
@@ -194,6 +215,15 @@ export const store = createStore({
     clearAlertMessage(state) {
       state.alertMessage = "";
     },
+    setProfileVisitors(state, visitors) {
+      state.profileVisitors = visitors;
+    },
+    setProfileLikes(state, likes) {
+      state.profileLikes = likes;
+    },
+    setLocation(state, location) {
+      state.location = location;
+    },
   },
 
   actions: {
@@ -223,6 +253,14 @@ export const store = createStore({
         console.log("Server says: " + data.type);
 
         if (data.type === "pingLocation") {
+          // Vérifier si l'utilisateur a défini sa position manuellement
+          const isManualMode = state.location && state.location.manualMode === true;
+
+          if (isManualMode) {
+            console.log("🔒 Skipping location update (manualMode: true)");
+            return; // Ne pas envoyer la localisation
+          }
+
           // Obtenir la géolocalisation de l'utilisateur
           navigator.geolocation.getCurrentPosition(
             function (position) {
@@ -236,7 +274,7 @@ export const store = createStore({
                 location: location,
               });
               state.ws.send(message);
-              console.log("Envoyé newLocation :", message);
+              console.log("📍 Envoyé newLocation :", message);
             },
             function (error) {
               console.error(
@@ -382,6 +420,12 @@ export const store = createStore({
             commit("setBio", responseData.user.biography);
             commit("setInterests", responseData.user.interests);
             commit("setPhotos", responseData.user.photos);
+            if (responseData.user.location) {
+              const locationData = typeof responseData.user.location === 'string'
+                ? JSON.parse(responseData.user.location)
+                : responseData.user.location;
+              commit("setLocation", locationData);
+            }
             commit("setProfilePicture", responseData.user.profilepicture || 0);
             break;
           case 404:
@@ -552,6 +596,48 @@ export const store = createStore({
         setTimeout(() => {
           commit("clearAlertMessage");
         }, 5000);
+      }
+    },
+
+    async fetchProfileVisitors({ commit }) {
+      try {
+        const response = await fetchData("/profile/visitors", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.response.status === 200) {
+          commit("setProfileVisitors", response.data.visitors || []);
+        } else {
+          console.error("Error fetching profile visitors:", response.data.message);
+          commit("setProfileVisitors", []);
+        }
+      } catch (error) {
+        console.error("Error in fetchProfileVisitors:", error);
+        commit("setProfileVisitors", []);
+      }
+    },
+
+    async fetchProfileLikes({ commit }) {
+      try {
+        const response = await fetchData("/profile/likes", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.response.status === 200) {
+          commit("setProfileLikes", response.data.likes || []);
+        } else {
+          console.error("Error fetching profile likes:", response.data.message);
+          commit("setProfileLikes", []);
+        }
+      } catch (error) {
+        console.error("Error in fetchProfileLikes:", error);
+        commit("setProfileLikes", []);
       }
     },
   },

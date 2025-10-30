@@ -1,7 +1,12 @@
 <template>
     <div class="profile--info--container">
-        <form class="form-container" @submit.prevent="submitForm">
-            <h3>{{ $store.getters.getUserName }}</h3>
+        <h3>{{ $store.getters.getUserName }}</h3>
+
+        <Tabs :tabs="['Modifier le profil', 'Statistiques', 'GPS']" :defaultTab="0">
+            <template #tab-0>
+                <div class="tab-content-wrapper">
+                    <div class="form-section">
+                        <form class="form-container" @submit.prevent="submitForm">
             <div class="form-row">
                 <div class="form-col">
                     <label for="firstName">Prénom</label>
@@ -82,6 +87,7 @@
                 </button>
             </div>
         </form>
+
         <div class="text--btn">
             <button @click="passwordResetMessage()" class="router--btn">
                 <TextButton :btnName="$t('resetPasswordBtn')"></TextButton>
@@ -94,6 +100,22 @@
         <div v-if="passwordResetAction" class="password--reset--msg">
             <p> check your mailbox </p>
         </div>
+                    </div>
+
+                    <div class="photos-section">
+                        <ProfilePictures />
+                    </div>
+                </div>
+            </template>
+
+            <template #tab-1>
+                <ProfileStats />
+            </template>
+
+            <template #tab-2>
+                <ProfileGPS />
+            </template>
+        </Tabs>
     </div>
 </template>
 
@@ -103,12 +125,20 @@ import { ref, watch } from "vue";
 import { useStore } from "vuex";
 import TextButton from "@/components/TextButton.vue";
 import { fetchData } from "@/config/api";
+import Tabs from "@/components/ui/Tabs.vue";
+import ProfileStats from "@/components/profile/ProfileStats.vue";
+import ProfileGPS from "@/components/profile/ProfileGPS.vue";
+import ProfilePictures from "@/components/profile/ProfilePictures.vue";
 
 export default {
     name: "ProfileInfos",
     components: {
         Multiselect,
         TextButton,
+        Tabs,
+        ProfileStats,
+        ProfileGPS,
+        ProfilePictures,
     },
     setup() {
         const maxLengthBio = 150;
@@ -315,6 +345,25 @@ export default {
         font-weight: 900;
         margin: 0;
         text-transform: capitalize;
+    }
+
+    .tab-content-wrapper {
+        display: flex;
+        gap: 2rem;
+        width: 100%;
+        align-items: flex-start;
+        justify-content: center;
+
+        @media (max-width: 1024px) {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+    .form-section {
+        flex: 1;
+        max-width: 600px;
+        width: 100%;
     }
 
     .form-container {
@@ -546,6 +595,24 @@ export default {
     .btn--pushed {
         background-color: #a602e7 !important;
         color: white !important;
+    }
+
+    .photos-section {
+        flex: 1;
+        max-width: 500px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+
+        @media (max-width: 1024px) {
+            max-width: 600px;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 812px) {
+            padding: 0;
+        }
     }
 
     .text--btn {

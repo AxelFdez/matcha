@@ -54,18 +54,37 @@ async function loginUser(req, res) {
     //      });
     // }
 
-    //  Séparation de la chaîne en latitude et longitude
-    if (req.body.location) {
+    // Gérer la localisation en fonction de manualMode
+    let locationData = user.rows[0].location;
+
+    // Parser le JSON si c'est une string
+    if (typeof locationData === 'string') {
+      locationData = JSON.parse(locationData);
+    }
+
+    // Vérifier si l'utilisateur a défini sa position manuellement
+    const isManualMode = locationData && locationData.manualMode === true;
+
+    // Ne mettre à jour la location que si manualMode est false ou n'existe pas
+    if (!isManualMode && req.body.location) {
       const latitude = parseFloat(req.body.location.latitude);
       const longitude = parseFloat(req.body.location.longitude);
-      user.rows[0].location.coordinates = [latitude, longitude];
-      user.rows[0].location.authorization = true;
+      locationData.coordinates = [latitude, longitude];
+      locationData.latitude = latitude;
+      locationData.longitude = longitude;
+      locationData.authorization = true;
+
+      console.log(`📍 Updating location for user ${username} (manualMode: false)`);
+    } else if (!isManualMode) {
+      locationData.authorization = false;
+      console.log(`⚠️  No location provided for user ${username}`);
     } else {
-      user.rows[0].location.authorization = false;
+      console.log(`🔒 Skipping location update for user ${username} (manualMode: true)`);
     }
+
     pool.query(
       "UPDATE users SET refreshToken = $1, location = $2, connected = $3 WHERE username = $4",
-      [refreshToken, JSON.stringify(user.rows[0].location), true, username]
+      [refreshToken, JSON.stringify(locationData), true, username]
     );
 
     // Envoyer les tokens au client

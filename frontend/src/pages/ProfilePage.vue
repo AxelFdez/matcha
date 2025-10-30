@@ -15,7 +15,6 @@
       </div>
       <div class="profile--container">
         <ProfileInfos></ProfileInfos>
-        <ProfilePictures></ProfilePictures>
       </div>
     </div>
   </div>
@@ -27,14 +26,12 @@
 
 <script>
 import ProfileInfos from '@/components/profile/ProfileInfos.vue'
-import ProfilePictures from '@/components/profile/ProfilePictures.vue'
 import InfoModal from '@/components/InfoModal.vue'
 
 export default {
   name: "ProfilePage",
   components: {
     ProfileInfos,
-    ProfilePictures,
     InfoModal,
   },
   data() {
@@ -98,9 +95,10 @@ export default {
 .profile--page {
 
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
+  padding-top: 80px;
   // margin: 0 0px 0 0px;
 
   .profile--main--container {
@@ -108,18 +106,18 @@ export default {
     display: block;
     align-content: center;
     width: 100%;
-    margin: 50px 20px 0 20px;
+    margin: 20px 20px 20px 20px;
     border-radius: 10px;
 
     max-width: 1300px;
-    height: 80%;
+    height: fit-content;
     // margin-bottom: 10px;
-    overflow-y: auto;
+    overflow-y: visible;
 
 
     @media (max-width: 700px) {
 
-      margin-top: 90px;
+      margin-top: 20px;
     }
 
     .profile--container {
@@ -127,18 +125,15 @@ export default {
       border-radius: 10px;
       background-color: #ffffff8e;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      padding: 0px 20px 20px 20px;
+      padding: 20px;
       display: flex;
-      align-items: center;
+      justify-content: center;
+      align-items: flex-start;
       height: fit-content;
-
+      width: 100%;
 
       @media (max-width: 812px) {
-        display: grid;
-        align-content: space-around;
-        padding: 0px;
-
-
+        padding: 10px;
       }
     }
   }

@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const saltRounds = 10;
 const { sendEmail } = require('./sendEmailVerification');
 const pool = require('../config/connectBdd');
-const IPinfoWrapper = require('node-ipinfo');
+const getLocationFromRequest = require('./getLocationFromRequest');
 
 class DuplicationError extends Error {
     constructor(message) {
@@ -128,55 +128,6 @@ function validatePassword(password) {
     }
 
     return true;
-}
-
-
-async function getLocationFromRequest(bodyLocation, req) {
-    let location = null;
-
-    // Try to use location from request body first
-    if (bodyLocation && typeof bodyLocation === 'object') {
-        const { latitude, longitude } = bodyLocation;
-        if (typeof latitude === 'number' && typeof longitude === 'number') {
-            location = { latitude, longitude };
-            return location;
-        }
-    }
-
-    try {
-
-        let ipAddress = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
-
-        // Clean IP address
-        if (ipAddress && ipAddress.startsWith('::ffff:')) {
-            ipAddress = ipAddress.substring(7);
-        }
-
-        // Skip localhost
-        if (!ipAddress || ipAddress === '127.0.0.1' || ipAddress === '::1') {
-            console.log('Localhost IP detected, skipping geolocation');
-            return null;
-        }
-
-
-        const ipinfoToken = process.env.IPINFO_TOKEN || null;
-        const ipinfo = new IPinfoWrapper(ipinfoToken);
-
-        const ipData = await ipinfo.lookupIp(ipAddress);
-
-        if (ipData && ipData.loc) {
-            
-            const [latitude, longitude] = ipData.loc.split(',').map(parseFloat);
-            if (!isNaN(latitude) && !isNaN(longitude)) {
-                location = { latitude, longitude };
-                console.log('Location retrieved from IP:', location);
-            }
-        }
-    } catch (ipError) {
-        console.error('Error getting location from IP:', ipError);
-    }
-
-    return location;
 }
 
 async function createUser(req, res) {
