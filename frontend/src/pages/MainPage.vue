@@ -43,21 +43,25 @@ export default {
   const componentKey = ref(0);
   const currentFilters = ref({});
 
-    watch(ws, (newWs) => {
-      if (newWs) {
-        newWs.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === "success") {
+  watch(ws, (newWs) => {
+    if (newWs) {
+      newWs.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "success") {
+          if (tenUsers.value && Array.isArray(tenUsers.value) && tenUsers.value.length > 0) {
             tenUsers.value.shift();
-            if (tenUsers.value.length === 0) {
-              getTenUsers();
-            } else {
-              componentKey.value++;
-            }
           }
-        };
-      }
-    }, { immediate: true });
+
+          if (!tenUsers.value || tenUsers.value.length === 0) {
+            getTenUsers();
+          } else {
+            componentKey.value++;
+          }
+        }
+      };
+    }
+  }, { immediate: true });
 
     const buildQueryString = (filters) => {
       const params = new URLSearchParams();
