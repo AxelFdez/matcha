@@ -18,6 +18,8 @@ export const store = createStore({
     photos: [],
     profilePicture: 0,
     alertMessage: "",
+    profileVisitors: [],
+    profileLikes: [],
 
     // Website initialize
     is_ready: false,
@@ -109,6 +111,14 @@ export const store = createStore({
     },
 
     getAlertMessage: (state) => state.alertMessage,
+
+    getProfileVisitors(state) {
+      return state.profileVisitors;
+    },
+
+    getProfileLikes(state) {
+      return state.profileLikes;
+    },
   },
 
   mutations: {
@@ -193,6 +203,12 @@ export const store = createStore({
     },
     clearAlertMessage(state) {
       state.alertMessage = "";
+    },
+    setProfileVisitors(state, visitors) {
+      state.profileVisitors = visitors;
+    },
+    setProfileLikes(state, likes) {
+      state.profileLikes = likes;
     },
   },
 
@@ -552,6 +568,48 @@ export const store = createStore({
         setTimeout(() => {
           commit("clearAlertMessage");
         }, 5000);
+      }
+    },
+
+    async fetchProfileVisitors({ commit }) {
+      try {
+        const response = await fetchData("/profile/visitors", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.response.status === 200) {
+          commit("setProfileVisitors", response.data.visitors || []);
+        } else {
+          console.error("Error fetching profile visitors:", response.data.message);
+          commit("setProfileVisitors", []);
+        }
+      } catch (error) {
+        console.error("Error in fetchProfileVisitors:", error);
+        commit("setProfileVisitors", []);
+      }
+    },
+
+    async fetchProfileLikes({ commit }) {
+      try {
+        const response = await fetchData("/profile/likes", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.response.status === 200) {
+          commit("setProfileLikes", response.data.likes || []);
+        } else {
+          console.error("Error fetching profile likes:", response.data.message);
+          commit("setProfileLikes", []);
+        }
+      } catch (error) {
+        console.error("Error in fetchProfileLikes:", error);
+        commit("setProfileLikes", []);
       }
     },
   },

@@ -1,7 +1,12 @@
 <template>
     <div class="profile--info--container">
-        <form class="form-container" @submit.prevent="submitForm">
-            <h3>{{ $store.getters.getUserName }}</h3>
+        <h3>{{ $store.getters.getUserName }}</h3>
+
+        <Tabs :tabs="['Modifier le profil', 'Statistiques', 'GPS']" :defaultTab="0">
+            <template #tab-0>
+                <div class="tab-content-wrapper">
+                    <div class="form-section">
+                        <form class="form-container" @submit.prevent="submitForm">
             <div class="form-row">
                 <div class="form-col">
                     <label for="firstName">Prénom</label>
@@ -82,6 +87,7 @@
                 </button>
             </div>
         </form>
+
         <div class="text--btn">
             <button @click="passwordResetMessage()" class="router--btn">
                 <TextButton :btnName="$t('resetPasswordBtn')"></TextButton>
@@ -94,6 +100,32 @@
         <div v-if="passwordResetAction" class="password--reset--msg">
             <p> check your mailbox </p>
         </div>
+                    </div>
+
+                    <div class="photos-section">
+                        <ProfilePictures />
+                    </div>
+                </div>
+            </template>
+
+            <template #tab-1>
+                <ProfileStats />
+            </template>
+
+            <template #tab-2>
+                <div class="gps-tab-placeholder">
+                    <div class="placeholder-icon">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <h4>Ajustement de la localisation GPS</h4>
+                    <p>Cette fonctionnalité vous permettra de modifier manuellement votre position GPS.</p>
+                    <div class="coming-soon-badge">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        <span>Bientôt disponible</span>
+                    </div>
+                </div>
+            </template>
+        </Tabs>
     </div>
 </template>
 
@@ -103,12 +135,18 @@ import { ref, watch } from "vue";
 import { useStore } from "vuex";
 import TextButton from "@/components/TextButton.vue";
 import { fetchData } from "@/config/api";
+import Tabs from "@/components/ui/Tabs.vue";
+import ProfileStats from "@/components/profile/ProfileStats.vue";
+import ProfilePictures from "@/components/profile/ProfilePictures.vue";
 
 export default {
     name: "ProfileInfos",
     components: {
         Multiselect,
         TextButton,
+        Tabs,
+        ProfileStats,
+        ProfilePictures,
     },
     setup() {
         const maxLengthBio = 150;
@@ -315,6 +353,25 @@ export default {
         font-weight: 900;
         margin: 0;
         text-transform: capitalize;
+    }
+
+    .tab-content-wrapper {
+        display: flex;
+        gap: 2rem;
+        width: 100%;
+        align-items: flex-start;
+        justify-content: center;
+
+        @media (max-width: 1024px) {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+    .form-section {
+        flex: 1;
+        max-width: 600px;
+        width: 100%;
     }
 
     .form-container {
@@ -548,6 +605,24 @@ export default {
         color: white !important;
     }
 
+    .photos-section {
+        flex: 1;
+        max-width: 500px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+
+        @media (max-width: 1024px) {
+            max-width: 600px;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 812px) {
+            padding: 0;
+        }
+    }
+
     .text--btn {
         display: flex;
         align-items: center;
@@ -575,6 +650,99 @@ export default {
     // }
     .placeholder {
         color: gray !important;
+    }
+
+    .gps-tab-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(166, 2, 231, 0.05) 0%, rgba(231, 2, 160, 0.05) 100%);
+        border-radius: 16px;
+        margin: 2rem 0;
+
+        .placeholder-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a602e7 0%, #e702a0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 16px rgba(166, 2, 231, 0.3);
+        }
+
+        h4 {
+            font-size: 1.8rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        .coming-soon-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: white;
+            border: 2px solid #a602e7;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #a602e7;
+            box-shadow: 0 4px 12px rgba(166, 2, 231, 0.2);
+
+            i {
+                font-size: 1.2rem;
+                animation: pulse 2s ease-in-out infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 0.7;
+                    transform: scale(1.1);
+                }
+            }
+        }
+
+        @media (max-width: 768px) {
+            padding: 3rem 1.5rem;
+
+            .placeholder-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+
+            h4 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .coming-soon-badge {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
+        }
     }
 }
 </style>

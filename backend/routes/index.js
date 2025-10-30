@@ -40,6 +40,10 @@ router.post('/resetEmail', verifyToken, require('../utils/resetEmail'), (req, re
 router.post('/verifyEmail', require('../utils/verifyEmail'), (req, res) => {});
 // OK
 router.post('/updateUser', verifyToken, upload.array('photos', 5), require('../utils/updateUser'), (req, res) => {});
+// Get profile visitors
+router.get('/profile/visitors', verifyToken, require('../utils/getProfileVisitors'), (req, res) => {});
+// Get profile likes
+router.get('/profile/likes', verifyToken, require('../utils/getProfileLikes'), (req, res) => {});
 // OK
 router.get('/profile/:username', verifyToken, require('../utils/getUser'), (req, res) => {});
 // OK
@@ -68,7 +72,7 @@ router.post('/admin/create-missing-conversations', async (req, res) => {
     try {
         const { createMissingConversations } = require('../utils/createMissingConversations');
         const result = await createMissingConversations();
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Missing conversations created successfully',
             conversationsCreated: result.length,
             details: result
