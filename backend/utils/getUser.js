@@ -17,7 +17,6 @@ async function getUser(req, res) {
 
 		const userProfile = new UserProfile(user);
 		const profile = userProfile.getProfile();
-		console.log("profile:", profile);
 		res.status(200).json({ user: profile });
 	} catch (error) {
 		console.error("Error in getUser:", error);

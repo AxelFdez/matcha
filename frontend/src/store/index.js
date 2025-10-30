@@ -274,13 +274,21 @@ export const store = createStore({
               commit("setServerMessage", "emailExist");
             }
             break;
-            true;
+          case 500:
+          case 502:
           case 503:
+          case 504:
             commit("setServerMessage", "serverError");
+            break;
+          default:
+            if (response.response.status >= 500) {
+              commit("setServerMessage", "serverError");
+            }
             break;
         }
       } catch (error) {
         console.error("Error submitting form:", error);
+        commit("setServerMessage", "serverError");
       } finally {
         commit("setIsRegisterFormSent", true);
         commit("setIsLoading", false);
@@ -328,11 +336,20 @@ export const store = createStore({
             commit("setServerMessage", "loginFail");
             break;
           case 500:
+          case 502:
+          case 503:
+          case 504:
             commit("setServerMessage", "serverError");
+            break;
+          default:
+            if (response.response.status >= 500) {
+              commit("setServerMessage", "serverError");
+            }
             break;
         }
       } catch (error) {
         console.error("Error submitting form:", error);
+        commit("setServerMessage", "serverError");
       } finally {
         commit("setIsLoginFormSent", true);
         commit("setIsLoading", false);
@@ -370,8 +387,16 @@ export const store = createStore({
           case 404:
             console.log("User not found");
             break;
+          case 500:
+          case 502:
           case 503:
+          case 504:
             console.log("Server Error");
+            break;
+          default:
+            if (response.response.status >= 500) {
+              console.log("Server Error");
+            }
             break;
         }
       } catch (error) {
@@ -415,12 +440,21 @@ export const store = createStore({
           case 404:
             commit("setServerMessage", "emailNotMatch");
             break;
+          case 500:
+          case 502:
           case 503:
+          case 504:
             commit("setServerMessage", "serverError");
+            break;
+          default:
+            if (response.response.status >= 500) {
+              commit("setServerMessage", "serverError");
+            }
             break;
         }
       } catch (error) {
         console.error("Error submitting form:", error);
+        commit("setServerMessage", "serverError");
       } finally {
         commit("setIsForgotFormSent", true);
         commit("setIsLoading", false);
@@ -450,15 +484,23 @@ export const store = createStore({
               // router.push({ name: "LoginPage" });
             }, 5000);
             break;
+          case 500:
+          case 502:
           case 503:
-            commit("setServerMessage", responseData.alert);
+          case 504:
+            commit("setServerMessage", responseData.alert || "serverError");
             break;
           default:
-            commit("setServerMessage", responseData.alert);
+            if (response.response.status >= 500) {
+              commit("setServerMessage", "serverError");
+            } else {
+              commit("setServerMessage", responseData.alert);
+            }
             break;
         }
       } catch (error) {
         console.error("Error submitting form:", error);
+        commit("setServerMessage", "serverError");
       } finally {
         commit("setIsFormSent", true);
         commit("setIsLoading", false);
@@ -483,13 +525,20 @@ export const store = createStore({
             commit("setAlertMessage", responseData.alert);
             window.location.href = '/';
             break;
+          case 500:
+          case 502:
           case 503:
+          case 504:
             commit(
               "setAlertMessage",
               responseData.alert || "Erreur du serveur."
             );
             console.log("server error");
-
+            break;
+          default:
+            if (response.response.status >= 500) {
+              commit("setAlertMessage", "Erreur du serveur.");
+            }
             break;
         }
       } catch (error) {

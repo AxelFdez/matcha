@@ -3,14 +3,14 @@ const pool = require("../config/connectBdd");
 module.exports = async function browseUsers(req, res) {
   let { location, tags, ageGap, fameRatingGap, filterBy, sortBy } = req.query;
 
-  console.log("BrowseUsers called with:", {
-    location,
-    tags,
-    ageGap,
-    fameRatingGap,
-    filterBy,
-    sortBy,
-  });
+  // console.log("BrowseUsers called with:", {
+  //   location,
+  //   tags,
+  //   ageGap,
+  //   fameRatingGap,
+  //   filterBy,
+  //   sortBy,
+  // });
 
   // Parse les paramètres si nécessaire
   if (typeof ageGap === "string") {

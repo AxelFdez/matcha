@@ -266,24 +266,23 @@ export default {
     },
     computed: {
         isFormValid() {
-            // if (
-            //     // this.$store.getters.getAge === this.formData.age &&
-            //     // this.$store.getters.getGender === this.formData.gender &&
-            //     // this.formData.interests === this.$store.getters.getInterests &&
-            //     // this.formData.sexualPreferences[0] === this.$store.getters.getSexPref &&
-            //     // this.formData.sexualPreferences[1] === this.$store.getters.getSexPref &&
-            //     this.formData.firstName === this.$store.getters.getFirstName &&
-            //     this.formData.lastName === this.$store.getters.getLastName &&
-            //     this.formData.biography === this.$store.getters.getBio
-            // ) {
-            //     return false;
-            // }
-
-            if ( (!this.$store.getters.getAge && !this.formData.age) ||
-                (!this.$store.getters.getGender && !this.formData.gender) ||
-                this.formData.interests.length === 0 ) {
+            // Vérifier d'abord les champs obligatoires (genre, âge, au moins un intérêt)
+            // Si le genre n'est pas défini (ni dans le formulaire ni dans le store), le formulaire est invalide
+            if ((!this.$store.getters.getGender && !this.formData.gender) || this.$store.getters.getGender === 'None') {
                 return false;
             }
+
+            // Si l'âge n'est pas défini (ni dans le formulaire ni dans le store), le formulaire est invalide
+            if (!this.$store.getters.getAge && !this.formData.age) {
+                return false;
+            }
+
+            // Il faut au moins un intérêt
+            if (this.formData.interests.length === 0) {
+                return false;
+            }
+
+            // Si tous les champs obligatoires sont remplis, vérifier si au moins un champ a été modifié
             if (
                 this.formData.age ||
                 this.formData.firstname ||
@@ -292,8 +291,6 @@ export default {
                 this.formData.interests.length !== this.$store.getters.getInterests.length ||
                 this.formData.sexualpreferences[0] ||
                 this.formData.sexualpreferences[1] ||
-
-                // (!this.formData.sexualPreferences[0] && !this.formData.sexualPreferences[1]) ||
                 this.formData.gender ||
                 (!this.formData.sexualpreferences[0] && !this.formData.sexualpreferences[1])
             ) {
