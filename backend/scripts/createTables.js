@@ -12,7 +12,7 @@ const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
                 database: process.env.PGDATABASE,
                 connectionTimeoutMillis: 5000,
             });
-            
+
             await client.connect();
             await client.query('SELECT 1');
             await client.end();
@@ -93,7 +93,7 @@ const createUsersTable = async () => {
                 profilePicture INTEGER DEFAULT 0,
                 fameRating INTEGER DEFAULT 0,
                 reported INTEGER DEFAULT 0,
-                location JSONB DEFAULT '{"authorization": false, "type": "Point", "coordinates": [0, 0]}',
+                location JSONB DEFAULT '{"manualMode" : false, "authorization": false, "type": "Point", "coordinates": [0, 0]}',
                 blackList TEXT[],
                 viewedBy TEXT[],
                 likedBy TEXT[],
@@ -163,7 +163,7 @@ const createChatTables = async () => {
 
         // Index pour optimiser les requêtes de conversation
         const createConversationIndexQuery = `
-            CREATE INDEX IF NOT EXISTS idx_conversations_users 
+            CREATE INDEX IF NOT EXISTS idx_conversations_users
             ON chat_conversations(user1_id, user2_id);
         `;
         await client.query(createConversationIndexQuery);
@@ -171,7 +171,7 @@ const createChatTables = async () => {
 
         // Index pour optimiser les requêtes de messages
         const createMessagesIndexQuery = `
-            CREATE INDEX IF NOT EXISTS idx_messages_conversation_sent 
+            CREATE INDEX IF NOT EXISTS idx_messages_conversation_sent
             ON chat_messages(conversation_id, sent_at DESC);
         `;
         await client.query(createMessagesIndexQuery);
@@ -190,11 +190,11 @@ const createChatTables = async () => {
     try {
         console.log('Waiting for PostgreSQL to be ready...');
         await waitForPostgres();
-        
+
         console.log('Creating database tables...');
         await createUsersTable();
         await createChatTables();
-        
+
         console.log('Database initialization completed successfully!');
     } catch (err) {
         console.error('Database initialization failed:', err);

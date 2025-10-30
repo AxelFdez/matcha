@@ -113,17 +113,7 @@
             </template>
 
             <template #tab-2>
-                <div class="gps-tab-placeholder">
-                    <div class="placeholder-icon">
-                        <i class="fa-solid fa-location-dot"></i>
-                    </div>
-                    <h4>Ajustement de la localisation GPS</h4>
-                    <p>Cette fonctionnalité vous permettra de modifier manuellement votre position GPS.</p>
-                    <div class="coming-soon-badge">
-                        <i class="fa-solid fa-hourglass-half"></i>
-                        <span>Bientôt disponible</span>
-                    </div>
-                </div>
+                <ProfileGPS />
             </template>
         </Tabs>
     </div>
@@ -137,6 +127,7 @@ import TextButton from "@/components/TextButton.vue";
 import { fetchData } from "@/config/api";
 import Tabs from "@/components/ui/Tabs.vue";
 import ProfileStats from "@/components/profile/ProfileStats.vue";
+import ProfileGPS from "@/components/profile/ProfileGPS.vue";
 import ProfilePictures from "@/components/profile/ProfilePictures.vue";
 
 export default {
@@ -146,6 +137,7 @@ export default {
         TextButton,
         Tabs,
         ProfileStats,
+        ProfileGPS,
         ProfilePictures,
     },
     setup() {
@@ -650,99 +642,6 @@ export default {
     // }
     .placeholder {
         color: gray !important;
-    }
-
-    .gps-tab-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 4rem 2rem;
-        text-align: center;
-        background: linear-gradient(135deg, rgba(166, 2, 231, 0.05) 0%, rgba(231, 2, 160, 0.05) 100%);
-        border-radius: 16px;
-        margin: 2rem 0;
-
-        .placeholder-icon {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #a602e7 0%, #e702a0 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: white;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 8px 16px rgba(166, 2, 231, 0.3);
-        }
-
-        h4 {
-            font-size: 1.8rem;
-            color: #1f2937;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        p {
-            font-size: 1.1rem;
-            color: #6b7280;
-            margin-bottom: 2rem;
-            max-width: 500px;
-        }
-
-        .coming-soon-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem 2rem;
-            background: white;
-            border: 2px solid #a602e7;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 500;
-            color: #a602e7;
-            box-shadow: 0 4px 12px rgba(166, 2, 231, 0.2);
-
-            i {
-                font-size: 1.2rem;
-                animation: pulse 2s ease-in-out infinite;
-            }
-
-            @keyframes pulse {
-                0%, 100% {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-                50% {
-                    opacity: 0.7;
-                    transform: scale(1.1);
-                }
-            }
-        }
-
-        @media (max-width: 768px) {
-            padding: 3rem 1.5rem;
-
-            .placeholder-icon {
-                width: 80px;
-                height: 80px;
-                font-size: 2rem;
-            }
-
-            h4 {
-                font-size: 1.5rem;
-            }
-
-            p {
-                font-size: 1rem;
-            }
-
-            .coming-soon-badge {
-                padding: 0.75rem 1.5rem;
-                font-size: 0.9rem;
-            }
-        }
     }
 }
 </style>

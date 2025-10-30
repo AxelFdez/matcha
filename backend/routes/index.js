@@ -44,6 +44,10 @@ router.post('/updateUser', verifyToken, upload.array('photos', 5), require('../u
 router.get('/profile/visitors', verifyToken, require('../utils/getProfileVisitors'), (req, res) => {});
 // Get profile likes
 router.get('/profile/likes', verifyToken, require('../utils/getProfileLikes'), (req, res) => {});
+// Update GPS location
+router.post('/update-gps-location', verifyToken, require('../utils/updateGpsLocation'), (req, res) => {});
+// Reset to automatic location
+router.post('/reset-automatic-location', verifyToken, require('../utils/resetToAutomaticLocation'), (req, res) => {});
 // OK
 router.get('/profile/:username', verifyToken, require('../utils/getUser'), (req, res) => {});
 // OK

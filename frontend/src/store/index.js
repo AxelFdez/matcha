@@ -20,6 +20,14 @@ export const store = createStore({
     alertMessage: "",
     profileVisitors: [],
     profileLikes: [],
+    location: {
+      coordinates: [48.8566, 2.3522],
+      city: "Paris",
+      country: "France",
+      latitude: 48.8566,
+      longitude: 2.3522,
+      manualMode: false
+    },
 
     // Website initialize
     is_ready: false,
@@ -119,6 +127,9 @@ export const store = createStore({
     getProfileLikes(state) {
       return state.profileLikes;
     },
+    getLocation(state) {
+      return state.location;
+    },
   },
 
   mutations: {
@@ -210,6 +221,9 @@ export const store = createStore({
     setProfileLikes(state, likes) {
       state.profileLikes = likes;
     },
+    setLocation(state, location) {
+      state.location = location;
+    },
   },
 
   actions: {
@@ -239,6 +253,14 @@ export const store = createStore({
         console.log("Server says: " + data.type);
 
         if (data.type === "pingLocation") {
+          // Vérifier si l'utilisateur a défini sa position manuellement
+          const isManualMode = state.location && state.location.manualMode === true;
+
+          if (isManualMode) {
+            console.log("🔒 Skipping location update (manualMode: true)");
+            return; // Ne pas envoyer la localisation
+          }
+
           // Obtenir la géolocalisation de l'utilisateur
           navigator.geolocation.getCurrentPosition(
             function (position) {
@@ -252,7 +274,7 @@ export const store = createStore({
                 location: location,
               });
               state.ws.send(message);
-              console.log("Envoyé newLocation :", message);
+              console.log("📍 Envoyé newLocation :", message);
             },
             function (error) {
               console.error(
@@ -398,6 +420,12 @@ export const store = createStore({
             commit("setBio", responseData.user.biography);
             commit("setInterests", responseData.user.interests);
             commit("setPhotos", responseData.user.photos);
+            if (responseData.user.location) {
+              const locationData = typeof responseData.user.location === 'string'
+                ? JSON.parse(responseData.user.location)
+                : responseData.user.location;
+              commit("setLocation", locationData);
+            }
             commit("setProfilePicture", responseData.user.profilepicture || 0);
             break;
           case 404:
