@@ -54,18 +54,21 @@ async function updateUser(req, res) {
       updates.age = req.body.age;
     }
     if (req.body.interests) {
+      // Remplacer complètement la liste des tags (au lieu de juste ajouter)
+      const newInterests = [];
       for (let i = 0; i < req.body.interests.length; i++) {
         if (!req.body.interests[i].startsWith("#")) {
           return res.status(400).json({ alert: { type: "warning", message: "Invalid interest" } });
         }
-        if (!user.interests.includes(req.body.interests[i])) {
-          user.interests.push(req.body.interests[i]);
-          if (!interests.includes(req.body.interests[i])) {
-            interests.push(req.body.interests[i]);
-          }
+        // Enlever le # avant de stocker en DB
+        const tagWithoutHash = req.body.interests[i].substring(1);
+        newInterests.push(tagWithoutHash);
+        // Ajouter à la liste globale si pas déjà présent
+        if (!interests.includes(tagWithoutHash)) {
+          interests.push(tagWithoutHash);
         }
       }
-      updates.interests = user.interests;
+      updates.interests = newInterests;
     }
     if (req.files) {
       const fs = require("fs");

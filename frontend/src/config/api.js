@@ -14,7 +14,7 @@ export const fetchData = async (endpoint, options = {}) => {
     },
   };
 
-  console.log('api url= ', process.env.VUE_APP_API_URL + endpoint);
+  // console.log('api url= ', process.env.VUE_APP_API_URL + endpoint);
   // console.log('config= ', config);
   try {
     const response = await fetch(process.env.VUE_APP_API_URL + endpoint, config);

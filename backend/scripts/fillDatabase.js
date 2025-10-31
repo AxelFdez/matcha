@@ -15,7 +15,7 @@ const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
                 database: process.env.PGDATABASE,
                 connectionTimeoutMillis: 5000,
             });
-            
+
             await pool.query('SELECT 1');
             await pool.end();
             console.log('PostgreSQL is ready for seeding!');
@@ -56,6 +56,7 @@ function generateFakeUser() {
     fameRating: faker.number.int({ min: 0, max: 1000 }),
     location: {
       authorization: faker.datatype.boolean(),
+      manualMode: false,
       type: 'Point',
       coordinates: [faker.location.longitude(), faker.location.latitude()]
     },
@@ -99,7 +100,7 @@ async function insertUser(user) {
   try {
     console.log('Waiting for PostgreSQL to be ready for seeding...');
     await waitForPostgres();
-    
+
     console.log('Insertion des utilisateurs...');
     const fakeUsers = Array.from({ length: USERS_TO_CREATE }, generateFakeUser);
     for (const user of fakeUsers) {
