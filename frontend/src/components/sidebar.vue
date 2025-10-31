@@ -199,8 +199,8 @@
               <div class="flex items-center space-x-3">
                 <div class="size-10 flex-shrink-0">
                   <img
-                    v-if="getFirstPhoto(conversation.otherUser.photos)"
-                    :src="getFirstPhoto(conversation.otherUser.photos)"
+                    v-if="getFirstPhoto(conversation.otherUser.avatar)"
+                    :src="getFirstPhoto(conversation.otherUser.avatar)"
                     :alt="conversation.otherUser.username"
                     class="size-10 rounded-full object-cover"
                   />
@@ -265,8 +265,8 @@
           <div class="flex items-center space-x-2">
             <div class="size-8 flex-shrink-0">
               <img
-                v-if="getFirstPhoto(selectedConversation.otherUser.photos)"
-                :src="getFirstPhoto(selectedConversation.otherUser.photos)"
+                v-if="selectedConversation.otherUser.avatar"
+                :src="getFirstPhoto(selectedConversation.otherUser.avatar)"
                 :alt="selectedConversation.otherUser.username"
                 class="size-8 rounded-full object-cover"
               />
@@ -416,13 +416,39 @@ export default {
     let newNotificationTimeout = null;
 
     // Utility function to get first photo
-    const getFirstPhoto = (photos) => {
-      if (!photos || !Array.isArray(photos)) return null;
+    const getFirstPhoto = (photoData) => {
+      if (!photoData) return null;
 
-      const firstPhoto = photos.find(photo => photo);
-      if (!firstPhoto) return null;
+      let photo = null;
 
-      return `http://localhost:3000${firstPhoto.replace("/app", "")}`;
+      if (Array.isArray(photoData)) {
+        photo = photoData[0];
+      } else if (typeof photoData === "string") {
+        try {
+          const parsed = JSON.parse(photoData);
+          if (Array.isArray(parsed)) {
+            photo = parsed[0];
+          } else {
+            photo = photoData.split(",")[0];
+          }
+        } catch {
+          // Si simple string
+          photo = photoData.includes(",") ? photoData.split(",")[0] : photoData;
+        }
+      }
+
+      if (!photo) return null;
+
+      // Nettoyage du chemin
+      const cleaned = photo.replace(/^\/app/, "");
+
+      // Base URL (vue-cli)
+      const baseURL = process.env.VUE_APP_API_URL || "http://localhost:3000";
+
+      // Si c’est déjà une URL absolue
+      if (photo.startsWith("http")) return photo;
+
+      return `${baseURL}${cleaned}`;
     };
 
     // Computed properties
