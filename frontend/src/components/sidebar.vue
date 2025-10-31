@@ -199,8 +199,8 @@
               <div class="flex items-center space-x-3">
                 <div class="size-10 flex-shrink-0">
                   <img
-                    v-if="getFirstPhoto(conversation.otherUser.photos)"
-                    :src="getFirstPhoto(conversation.otherUser.photos)"
+                    v-if="getFirstPhoto(conversation.otherUser.avatar)"
+                    :src="getFirstPhoto(conversation.otherUser.avatar)"
                     :alt="conversation.otherUser.username"
                     class="size-10 rounded-full object-cover"
                   />
@@ -416,13 +416,15 @@ export default {
     let newNotificationTimeout = null;
 
     // Utility function to get first photo
-    const getFirstPhoto = (photos) => {
-      if (!photos || !Array.isArray(photos)) return null;
+    const getFirstPhoto = (photo) => {
+      if (!photo) return null;
 
-      const firstPhoto = photos.find(photo => photo);
-      if (!firstPhoto) return null;
+      if (photo.startsWith("http")) return photo;
 
-      return `http://localhost:3000${firstPhoto.replace("/app", "")}`;
+      const cleaned = photo.replace(/^\/app/, "");
+
+      const baseURL = process.env.VUE_APP_API_URL || "http://localhost:3000";
+      return `${baseURL}${cleaned}`;
     };
 
     // Computed properties
@@ -537,6 +539,7 @@ export default {
 
         if (response.response.ok && response.data && response.data.conversations) {
           conversations.value = response.data.conversations;
+          console.log("Conversations reçues:", response.data.conversations);
         } else {
           conversations.value = [];
         }
