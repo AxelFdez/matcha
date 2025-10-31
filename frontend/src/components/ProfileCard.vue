@@ -1,9 +1,7 @@
 <!-- eslint-disable tailwindcss/no-custom-classname -->
 <template>
   <div class="justify-items-center overflow-auto">
-    <div
-      class="card-container mt-8 max-w-2xl justify-items-center rounded-xl p-4 shadow-lg"
-    >
+    <div class="card-container mt-8 max-w-2xl justify-items-center rounded-xl p-4 shadow-lg">
       <swiper
         :modules="modules"
         :slides-per-view="1"
@@ -121,12 +119,7 @@
 
 <script setup>
 import { defineProps, onMounted, ref, nextTick, watch } from "vue";
-import {
-  Dialog,
-  DialogPanel,
-  TransitionChild,
-  TransitionRoot,
-} from "@headlessui/vue";
+import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
 import profileInfos from "./ProfileInfos.vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
@@ -140,18 +133,23 @@ const open = ref(false);
 const toggleModal = () => {
   open.value = !open.value;
 
-  // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
-  // if (open.value && props.user && props.user.username) {
-  //   const viewedMessage = {
-  //     type: "viewed",
-  //     userId: userId,
-  //     message: {
-  //       user: username,
-  //       userviewed: props.user.username
-  //     },
-  //   };
-  //   ws.send(JSON.stringify(viewedMessage));
-  // }
+  const realUsername = store.getters.getUserName;
+  const viewedUsername = props.user.username;
+
+  if (!ws || !realUsername || !viewedUsername) {
+    console.warn("WebSocket or usernames not available");
+    return;
+  }
+
+  console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });
+
+  ws.send(
+    JSON.stringify({
+      type: "viewed",
+      userId: userId,
+      message: { user: realUsername, userViewed: viewedUsername },
+    })
+  );
 };
 
 const store = useStore();
@@ -161,15 +159,12 @@ const swiperInstance = ref(null);
 
 const loadImages = async (username) => {
   const imagePromises = props.user.photos.map((_, index) =>
-    fetch(
-      `${process.env.VUE_APP_API_URL}/getPhotos/${username}?index=${index}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("accessToken"),
-        },
-      }
-    )
+    fetch(`${process.env.VUE_APP_API_URL}/getPhotos/${username}?index=${index}`, {
+      method: "GET",
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("accessToken"),
+      },
+    })
       .then((response) => (response.ok ? response.blob() : null))
       .then((blob) => (blob ? URL.createObjectURL(blob) : imgPlaceholder))
       .catch(() => imgPlaceholder)
@@ -219,20 +214,24 @@ const props = defineProps({
   },
 });
 // Watch pour recalibrer Swiper quand les photos changent
-watch(photos, () => {
-  nextTick(() => {
-    if (swiperInstance.value && photos.value.length > 0) {
-      swiperInstance.value.update();
-      swiperInstance.value.updateSize();
-      swiperInstance.value.updateSlides();
-      swiperInstance.value.updateProgress();
-      swiperInstance.value.updateSlidesClasses();
+watch(
+  photos,
+  () => {
+    nextTick(() => {
+      if (swiperInstance.value && photos.value.length > 0) {
+        swiperInstance.value.update();
+        swiperInstance.value.updateSize();
+        swiperInstance.value.updateSlides();
+        swiperInstance.value.updateProgress();
+        swiperInstance.value.updateSlidesClasses();
 
-      // Force slide to index 0 to "activate" the slider
-      swiperInstance.value.slideTo(0, 0);
-    }
-  });
-}, { deep: true });
+        // Force slide to index 0 to "activate" the slider
+        swiperInstance.value.slideTo(0, 0);
+      }
+    });
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   if (props.user.username) {
