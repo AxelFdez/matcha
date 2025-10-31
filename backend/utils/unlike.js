@@ -1,121 +1,133 @@
-const WebSocket = require('ws');
-const connectBdd = require('../config/connectBdd');
+const WebSocket = require("ws");
+const pool = require("../config/connectBdd");
 
 async function unlike(userId, message) {
-	const { clients } = require('./websockets');
-	let ws = clients.get(userId);
-	if (!ws) {
-		return;
-	}
-	else if (!message.user || !message.userUnliked || message.user === message.userUnliked) {
-		ws.send(JSON.stringify({
-			type: 'error',
-			userId: userId,
-			message: {
-				title: 'errors in data sent',
-			}
-		}));
-		return;
-	}
-
-	const User = require('../models/User');
-	connectBdd();
-	user = await User.findOne({ username: message.user });
-	if (!user) {
-		ws.send(JSON.stringify({
-					type: 'error',
-					userId: userId,
-					message: {
-						title: 'user not found',
-					}
-				}));
-		return;
-	}
-
-	userUnliked = await User.findOne({ username: message.userUnliked });
-	if (!userUnliked) {
-		ws.send(JSON.stringify({
-			type: 'error',
-			userId: userId,
-			message: {
-				title: 'userUnliked not found',
-			}
-		}));
-		return;
-	}
-	else if (!userUnliked.likedBy.includes(user._id)) {
-		ws.send(JSON.stringify({
-			type: 'error',
-			userId: userId,
-			message: {
-				title: 'user not liked',
-			}
-		}));
-		return;
-	}
-
-	// let userUnlikedFilter = userUnliked.likedBy.filter((id) => id.toString() !== user._id.toString());
-	let index = userUnliked.likedBy.findIndex(item => item === user.id);
-	if (index > -1) {
-		userUnliked.fameRating -= 10;
-		userUnliked.likedBy.splice(index, 1);
-		const ws2 = clients.get(userliked._id.toString());
-		if (ws2 && ws2.readyState === WebSocket.OPEN) {
-			ws2.send(JSON.stringify({
-				type: 'notification',
-				message: {
-					title: 'unlike',
-					user: user.username,
-				}
-			}));
-		}
-	}
-
-	index = userUnliked.matchs.findIndex(item => item === user._id);
-	if (index > -1) {
-		userUnliked.fameRating -= 50;
-		userUnliked.matchs.splice(index, 1);
-		const ws2 = clients.get(userliked._id.toString());
-		if (ws2 && ws2.readyState === WebSocket.OPEN) {
-			ws2.send(JSON.stringify({
-				type: 'notification',
-				message: {
-					title: 'unmatcha',
-					user: user.username,
-				}
-			}));
-		}
-	}
-	index = user.matchs.findIndex(item => item === userUnliked._id);
-	if (index > -1) {
-		user.fameRating -= 50;
-		user.matchs.splice(index, 1);
-		if (ws && ws.readyState === WebSocket.OPEN) {
-			ws.send(JSON.stringify({
-				type: 'notification',
-				message: {
-					title: 'unmatcha',
-					user: userliked.username,
-				}
-			}));
-		}
-	}
-
-	ws.send(JSON.stringify({
-		type: 'success',
-		userId: userId,
-		message: {
-			title: 'unlike',
-		}
-	}));
-
-	userUnliked.notifications.push({
-		title: 'unlike',
-		body: user.username + ' unliked you',
-	});
-
-	await userUnliked.save();
-	await user.save();
+  // console.log("unlikeUser");
+  // const { clients } = require("./websockets");
+  // const username = message.user;
+  // const userUnlikedM = message.userUnliked;
+  // const ws = clients.get(userId);
+  // if (!ws) return;
+  // if (!message.user || !message.userUnliked || message.user === message.userUnliked) {
+  //   ws.send(
+  //     JSON.stringify({
+  //       type: "error",
+  //       userId,
+  //       message: { title: "errors in data sent" },
+  //     })
+  //   );
+  //   return;
+  // }
+  // let user = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+  // user = user.rows[0];
+  // if (!user) {
+  //   ws.send(
+  //     JSON.stringify({
+  //       type: "error",
+  //       userId,
+  //       message: { title: "user not found" },
+  //     })
+  //   );
+  //   return;
+  // }
+  // let userUnliked = await pool.query("SELECT * FROM users WHERE username = $1", [userUnlikedM]);
+  // userUnliked = userUnliked.rows[0];
+  // if (!userUnliked) {
+  //   ws.send(
+  //     JSON.stringify({
+  //       type: "error",
+  //       userId,
+  //       message: { title: "userUnliked not found" },
+  //     })
+  //   );
+  //   return;
+  // }
+  // if (!userUnliked.likedby || !userUnliked.likedby.includes(user.id.toString())) {
+  //   ws.send(
+  //     JSON.stringify({
+  //       type: "error",
+  //       userId,
+  //       message: { title: "user was not liked" },
+  //     })
+  //   );
+  //   return;
+  // }
+  // // Retirer le like
+  // await pool.query("UPDATE users SET likedby = array_remove(likedby, $1) WHERE id = $2", [
+  //   user.id,
+  //   userUnliked.id,
+  // ]);
+  // // Ajuster famerating
+  // userUnliked.famerating = Math.max(0, (userUnliked.famerating || 0) - 10);
+  // await pool.query("UPDATE users SET famerating = $1 WHERE id = $2", [
+  //   userUnliked.famerating,
+  //   userUnliked.id,
+  // ]);
+  // // Ajouter notification
+  // await pool.query(
+  //   `UPDATE users
+  //    SET notifications = notifications || $1::jsonb
+  //    WHERE id = $2`,
+  //   [
+  //     JSON.stringify({
+  //       title: "unlike",
+  //       body: `${user.username} unliked you`,
+  //       createdAt: new Date(),
+  //       viewed: false,
+  //     }),
+  //     userUnliked.id,
+  //   ]
+  // );
+  // // Envoyer notification via WebSocket
+  // const ws2 = clients.get(userUnliked.id.toString());
+  // if (ws2 && ws2.readyState === WebSocket.OPEN) {
+  //   ws2.send(
+  //     JSON.stringify({
+  //       type: "notification",
+  //       message: { title: "unlike", user: user.username },
+  //     })
+  //   );
+  // }
+  // ws.send(
+  //   JSON.stringify({
+  //     type: "success",
+  //     userId,
+  //     message: { title: "unlike" },
+  //   })
+  // );
+  // // Supprimer match si existant
+  // let userMatcha = await pool.query("SELECT matcha FROM users WHERE id = $1", [user.id]);
+  // userMatcha = userMatcha.rows[0].matcha || [];
+  // const isMatch = userMatcha.includes(userUnliked.id);
+  // if (isMatch) {
+  //   // Retirer match pour les deux utilisateurs
+  //   await pool.query(
+  //     "UPDATE users SET matcha = array_remove(matcha, $1), famerating = GREATEST(famerating - 50, 0), notifications = array_append(notifications, $2) WHERE id = $3",
+  //     [
+  //       userUnliked.id,
+  //       { title: "unmatch", body: `${userUnliked.username} unmatched with you` },
+  //       user.id,
+  //     ]
+  //   );
+  //   await pool.query(
+  //     "UPDATE users SET matcha = array_remove(matcha, $1), famerating = GREATEST(famerating - 50, 0), notifications = array_append(notifications, $2) WHERE id = $3",
+  //     [user.id, { title: "unmatch", body: `${user.username} unmatched with you` }, userUnliked.id]
+  //   );
+  //   // Envoyer notifications unmatch
+  //   if (ws && ws.readyState === WebSocket.OPEN) {
+  //     ws.send(
+  //       JSON.stringify({
+  //         type: "notification",
+  //         message: { title: "unmatch", user: userUnliked.username },
+  //       })
+  //     );
+  //   }
+  //   if (ws2 && ws2.readyState === WebSocket.OPEN) {
+  //     ws2.send(
+  //       JSON.stringify({ type: "notification", message: { title: "unmatch", user: user.username } })
+  //     );
+  //   }
+  // }
 }
 
 module.exports = unlike;

@@ -127,6 +127,10 @@ export const store = createStore({
     getProfileLikes(state) {
       return state.profileLikes;
     },
+    getProfileUnlikes(state) {
+      return state.profileUnlikes;
+    },
+
     getLocation(state) {
       return state.location;
     },
@@ -641,6 +645,28 @@ export const store = createStore({
       }
     },
   },
+
+  async fetchProfileUnlikes({ commit }) {
+    try {
+      const response = await fetchData("/profile/unlikes", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.response.status === 200) {
+        commit("setProfileUnlikes", response.data.unlikes || []);
+      } else {
+        console.error("Error fetching profile unlikes:", response.data.message);
+        commit("setProfileUnlikes", []);
+      }
+    } catch (error) {
+      console.error("Error in fetchProfileUnlikes:", error);
+      commit("setProfileUnlikes", []);
+    }
+  },
+
 
   modules: {},
 });

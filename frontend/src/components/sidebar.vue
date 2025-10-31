@@ -451,6 +451,7 @@ export default {
       return `${baseURL}${cleaned}`;
     };
 
+    console.log("notifications", notifications);
     // Computed properties
     const notificationCount = computed(() => {
       return notifications.value.filter((n) => !n.viewed).length;
