@@ -17,7 +17,7 @@ export const store = createStore({
     interests: [""],
     photos: [],
     profilePicture: 0,
-    alertMessage: "",
+    alertMessage: null,
     profileVisitors: [],
     profileLikes: [],
     location: {
@@ -213,7 +213,7 @@ export const store = createStore({
       state.alertMessage = message;
     },
     clearAlertMessage(state) {
-      state.alertMessage = "";
+      state.alertMessage = null;
     },
     setProfileVisitors(state, visitors) {
       state.profileVisitors = visitors;
@@ -334,7 +334,6 @@ export const store = createStore({
     },
 
     async submitLoginForm({ commit, dispatch }, formData) {
-      console.log("submitLoginForm");
 
       try {
         const response = await fetchData("/login", {
@@ -345,7 +344,6 @@ export const store = createStore({
           body: JSON.stringify(formData),
         });
         const responseData = response.data;
-        console.log(response);
         switch (response.response.status) {
           case 201:
             localStorage.setItem("accessToken", responseData.accessToken);
@@ -445,23 +443,24 @@ export const store = createStore({
         }
       } catch (error) {
         console.error("Error submitting form:", error);
-      } finally {
-        console.groupCollapsed("User Infos fetched");
-        console.log("Username:", state.user_name);
-        console.log("First Name:", state.first_name);
-        console.log("Last Name:", state.last_name);
-        console.log("Email:", state.email);
-        console.log("Verified:", state.verified);
-        console.log("Ready:", state.ready);
-        console.log("Age:", state.age);
-        console.log("Gender:", state.gender);
-        console.log("Sexual Preferences:", state.sex_pref);
-        console.log("Bio:", state.bio);
-        console.log("Interests:", state.interests);
-        console.log("Photos:", state.photos);
-        console.groupEnd();
-        // commit("setIsLoading", false);
       }
+      // finally {
+      //   console.groupCollapsed("User Infos fetched");
+      //   console.log("Username:", state.user_name);
+      //   console.log("First Name:", state.first_name);
+      //   console.log("Last Name:", state.last_name);
+      //   console.log("Email:", state.email);
+      //   console.log("Verified:", state.verified);
+      //   console.log("Ready:", state.ready);
+      //   console.log("Age:", state.age);
+      //   console.log("Gender:", state.gender);
+      //   console.log("Sexual Preferences:", state.sex_pref);
+      //   console.log("Bio:", state.bio);
+      //   console.log("Interests:", state.interests);
+      //   console.log("Photos:", state.photos);
+      //   console.groupEnd();
+        // commit("setIsLoading", false);
+      // }
     },
 
     async forgotPasswordForm({ commit }, formData) {
@@ -566,31 +565,45 @@ export const store = createStore({
         switch (response.response.status) {
           case 200:
             console.log("profil Updated");
-            commit("setAlertMessage", responseData.alert);
-            window.location.href = '/';
+            // Si responseData.alert est déjà un objet, l'utiliser tel quel
+            if (responseData.alert && typeof responseData.alert === 'object') {
+              commit("setAlertMessage", responseData.alert);
+            } else {
+              commit("setAlertMessage", {
+                type: "success",
+                message: responseData.alert || "Profil mis à jour avec succès!"
+              });
+            }
             break;
           case 500:
           case 502:
           case 503:
           case 504:
-            commit(
-              "setAlertMessage",
-              responseData.alert || "Erreur du serveur."
-            );
+            if (responseData.alert && typeof responseData.alert === 'object') {
+              commit("setAlertMessage", responseData.alert);
+            } else {
+              commit("setAlertMessage", {
+                type: "warning",
+                message: responseData.alert || "Erreur du serveur."
+              });
+            }
             console.log("server error");
             break;
           default:
             if (response.response.status >= 500) {
-              commit("setAlertMessage", "Erreur du serveur.");
+              commit("setAlertMessage", {
+                type: "warning",
+                message: "Erreur du serveur."
+              });
             }
             break;
         }
       } catch (error) {
         console.error("Error submitting form:", error);
-        commit(
-          "setAlertMessage",
-          "Une erreur est survenue lors de la soumission du formulaire."
-        );
+        commit("setAlertMessage", {
+          type: "warning",
+          message: "Une erreur est survenue lors de la soumission du formulaire."
+        });
       } finally {
         commit("setIsLoading", false);
         setTimeout(() => {

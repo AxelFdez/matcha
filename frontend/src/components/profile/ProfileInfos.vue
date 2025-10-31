@@ -208,6 +208,16 @@ export default {
             event.preventDefault();
             console.log("submit form function");
 
+            // Normaliser les tags : s'assurer qu'ils ont tous un # devant
+            if (formData.value.interests && Array.isArray(formData.value.interests)) {
+                formData.value.interests = formData.value.interests.map(tag => {
+                    if (typeof tag === 'string' && !tag.startsWith('#')) {
+                        return `#${tag}`;
+                    }
+                    return tag;
+                });
+            }
+
             console.log("formData = ", formData.value);
             store.dispatch("updateUserInfosForm", formData.value);
         }

@@ -5,9 +5,11 @@
       Ajustement de la localisation GPS
     </h4>
 
-    <div v-if="isLoading" class="loading">
+    <div v-if="isLoading || isSaving || isResetting" class="loading">
       <i class="fa-solid fa-spinner fa-spin"></i>
-      <p>Chargement de la carte...</p>
+      <p v-if="isLoading">Chargement de la carte...</p>
+      <p v-else-if="isSaving">Enregistrement en cours...</p>
+      <p v-else-if="isResetting">Réinitialisation en cours...</p>
     </div>
 
     <div v-else class="gps-content">
@@ -16,13 +18,12 @@
         <div class="status-badge">
           <i :class="isManualMode ? 'fa-solid fa-hand-pointer' : 'fa-solid fa-satellite-dish'"></i>
           <div>
-            <strong>Mode: {{ isManualMode ? 'Manuel' : 'Automatique' }}</strong>
+            <strong>Mode: {{ isManualMode ? "Manuel" : "Automatique" }}</strong>
             <p v-if="isManualMode">
-              Vous avez défini votre position manuellement. La localisation automatique est désactivée.
+              Vous avez défini votre position manuellement. La localisation automatique est
+              désactivée.
             </p>
-            <p v-else>
-              Votre position est mise à jour automatiquement.
-            </p>
+            <p v-else>Votre position est mise à jour automatiquement.</p>
           </div>
         </div>
         <button
@@ -36,14 +37,14 @@
           {{ isResetting ? "Réinitialisation..." : "Repasser en mode automatique" }}
         </button>
       </div>
-
+      <div class="map-container">
       <div class="map-wrapper">
         <l-map
           ref="map"
           v-model:zoom="zoom"
           :center="[currentLatitude, currentLongitude]"
           :use-global-leaflet="false"
-          style="height: 500px; border-radius: 12px;"
+          style="height: 500px; border-radius: 12px"
         >
           <l-tile-layer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -55,16 +56,14 @@
             :draggable="true"
             @update:lat-lng="onMarkerDrag"
           >
-            <l-icon
-              :icon-size="[32, 32]"
-              :icon-anchor="[16, 32]"
-            >
+            <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]">
               <div class="custom-marker">
                 <i class="fa-solid fa-location-dot"></i>
               </div>
             </l-icon>
           </l-marker>
         </l-map>
+      </div>
       </div>
 
       <div v-if="hasChanges" class="new-location">
@@ -81,19 +80,11 @@
       </div>
 
       <div class="action-buttons">
-        <button
-          v-if="hasChanges"
-          @click="resetPosition"
-          class="btn-reset"
-        >
+        <button v-if="hasChanges" @click="resetPosition" class="btn-reset">
           <i class="fa-solid fa-undo"></i>
           Réinitialiser
         </button>
-        <button
-          @click="saveNewLocation"
-          :disabled="!hasChanges || isSaving"
-          class="btn-save"
-        >
+        <button @click="saveNewLocation" :disabled="!hasChanges || isSaving" class="btn-save">
           <i class="fa-solid fa-check" v-if="!isSaving"></i>
           <i class="fa-solid fa-spinner fa-spin" v-else></i>
           {{ isSaving ? "Enregistrement..." : "Enregistrer la position" }}
@@ -104,11 +95,11 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useStore } from "vuex";
 import { LMap, LTileLayer, LMarker, LIcon } from "@vue-leaflet/vue-leaflet";
 import "leaflet/dist/leaflet.css";
-import fetchData from "@/config/api";
+import { fetchData } from "@/config/api";
 
 export default {
   name: "ProfileGPS",
@@ -178,7 +169,8 @@ export default {
         const data = await response.json();
 
         if (data.address) {
-          newCity.value = data.address.city || data.address.town || data.address.village || "Inconnue";
+          newCity.value =
+            data.address.city || data.address.town || data.address.village || "Inconnue";
           newCountry.value = data.address.country || "Inconnu";
         }
       } catch (error) {
@@ -196,7 +188,15 @@ export default {
     };
 
     const saveNewLocation = async () => {
+      // Sauvegarder les valeurs à envoyer
+      const savedLat = markerLatitude.value;
+      const savedLng = markerLongitude.value;
+      const savedCity = newCity.value;
+      const savedCountry = newCountry.value;
+
+      // Cacher Leaflet AVANT l'appel API pour éviter les erreurs
       isSaving.value = true;
+      await nextTick(); // Attendre que Leaflet soit démonté
 
       try {
         const response = await fetchData("/update-gps-location", {
@@ -205,65 +205,86 @@ export default {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            latitude: markerLatitude.value,
-            longitude: markerLongitude.value,
-            city: newCity.value,
-            country: newCountry.value,
+            latitude: savedLat,
+            longitude: savedLng,
+            city: savedCity,
+            country: savedCountry,
           }),
         });
 
         if (response.response.status === 200) {
-          // Mettre à jour le store
-          store.commit("setLocation", {
-            coordinates: [markerLatitude.value, markerLongitude.value],
-            city: newCity.value,
-            country: newCountry.value,
-            latitude: markerLatitude.value,
-            longitude: markerLongitude.value,
-            manualMode: true,
-          });
-
-          // Mettre à jour les valeurs actuelles
-          currentLatitude.value = markerLatitude.value;
-          currentLongitude.value = markerLongitude.value;
-          currentCity.value = newCity.value;
-          currentCountry.value = newCountry.value;
-
-          // Réinitialiser les nouvelles valeurs
+          // Mettre à jour toutes les données pendant que Leaflet est caché
+          currentLatitude.value = savedLat;
+          currentLongitude.value = savedLng;
+          currentCity.value = savedCity;
+          currentCountry.value = savedCountry;
           newCity.value = "";
           newCountry.value = "";
 
-          store.dispatch("setAlertMessage", {
+          // Mettre à jour le store
+          store.commit("setLocation", {
+            coordinates: [savedLat, savedLng],
+            city: savedCity,
+            country: savedCountry,
+            latitude: savedLat,
+            longitude: savedLng,
+            manualMode: true,
+          });
+
+          // Attendre que toutes les mises à jour soient propagées
+          await nextTick();
+
+          // Afficher le message de succès
+          const alertMsg = {
             type: "success",
-            message: "Localisation mise à jour avec succès!",
-          });
+            message: "Localisation mise à jour avec succès!"
+          };
+          store.commit("setAlertMessage", alertMsg);
+          setTimeout(() => {
+            store.commit("clearAlertMessage");
+          }, 3000);
+
+          // Réafficher Leaflet avec les nouvelles données
+          isSaving.value = false;
         } else {
-          store.dispatch("setAlertMessage", {
+          isSaving.value = false;
+          store.commit("setAlertMessage", {
             type: "warning",
-            message: response.data.message || "Erreur lors de la mise à jour",
+            message: response.data.message || "Erreur lors de la mise à jour"
           });
+          setTimeout(() => {
+            store.commit("clearAlertMessage");
+          }, 3000);
         }
       } catch (error) {
         console.error("Error saving location:", error);
-        store.dispatch("setAlertMessage", {
-          type: "warning",
-          message: "Erreur lors de la sauvegarde de la localisation",
-        });
-      } finally {
         isSaving.value = false;
+        store.commit("setAlertMessage", {
+          type: "warning",
+          message: "Erreur lors de la sauvegarde de la localisation"
+        });
+        setTimeout(() => {
+          store.commit("clearAlertMessage");
+        }, 3000);
       }
     };
 
     const resetToAutomaticMode = async () => {
+      // Cacher Leaflet immédiatement
       isResetting.value = true;
+      await nextTick(); // Attendre que Leaflet soit démonté
 
       try {
         // Demander la permission de géolocalisation au navigateur
         if (!navigator.geolocation) {
-          store.dispatch("setAlertMessage", {
+          store.commit("setAlertMessage", {
             type: "warning",
-            message: "La géolocalisation n'est pas supportée par votre navigateur",
+            message: "La géolocalisation n'est pas supportée par votre navigateur"
           });
+          setTimeout(() => {
+            store.commit("clearAlertMessage");
+          }, 3000);
+          isResetting.value = false;
           return;
         }
 
@@ -287,53 +308,76 @@ export default {
               if (response.response.status === 200) {
                 const locationData = response.data.location;
 
-                // Mettre à jour le store
-                store.commit("setLocation", locationData);
-
-                // Mettre à jour les valeurs affichées
+                // Mettre à jour toutes les données pendant que Leaflet est caché
+                newCity.value = "";
+                newCountry.value = "";
                 currentLatitude.value = locationData.latitude;
                 currentLongitude.value = locationData.longitude;
                 currentCity.value = locationData.city;
                 currentCountry.value = locationData.country;
-
                 markerLatitude.value = locationData.latitude;
                 markerLongitude.value = locationData.longitude;
 
-                store.dispatch("setAlertMessage", {
+                // Mettre à jour le store
+                store.commit("setLocation", locationData);
+
+                // Attendre que toutes les mises à jour soient propagées
+                await nextTick();
+
+                // Afficher le message de succès
+                store.commit("setAlertMessage", {
                   type: "success",
-                  message: "Mode automatique activé! Votre localisation sera mise à jour automatiquement.",
+                  message: "Mode automatique activé! Votre localisation sera mise à jour automatiquement."
                 });
+                setTimeout(() => {
+                  store.commit("clearAlertMessage");
+                }, 3000);
+
+                // Réafficher Leaflet avec les nouvelles données
+                isResetting.value = false;
               } else {
-                store.dispatch("setAlertMessage", {
+                isResetting.value = false;
+                store.commit("setAlertMessage", {
                   type: "warning",
-                  message: response.data.message || "Erreur lors de la réinitialisation",
+                  message: response.data.message || "Erreur lors de la réinitialisation"
                 });
+                setTimeout(() => {
+                  store.commit("clearAlertMessage");
+                }, 3000);
               }
             } catch (error) {
               console.error("Error resetting to automatic location:", error);
-              store.dispatch("setAlertMessage", {
-                type: "warning",
-                message: "Erreur lors de la réinitialisation de la localisation",
-              });
-            } finally {
               isResetting.value = false;
+              store.commit("setAlertMessage", {
+                type: "warning",
+                message: "Erreur lors de la réinitialisation de la localisation"
+              });
+              setTimeout(() => {
+                store.commit("clearAlertMessage");
+              }, 3000);
             }
           },
           (error) => {
             console.error("Geolocation error:", error);
-            store.dispatch("setAlertMessage", {
+            store.commit("setAlertMessage", {
               type: "warning",
-              message: "Impossible d'obtenir votre position. Veuillez autoriser la géolocalisation.",
+              message: "Impossible d'obtenir votre position. Veuillez autoriser la géolocalisation."
             });
+            setTimeout(() => {
+              store.commit("clearAlertMessage");
+            }, 3000);
             isResetting.value = false;
           }
         );
       } catch (error) {
         console.error("Error in resetToAutomaticMode:", error);
-        store.dispatch("setAlertMessage", {
+        store.commit("setAlertMessage", {
           type: "warning",
-          message: "Erreur lors de la réinitialisation",
+          message: "Erreur lors de la réinitialisation"
         });
+        setTimeout(() => {
+          store.commit("clearAlertMessage");
+        }, 3000);
         isResetting.value = false;
       }
     };
@@ -533,9 +577,9 @@ export default {
   }
 }
 
-
 .map-wrapper {
   border-radius: 12px;
+  width: 80%;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
@@ -608,6 +652,11 @@ export default {
   }
 }
 
+.map-container{
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .profile-gps-container {
     padding: 1rem;
@@ -615,6 +664,10 @@ export default {
     h4 {
       font-size: 1.25rem;
     }
+  }
+
+  .map-wrapper {
+    width: 100%;
   }
 
   .mode-status {
