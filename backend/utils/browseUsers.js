@@ -72,7 +72,6 @@ module.exports = async function browseUsers(req, res) {
         AND NOT COALESCE($1::text = ANY(ignoredby), FALSE)
         AND NOT COALESCE($1::text = ANY(likedBy), FALSE)
         AND NOT COALESCE($1::text = ANY(matcha), FALSE)
-        AND NOT COALESCE($1::text = ANY(viewedBy), FALSE)
         AND NOT COALESCE($1::text = ANY(blacklist), FALSE)
         AND gender = ANY($2)
         AND (sexualpreferences = 'both' OR sexualpreferences = $3)
@@ -98,12 +97,12 @@ module.exports = async function browseUsers(req, res) {
       paramIndex++;
     }
     if (fameRatingGap?.min) {
-      query += ` AND fameRating >= $${paramIndex}`;
+      query += ` AND famerating >= $${paramIndex}`;
       queryParams.push(fameRatingGap.min);
       paramIndex++;
     }
     if (fameRatingGap?.max) {
-      query += ` AND fameRating <= $${paramIndex}`;
+      query += ` AND famerating <= $${paramIndex}`;
       queryParams.push(fameRatingGap.max);
       paramIndex++;
     }
@@ -132,7 +131,7 @@ module.exports = async function browseUsers(req, res) {
         queryParams.push(filterBy.value);
         paramIndex++;
       } else if (filterBy.type === "fameRating") {
-        query += ` AND fameRating BETWEEN $${paramIndex} AND $${
+        query += ` AND famerating BETWEEN $${paramIndex} AND $${
           paramIndex + 1
         }`;
         queryParams.push(filterBy.value, parseInt(filterBy.value) + 50);
@@ -162,10 +161,10 @@ module.exports = async function browseUsers(req, res) {
         orderBy = "age DESC";
         break;
       case "fameRatingIncreasing":
-        orderBy = "fameRating ASC";
+        orderBy = "famerating ASC";
         break;
       case "fameRatingDecreasing":
-        orderBy = "fameRating DESC";
+        orderBy = "famerating DESC";
         break;
       case "locationIncreasing":
         orderBy = `ST_Distance(location, ST_SetSRID(ST_MakePoint($${paramIndex}, $${

@@ -187,6 +187,23 @@ export default {
 
       selectedLiker.value = formattedLiker;
       isModalOpen.value = true;
+
+      // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
+      const ws = store.getters.getWebSocket;
+      const userId = localStorage.getItem("userId");
+      const username = store.getters.getUserName;
+
+      if (ws && liker && liker.username) {
+        const viewedMessage = {
+          type: "viewed",
+          userId: userId,
+          message: {
+            user: username,
+            userviewed: liker.username
+          },
+        };
+        ws.send(JSON.stringify(viewedMessage));
+      }
     };
 
     return {

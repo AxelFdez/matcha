@@ -17,6 +17,7 @@ export const store = createStore({
     interests: [""],
     photos: [],
     profilePicture: 0,
+    fameRating: 0,
     alertMessage: null,
     profileVisitors: [],
     profileLikes: [],
@@ -82,6 +83,9 @@ export const store = createStore({
     },
     getProfilePicture(state) {
       return state.profilePicture;
+    },
+    getFameRating(state) {
+      return state.fameRating;
     },
 
     // Website initialize
@@ -173,6 +177,9 @@ export const store = createStore({
     setProfilePicture(state, value) {
       state.profilePicture = value;
     },
+    setFameRating(state, value) {
+      state.fameRating = value;
+    },
 
     // Website initialize
     setIsReady(state, value) {
@@ -252,7 +259,12 @@ export const store = createStore({
         const data = JSON.parse(messageEvent.data);
         console.log("Server says: " + data.type);
 
-        if (data.type === "pingLocation") {
+        if (data.type === "notification" && data.message && data.message.title === "viewed") {
+          // Incrémenter le fameRating quand quelqu'un voit le profil
+          const currentFameRating = state.fameRating || 0;
+          store.commit("setFameRating", currentFameRating + 2);
+          console.log("👁️ Profil vu ! Fame Rating:", currentFameRating + 2);
+        } else if (data.type === "pingLocation") {
           // Vérifier si l'utilisateur a défini sa position manuellement
           const isManualMode = state.location && state.location.manualMode === true;
 
@@ -425,6 +437,7 @@ export const store = createStore({
               commit("setLocation", locationData);
             }
             commit("setProfilePicture", responseData.user.profilepicture || 0);
+            commit("setFameRating", responseData.user.famerating || 0);
             break;
           case 404:
             console.log("User not found");

@@ -139,6 +139,19 @@ const open = ref(false);
 
 const toggleModal = () => {
   open.value = !open.value;
+
+  // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
+  // if (open.value && props.user && props.user.username) {
+  //   const viewedMessage = {
+  //     type: "viewed",
+  //     userId: userId,
+  //     message: {
+  //       user: username,
+  //       userviewed: props.user.username
+  //     },
+  //   };
+  //   ws.send(JSON.stringify(viewedMessage));
+  // }
 };
 
 const store = useStore();
@@ -214,7 +227,7 @@ watch(photos, () => {
       swiperInstance.value.updateSlides();
       swiperInstance.value.updateProgress();
       swiperInstance.value.updateSlidesClasses();
-      
+
       // Force slide to index 0 to "activate" the slider
       swiperInstance.value.slideTo(0, 0);
     }

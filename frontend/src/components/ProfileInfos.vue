@@ -134,7 +134,7 @@ onMounted(() => {
           alt=""
         />
         <p class="mt-4">Famerating</p>
-        <p>10</p>
+        <p>{{ user.fameRating || user.famerating || 0 }}</p>
         <div
           v-if="user.connected"
           class="relative mt-4 bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full"
