@@ -99,11 +99,12 @@
           <div
             v-for="notification in notifications"
             :key="notification.id"
-            class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-600 dark:bg-gray-700 transition-all"
+            class="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-600 dark:bg-gray-700 transition-all cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600"
             :class="{
               'border-l-4 border-l-blue-500 animate-slideIn': !notification.viewed,
               'opacity-75': notification.viewed,
             }"
+            @click="openProfileFromNotification(notification)"
           >
             <div class="flex items-start justify-between">
               <div class="flex-1">
@@ -112,7 +113,7 @@
                   <span v-if="notification.type === 'like'" class="text-red-500">❤️</span>
                   <span v-else-if="notification.type === 'match'" class="text-pink-500">💕</span>
                   <span v-else-if="notification.type === 'unlike'" class="text-gray-500">💔</span>
-                  <span v-else-if="notification.type === 'profile_view'" class="text-blue-500"
+                  <span v-else-if="notification.type === 'profile_view' || notification.type === 'viewed'" class="text-blue-500"
                     >👁️</span
                   >
                   <span v-else-if="notification.type === 'message'" class="text-green-500">💬</span>
@@ -133,7 +134,7 @@
                 </p>
               </div>
               <button
-                @click="deleteNotification(notification.id)"
+                @click.stop="deleteNotification(notification.id)"
                 class="ml-2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-600 dark:hover:text-gray-300"
               >
                 <svg class="size-4" fill="currentColor" viewBox="0 0 20 20">
@@ -263,7 +264,7 @@
             </svg>
           </button>
           <div class="flex items-center space-x-2">
-            <div class="size-8 flex-shrink-0">
+            <div class="size-8 flex-shrink-0 relative">
               <img
                 v-if="selectedConversation.otherUser.avatar"
                 :src="getFirstPhoto(selectedConversation.otherUser.avatar)"
@@ -276,10 +277,28 @@
               >
                 {{ selectedConversation.otherUser.username.charAt(0).toUpperCase() }}
               </div>
+              <!-- Indicateur de statut -->
+              <div
+                class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-800"
+                :class="selectedConversation.otherUser.connected ? 'bg-green-500' : 'bg-gray-400'"
+              ></div>
             </div>
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-              {{ selectedConversation.otherUser.username }}
-            </h2>
+            <div class="flex flex-col">
+              <h2
+                @click="toggleProfileModal"
+                class="text-base font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+              >
+                {{ selectedConversation.otherUser.username }}
+              </h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                <span v-if="selectedConversation.otherUser.connected" class="text-green-500">
+                  En ligne
+                </span>
+                <span v-else-if="selectedConversation.otherUser.lastconnection">
+                  {{ formatDate(selectedConversation.otherUser.lastconnection) }}
+                </span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -369,6 +388,54 @@
         </div>
       </div>
     </div>
+
+    <!-- Profile Modal -->
+    <TransitionRoot as="template" :show="showProfileModal">
+      <Dialog class="relative z-50" @close="showProfileModal = false">
+        <TransitionChild
+          as="template"
+          enter="ease-out duration-300"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="ease-in duration-200"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 z-50 w-screen overflow-y-auto">
+          <div
+            class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
+          >
+            <TransitionChild
+              as="template"
+              enter="ease-out duration-300"
+              enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enter-to="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leave-from="opacity-100 translate-y-0 sm:scale-100"
+              leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel
+                class="relative my-8 w-9/12 transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-lg"
+              >
+                <div
+                  v-if="loadingProfile"
+                  class="flex justify-center items-center p-8"
+                >
+                  <p class="text-gray-500 dark:text-gray-400">Chargement du profil...</p>
+                </div>
+                <profileInfos
+                  v-else-if="profileUser && profileUser.user"
+                  :user="profileUser.user"
+                ></profileInfos>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
   </aside>
 </template>
 
@@ -378,12 +445,19 @@ import { fetchData } from "../config/api.js";
 import { useStore } from "vuex";
 import DisconnectBtn from "./header/DisconnectBtn.vue";
 import ProfileBtn from "./header/ProfileBtn.vue";
+import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
+import profileInfos from "./ProfileInfos.vue";
 
 export default {
   name: "Sidebar",
   components: {
     ProfileBtn,
     DisconnectBtn,
+    Dialog,
+    DialogPanel,
+    TransitionChild,
+    TransitionRoot,
+    profileInfos,
   },
   emits: ["close"],
   setup(props, { emit }) {
@@ -410,6 +484,11 @@ export default {
     const messagesLoading = ref(false);
     const sendingMessage = ref(false);
     const messagesContainer = ref(null);
+
+    // Profile Modal
+    const showProfileModal = ref(false);
+    const profileUser = ref(null);
+    const loadingProfile = ref(false);
 
     // Polling interval
     let pollingInterval = null;
@@ -484,6 +563,10 @@ export default {
     const openChatMessages = async (conversation) => {
       selectedConversation.value = conversation;
       showChatMessages.value = true;
+
+      // Charger le profil complet pour avoir le statut de connexion à jour
+      await loadUserProfileForChat(conversation.otherUser.username);
+
       await fetchMessages(conversation);
 
       // Marquer les messages comme lus
@@ -503,6 +586,65 @@ export default {
     const backToConversations = () => {
       showChatMessages.value = false;
       selectedConversation.value = null;
+    };
+
+    const loadUserProfile = async (username) => {
+      if (!username) return;
+
+      loadingProfile.value = true;
+      try {
+        const response = await fetchData(`/profile/${username}`, {
+          method: "GET",
+        });
+
+        if (response.response.ok && response.data) {
+          profileUser.value = response.data;
+          showProfileModal.value = true;
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil:", error);
+      } finally {
+        loadingProfile.value = false;
+      }
+    };
+
+    const loadUserProfileForChat = async (username) => {
+      if (!username) return;
+
+      try {
+        const response = await fetchData(`/profile/${username}`, {
+          method: "GET",
+        });
+
+        if (response.response.ok && response.data && selectedConversation.value) {
+          // Mettre à jour les données de l'utilisateur dans la conversation avec le statut à jour
+          selectedConversation.value.otherUser = {
+            ...selectedConversation.value.otherUser,
+            ...response.data.user
+          };
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du profil pour le chat:", error);
+      }
+    };
+
+    const toggleProfileModal = async () => {
+      if (!showProfileModal.value && selectedConversation.value) {
+        // Charger le profil complet avant d'ouvrir la modal
+        await loadUserProfile(selectedConversation.value.otherUser.username);
+      } else {
+        showProfileModal.value = false;
+        profileUser.value = null;
+      }
+    };
+
+    const openProfileFromNotification = async (notification) => {
+      if (!notification.username) {
+        console.warn("Notification sans username:", notification);
+        return;
+      }
+
+      await loadUserProfile(notification.username);
     };
 
     const fetchNotifications = async () => {
@@ -880,6 +1022,12 @@ export default {
       formatDate,
       formatMessageTime,
       getFirstPhoto,
+      showProfileModal,
+      toggleProfileModal,
+      profileUser,
+      loadingProfile,
+      loadUserProfileForChat,
+      openProfileFromNotification,
     };
   },
 };

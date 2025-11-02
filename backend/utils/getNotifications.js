@@ -19,8 +19,10 @@ async function getNotifications(req, res) {
     // format notifications
     const formattedNotifications = notifications.map((notification, index) => ({
       id: notification.id || index,
+      type: notification.title || notification.type || "Notification",
       title: notification.title || notification.type || "Notification",
       message: notification.body,
+      username: notification.username || (notification.body ? notification.body.split(' ')[0] : null),
       viewed: notification.viewed || false,
       createdAt: notification.createdAt || notification.date || new Date().toISOString(),
     }));

@@ -21,6 +21,11 @@ async function setupWebSocket(server) {
 		const userId = location.query.id;
 
 		clients.set(userId, ws);
+
+		// Marquer l'utilisateur comme connecté dès la connexion
+		await pool.query('UPDATE users SET connected = $1, lastConnection = $2 WHERE id = $3', [true, new Date(), userId]);
+		console.log(`✅ User ${userId} marked as connected`);
+
 		ws.send(JSON.stringify({type: 'connected', userId: userId, message: 'You are connected'}));
 
 		const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
