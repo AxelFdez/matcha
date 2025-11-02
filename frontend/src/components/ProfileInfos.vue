@@ -79,6 +79,44 @@ const lastConnectionTime = computed(() => {
 const photos = ref([]);
 const imgPlaceholder = "src/default-avatar-img.jpeg";
 
+// Action buttons state
+const isLiked = ref(false); // Vous avez liké cet utilisateur
+const isLikedByUser = ref(true); // Cet utilisateur vous a liké
+const isMatched = ref(false); // Match mutuel (vous vous êtes likés mutuellement)
+const isBlocked = ref(false);
+
+// Action button handlers (UI only for now)
+const toggleLike = () => {
+  if (isLiked.value) {
+    // Unlike
+    isLiked.value = false;
+    isMatched.value = false;
+    console.log(`Unliked user: ${props.user.username}`);
+  } else {
+    // Like
+    isLiked.value = true;
+
+    // Si l'autre utilisateur nous a déjà liké, c'est un match !
+    if (isLikedByUser.value) {
+      isMatched.value = true;
+      console.log(`🎉 MATCH avec ${props.user.username}!`);
+    } else {
+      console.log(`Liked user: ${props.user.username}`);
+    }
+  }
+};
+
+const reportUser = () => {
+  console.log(`Report user as fake: ${props.user.username}`);
+  // TODO: Implement report functionality
+  alert(`Report ${props.user.username} as fake account (functionality to be implemented)`);
+};
+
+const blockUser = () => {
+  isBlocked.value = !isBlocked.value;
+  console.log(`${isBlocked.value ? 'Blocked' : 'Unblocked'} user: ${props.user.username}`);
+};
+
 onMounted(() => {
   if (props.user.username) {
     loadImages(props.user.username);
@@ -90,17 +128,39 @@ onMounted(() => {
   <div class="card-container p-4">
     <!-- <div class="flex justify-between items-center px-4 me-4 sm:px-0"> -->
     <div class="container flex justify-around items-center h-48">
-      <swiper
-        :modules="modules"
-        :slides-per-view="1"
-        :loop="true"
-        navigation
-        :pagination="{ clickable: true }"
-        :scrollbar="{ draggable: true }"
-        @swiper="onSwiper"
-        @slideChange="onSlideChange"
-        class="rounded shadow-black shadow-sm w-48 m-2 !important"
-      >
+      <div class="relative">
+        <!-- Status Badge over photo -->
+        <div v-if="isMatched || isBlocked || isLikedByUser" class="absolute -top-2 -left-2 z-10">
+          <span
+            v-if="isMatched"
+            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pink-500 text-white shadow-lg animate-pulse"
+          >
+            💕 MATCH
+          </span>
+          <span
+            v-else-if="isLikedByUser"
+            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white shadow-lg"
+          >
+            💜 LIKES YOU
+          </span>
+          <span
+            v-else-if="isBlocked"
+            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-lg"
+          >
+            🚫 BLOCKED
+          </span>
+        </div>
+        <swiper
+          :modules="modules"
+          :slides-per-view="1"
+          :loop="true"
+          navigation
+          :pagination="{ clickable: true }"
+          :scrollbar="{ draggable: true }"
+          @swiper="onSwiper"
+          @slideChange="onSlideChange"
+          class="rounded shadow-black shadow-sm w-48 m-2 !important"
+        >
         <swiper-slide v-for="(photo, index) in photos" :key="index">
           <img
             :src="imgPlaceholder"
@@ -110,6 +170,7 @@ onMounted(() => {
         </swiper-slide>
         ...
       </swiper>
+      </div>
       <div class="">
         <h2 class="mt-1 max-w-2xl text-2xl text-gray-900">
           {{ user.firstname }}
@@ -119,6 +180,34 @@ onMounted(() => {
         </h2>
         <h3 class="mt-1 max-w-2xl text-m text-gray-700">{{ user.username }}</h3>
         <h3 class="mt-1 max-w-2xl text-2xl text-gray-900">{{ user.age }} yo</h3>
+
+        <!-- Status Badges -->
+        <div class="mt-2 flex flex-wrap gap-2">
+          <span
+            v-if="isMatched"
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-700 border border-pink-300 animate-pulse"
+          >
+            💕 Match
+          </span>
+          <span
+            v-else-if="isLiked"
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-300"
+          >
+            ❤️ Liked
+          </span>
+          <span
+            v-else-if="isLikedByUser"
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-300"
+          >
+            💜 Likes You
+          </span>
+          <span
+            v-if="isBlocked"
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300"
+          >
+            🚫 Blocked
+          </span>
+        </div>
       </div>
       <div class="sm:self-start place-items-center">
         <img
@@ -216,6 +305,40 @@ onMounted(() => {
           </div>
         </div>
       </dl>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="border-t border-gray-100 px-4 py-4 sm:px-6">
+      <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <!-- Like/Unlike Button -->
+        <button
+          @click="toggleLike"
+          :class="isLiked ? 'bg-red-500 hover:bg-red-600' : (isLikedByUser ? 'bg-purple-500 hover:bg-purple-600 animate-pulse' : 'bg-pink-500 hover:bg-pink-600')"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto justify-center"
+        >
+          <span class="text-xl">{{ isLiked ? '💔' : (isLikedByUser ? '💜' : '❤️') }}</span>
+          <span>{{ isLiked ? 'Unlike' : (isLikedByUser ? 'Like Back ➜ Match' : 'Like') }}</span>
+        </button>
+
+        <!-- Report Button -->
+        <button
+          @click="reportUser"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto justify-center"
+        >
+          <span class="text-xl">⚠️</span>
+          <span>Report as Fake</span>
+        </button>
+
+        <!-- Block Button -->
+        <button
+          @click="blockUser"
+          :class="isBlocked ? 'bg-gray-500 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto justify-center"
+        >
+          <span class="text-xl">{{ isBlocked ? '🔓' : '🚫' }}</span>
+          <span>{{ isBlocked ? 'Unblock' : 'Block' }}</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
