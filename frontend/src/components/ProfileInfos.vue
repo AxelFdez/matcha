@@ -36,24 +36,29 @@ const props = defineProps({
 const modules = [Navigation, Pagination, Scrollbar, A11y];
 
 const loadImages = async (username) => {
-  const imagePromises = props.user.photos.map((_, index) =>
-    // fetchData(`/getPhotos/${username}?index=${index}`, {
-    //   method: "GET",
-    //   headers: {
-    //     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-    //   },
-    // })
-    fetch(`${process.env.VUE_APP_API_URL}/getPhotos/${username}?index=${index}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem('accessToken'),
-        },
-      })
-      .then((response) => (response.ok ? response.blob() : null))
-      .then((blob) => (blob ? URL.createObjectURL(blob) : imgPlaceholder))
-      .catch(() => imgPlaceholder)
-  );
-  photos.value = await Promise.all(imagePromises);
+  try {
+    const imagePromises = props.user.photos.map(async (_, index) => {
+      const response = await fetch(
+        `${process.env.VUE_APP_API_URL.replace(/\/app$/, "")}/getPhotos/${username}?index=${index}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (!response.ok) return imgPlaceholder;
+
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    });
+
+    photos.value = await Promise.all(imagePromises);
+  } catch (err) {
+    console.error("Erreur chargement images:", err);
+    photos.value = [imgPlaceholder];
+  }
 };
 
 const calculateTimeSince = (date) => {
@@ -114,7 +119,7 @@ const reportUser = () => {
 
 const blockUser = () => {
   isBlocked.value = !isBlocked.value;
-  console.log(`${isBlocked.value ? 'Blocked' : 'Unblocked'} user: ${props.user.username}`);
+  console.log(`${isBlocked.value ? "Blocked" : "Unblocked"} user: ${props.user.username}`);
 };
 
 onMounted(() => {
@@ -161,15 +166,15 @@ onMounted(() => {
           @slideChange="onSlideChange"
           class="rounded shadow-black shadow-sm w-48 m-2 !important"
         >
-        <swiper-slide v-for="(photo, index) in photos" :key="index">
-          <img
-            :src="imgPlaceholder"
-            :alt="`Photo ${index + 1}`"
-            class="w-full sm:h-48 object-contain rounded-lg"
-          />
-        </swiper-slide>
-        ...
-      </swiper>
+          <swiper-slide v-for="(photo, index) in photos" :key="index">
+            <img
+              :src="photo || imgPlaceholder"
+              :alt="`Photo ${index + 1}`"
+              class="w-full sm:h-48 object-cover rounded-lg"
+            />
+          </swiper-slide>
+          ...
+        </swiper>
       </div>
       <div class="">
         <h2 class="mt-1 max-w-2xl text-2xl text-gray-900">
@@ -242,25 +247,17 @@ onMounted(() => {
     <div class="mx-2 mt-6 border-t border-gray-100">
       <dl class="divide-y divide-gray-100">
         <div class="px-4 pb-2 pt-1 sm:py-6 grid sm:grid-cols-3">
-          <dt class="content-center mb-1 text-sm/6 font-medium text-gray-900">
-            Interested by
-          </dt>
+          <dt class="content-center mb-1 text-sm/6 font-medium text-gray-900">Interested by</dt>
           <!-- <dd class="mt-1 text-sm/6 text-gray-700 col-span-2 mt-0">{{ user.age }}</dd> -->
           <div>
             <img
-              v-if="
-                user.sexualpreferences == 'female' ||
-                user.sexualpreferences == 'both'
-              "
+              v-if="user.sexualpreferences == 'female' || user.sexualpreferences == 'both'"
               class="inline-block me-2 size-8 sm:size-10 rounded-full ring-2 ring-white"
               src="src/office-woman.png"
               alt=""
             />
             <img
-              v-if="
-                user.sexualpreferences == 'male' ||
-                user.sexualpreferences == 'both'
-              "
+              v-if="user.sexualpreferences == 'male' || user.sexualpreferences == 'both'"
               class="inline-block me-2 size-8 sm:size-10 rounded-full ring-2 ring-white"
               src="src/office-man.png"
               alt=""
@@ -285,22 +282,14 @@ onMounted(() => {
               class="rounded"
               ref="map "
               :zoom="zoom"
-              :center="[
-                user.location.coordinates[0],
-                user.location.coordinates[1],
-              ]"
+              :center="[user.location.coordinates[0], user.location.coordinates[1]]"
             >
               <l-tile-layer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 layer-type="base"
                 name="OpenStreetMap"
               ></l-tile-layer>
-              <l-marker
-                :lat-lng="[
-                  user.location.coordinates[0],
-                  user.location.coordinates[1],
-                ]"
-              />
+              <l-marker :lat-lng="[user.location.coordinates[0], user.location.coordinates[1]]" />
             </l-map>
           </div>
         </div>
@@ -313,11 +302,17 @@ onMounted(() => {
         <!-- Like/Unlike Button -->
         <button
           @click="toggleLike"
-          :class="isLiked ? 'bg-red-500 hover:bg-red-600' : (isLikedByUser ? 'bg-purple-500 hover:bg-purple-600 animate-pulse' : 'bg-pink-500 hover:bg-pink-600')"
+          :class="
+            isLiked
+              ? 'bg-red-500 hover:bg-red-600'
+              : isLikedByUser
+              ? 'bg-purple-500 hover:bg-purple-600 animate-pulse'
+              : 'bg-pink-500 hover:bg-pink-600'
+          "
           class="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto justify-center"
         >
-          <span class="text-xl">{{ isLiked ? '💔' : (isLikedByUser ? '💜' : '❤️') }}</span>
-          <span>{{ isLiked ? 'Unlike' : (isLikedByUser ? 'Like Back ➜ Match' : 'Like') }}</span>
+          <span class="text-xl">{{ isLiked ? "💔" : isLikedByUser ? "💜" : "❤️" }}</span>
+          <span>{{ isLiked ? "Unlike" : isLikedByUser ? "Like Back ➜ Match" : "Like" }}</span>
         </button>
 
         <!-- Report Button -->
@@ -335,8 +330,8 @@ onMounted(() => {
           :class="isBlocked ? 'bg-gray-500 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'"
           class="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto justify-center"
         >
-          <span class="text-xl">{{ isBlocked ? '🔓' : '🚫' }}</span>
-          <span>{{ isBlocked ? 'Unblock' : 'Block' }}</span>
+          <span class="text-xl">{{ isBlocked ? "🔓" : "🚫" }}</span>
+          <span>{{ isBlocked ? "Unblock" : "Block" }}</span>
         </button>
       </div>
     </div>
