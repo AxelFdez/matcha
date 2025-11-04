@@ -113,7 +113,11 @@
                   <span v-if="notification.type === 'like'" class="text-red-500">❤️</span>
                   <span v-else-if="notification.type === 'match'" class="text-pink-500">💕</span>
                   <span v-else-if="notification.type === 'unlike'" class="text-gray-500">💔</span>
-                  <span v-else-if="notification.type === 'profile_view' || notification.type === 'viewed'" class="text-blue-500"
+                  <span
+                    v-else-if="
+                      notification.type === 'profile_view' || notification.type === 'viewed'
+                    "
+                    class="text-blue-500"
                     >👁️</span
                   >
                   <span v-else-if="notification.type === 'message'" class="text-green-500">💬</span>
@@ -420,10 +424,7 @@
               <DialogPanel
                 class="relative my-8 w-9/12 transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-lg"
               >
-                <div
-                  v-if="loadingProfile"
-                  class="flex justify-center items-center p-8"
-                >
+                <div v-if="loadingProfile" class="flex justify-center items-center p-8">
                   <p class="text-gray-500 dark:text-gray-400">Chargement du profil...</p>
                 </div>
                 <profileInfos
@@ -530,10 +531,11 @@ export default {
       return `${baseURL}${cleaned}`;
     };
 
-    console.log("notifications", notifications);
     // Computed properties
     const notificationCount = computed(() => {
-      return notifications.value.filter((n) => !n.viewed).length;
+      return Array.isArray(notifications.value)
+        ? notifications.value.filter((n) => !n.viewed).length
+        : 0;
     });
 
     const unreadMessagesCount = computed(() => {
@@ -620,7 +622,7 @@ export default {
           // Mettre à jour les données de l'utilisateur dans la conversation avec le statut à jour
           selectedConversation.value.otherUser = {
             ...selectedConversation.value.otherUser,
-            ...response.data.user
+            ...response.data.user,
           };
         }
       } catch (error) {
@@ -652,10 +654,16 @@ export default {
 
       loading.value = true;
       try {
-        const response = await fetchData("/notifications", {
-          method: "GET",
-        });
-        notifications.value = response.data || [];
+        const response = await fetchData("/notifications", { method: "GET" });
+        const data = response.data;
+
+        if (Array.isArray(data)) {
+          notifications.value = data;
+        } else if (data && Array.isArray(data.notifications)) {
+          notifications.value = data.notifications;
+        } else {
+          notifications.value = [];
+        }
       } catch (error) {
         console.error("Erreur lors du chargement des notifications:", error);
         notifications.value = [];
