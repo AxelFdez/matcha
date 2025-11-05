@@ -11,6 +11,8 @@ async function getUser(req, res) {
 
 		const user = userResult.rows[0];
 
+		console.log("Fetched user:", user);
+
 		if (!user.verified) {
 			return res.status(401).json({ message: "User not verified" });
 		}

@@ -86,8 +86,9 @@ const imgPlaceholder = "src/default-avatar-img.jpeg";
 
 // Action buttons state
 const isLiked = ref(false); // Vous avez liké cet utilisateur
-const isLikedByUser = ref(true); // Cet utilisateur vous a liké
+const isLikedByUser = ref(false); // Cet utilisateur vous a liké
 const isMatched = ref(false); // Match mutuel (vous vous êtes likés mutuellement)
+const isViewedByUser = ref(false); // Cet utilisateur a vu votre profil
 const isBlocked = ref(false);
 
 // Action button handlers (UI only for now)
@@ -122,10 +123,77 @@ const blockUser = () => {
   console.log(`${isBlocked.value ? "Blocked" : "Unblocked"} user: ${props.user.username}`);
 };
 
+const checkRelationshipStatus = async () => {
+  try {
+    // Récupérer les infos du user connecté depuis l'API
+    const currentUsername = localStorage.getItem("userName");
+    const response = await fetchData(`/profile/${currentUsername}`, {
+      method: "GET",
+    });
+
+    if (response.response.status === 200) {
+      const currentUserData = response.data.user;
+      const viewedUserId = String(props.user.id);
+      console.log("Checking relationship status with user ID:", viewedUserId);
+      console.log("Current user data:", currentUserData);
+
+      // Reset all states
+      isMatched.value = false;
+      isLiked.value = false;
+      isLikedByUser.value = false;
+      isViewedByUser.value = false;
+
+      // Priority 1: Check if it's a match (matcha) - mutual like
+      if (
+        currentUserData.matcha &&
+        Array.isArray(currentUserData.matcha) &&
+        currentUserData.matcha.some((id) => String(id) === viewedUserId)
+      ) {
+        isMatched.value = true;
+        isLiked.value = true;
+        isLikedByUser.value = true;
+      }
+      // Priority 2: Check if we liked this user (user consulté est dans notre likedby)
+      else if (
+        currentUserData.likedby &&
+        Array.isArray(currentUserData.likedby) &&
+        currentUserData.likedby.some((id) => String(id) === viewedUserId)
+      ) {
+        isLikedByUser.value = true;
+      } else if (
+        props.user.likedby &&
+        Array.isArray(props.user.likedby) &&
+        props.user.likedby.some((id) => String(id) === String(currentUserData.id))
+      ) {
+        isLiked.value = true;
+      }
+      // Priority 3: Check if we viewed this user
+      else if (
+        currentUserData.viewedby &&
+        Array.isArray(currentUserData.viewedby) &&
+        currentUserData.viewedby.some((id) => String(id) === viewedUserId)
+      ) {
+        isViewedByUser.value = true;
+      }
+
+      // Separate check: if the viewed user liked us (to show "Likes You" or "Like Back" button)
+      if (props.user.likedby && Array.isArray(props.user.likedby)) {
+        const currentUserId = String(localStorage.getItem("userId"));
+        if (props.user.likedby.some((id) => String(id) === currentUserId)) {
+          isLikedByUser.value = true;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error checking relationship status:", error);
+  }
+};
+
 onMounted(() => {
   if (props.user.username) {
     loadImages(props.user.username);
   }
+  checkRelationshipStatus();
 });
 </script>
 
@@ -134,27 +202,6 @@ onMounted(() => {
     <!-- <div class="flex justify-between items-center px-4 me-4 sm:px-0"> -->
     <div class="container flex justify-around items-center h-48">
       <div class="relative">
-        <!-- Status Badge over photo -->
-        <div v-if="isMatched || isBlocked || isLikedByUser" class="absolute -top-2 -left-2 z-10">
-          <span
-            v-if="isMatched"
-            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-pink-500 text-white shadow-lg animate-pulse"
-          >
-            💕 MATCH
-          </span>
-          <span
-            v-else-if="isLikedByUser"
-            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-purple-500 text-white shadow-lg"
-          >
-            💜 LIKES YOU
-          </span>
-          <span
-            v-else-if="isBlocked"
-            class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-600 text-white shadow-lg"
-          >
-            🚫 BLOCKED
-          </span>
-        </div>
         <swiper
           :modules="modules"
           :slides-per-view="1"
@@ -205,6 +252,12 @@ onMounted(() => {
             class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-300"
           >
             💜 Likes You
+          </span>
+          <span
+            v-else-if="isViewedByUser"
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300"
+          >
+            👁️ Viewed You
           </span>
           <span
             v-if="isBlocked"

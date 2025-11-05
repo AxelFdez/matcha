@@ -19,6 +19,9 @@ class UserProfile {
 		this.famerating = user.famerating;
 		this.location = user.location;
 		this.createdat = user.createdat;
+		this.viewedby = user.viewedby;
+		this.likedby = user.likedby;
+		this.matcha = user.matcha;
 	}
 
 	getProfile(){
@@ -40,7 +43,10 @@ class UserProfile {
 			profilepicture: this.profilepicture,
 			famerating: this.famerating,
 			location: this.location,
-			createdat: this.createdat
+			createdat: this.createdat,
+			viewedby: this.viewedby,
+			likedby: this.likedby,
+			matcha: this.matcha
 		};
 	}
 
