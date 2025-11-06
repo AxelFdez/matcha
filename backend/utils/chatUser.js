@@ -44,6 +44,20 @@ async function chatUser(userId, message){
 		}
 		const userRecipient = userRecipientResult.rows[0];
 
+		// Check if either user has blocked the other
+		const userBlacklist = user.blacklist || [];
+		const recipientBlacklist = userRecipient.blacklist || [];
+
+		if (userBlacklist.includes(userRecipient.id.toString()) || recipientBlacklist.includes(user.id.toString())) {
+			return ws.send(JSON.stringify({
+				type: 'error',
+				userId: userId,
+				message: {
+					title: 'chat not allowed with blocked user',
+				}
+			}));
+		}
+
 		// Check if users are matched (fix the typo in original code: userRecpient -> userRecipient)
 		const userMatcha = user.matcha || [];
 		const recipientMatcha = userRecipient.matcha || [];

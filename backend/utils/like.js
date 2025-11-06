@@ -49,7 +49,23 @@ async function likeUser(userId, message) {
 		}));
 		return;
 	}
-	else if (userliked.likedby && userliked.likedby.includes(user.id.toString())) {
+
+	// Check if either user has blocked the other
+	const userBlacklist = user.blacklist || [];
+	const userlikedBlacklist = userliked.blacklist || [];
+
+	if (userBlacklist.includes(userliked.id.toString()) || userlikedBlacklist.includes(user.id.toString())) {
+		ws.send(JSON.stringify({
+			type: 'error',
+			userId: userId,
+			message: {
+				title: 'cannot like blocked user',
+			}
+		}));
+		return;
+	}
+
+	if (userliked.likedby && userliked.likedby.includes(user.id.toString())) {
 		ws.send(JSON.stringify({
 			type: 'error',
 			userId: userId,

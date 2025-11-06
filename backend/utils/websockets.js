@@ -7,6 +7,8 @@ const unlikeUser = require('./unlike');
 const viewedUser = require('./viewed');
 const pingLocation = require('./pingLocation');
 const ignoreUser = require('./ignore');
+const reportUser = require('./report');
+const blockUser = require('./block');
 const { deleteNotification, notificationViewed } = require('./notificationHandler');
 
 let clients = new Map();
@@ -61,6 +63,10 @@ async function setupWebSocket(server) {
 				ignoreUser(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'viewed') {
 				viewedUser(parsedMessage.userId, parsedMessage.message);
+			} else if (parsedMessage.type === 'report') {
+				reportUser(parsedMessage.userId, parsedMessage.message);
+			} else if (parsedMessage.type === 'block') {
+				blockUser(parsedMessage.userId, parsedMessage.message);
 			} else if (parsedMessage.type === 'notification') {
 				notificationViewed(parsedMessage.userId);
 			// } else if (parsedMessage.type === 'deleteNotification') {

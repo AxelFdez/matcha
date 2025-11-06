@@ -26,6 +26,15 @@ async function viewedUser(userId, message) {
       return;
     }
 
+    // 🔹 Check if either user has blocked the other
+    const userBlacklist = user.blacklist || [];
+    const userViewedBlacklist = userViewed.blacklist || [];
+
+    if (userBlacklist.includes(userViewed.id.toString()) || userViewedBlacklist.includes(user.id.toString())) {
+      console.log(`View notification blocked: ${user.username} or ${userViewed.username} has blocked the other`);
+      return; // Don't generate notification or update viewedby for blocked users
+    }
+
     // 🔹 Ajouter user.id à viewedby de façon atomique si pas déjà présent
     const updateViewedRes = await pool.query(
       `UPDATE users

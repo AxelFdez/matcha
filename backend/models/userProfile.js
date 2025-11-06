@@ -1,6 +1,7 @@
 
 class UserProfile {
 	constructor(user){
+		this.id = user.id;
 		this.username = user.username;
 		this.firstname = user.firstname;
 		this.lastname = user.lastname;
@@ -22,10 +23,12 @@ class UserProfile {
 		this.viewedby = user.viewedby;
 		this.likedby = user.likedby;
 		this.matcha = user.matcha;
+		this.blacklist = user.blacklist;
 	}
 
 	getProfile(){
 		return {
+			id: this.id,
 			username: this.username,
 			firstname: this.firstname,
 			lastname: this.lastname,
@@ -46,7 +49,8 @@ class UserProfile {
 			createdat: this.createdat,
 			viewedby: this.viewedby,
 			likedby: this.likedby,
-			matcha: this.matcha
+			matcha: this.matcha,
+			blacklist: this.blacklist
 		};
 	}
 

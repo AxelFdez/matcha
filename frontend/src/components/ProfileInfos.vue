@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
 import { ref, onMounted } from "vue";
 import { fetchData } from "@/config/api";
+import { useStore } from "vuex";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -34,6 +35,12 @@ const props = defineProps({
 });
 
 const modules = [Navigation, Pagination, Scrollbar, A11y];
+const store = useStore();
+
+/* WebSocket setup */
+const username = store.getters.getUserName;
+const userId = localStorage.getItem("userId");
+const ws = store.getters.getWebSocket;
 
 const loadImages = async (username) => {
   try {
@@ -90,16 +97,36 @@ const isLikedByUser = ref(false); // Cet utilisateur vous a liké
 const isMatched = ref(false); // Match mutuel (vous vous êtes likés mutuellement)
 const isViewedByUser = ref(false); // Cet utilisateur a vu votre profil
 const isBlocked = ref(false);
+const hasReported = ref(false); // A déjà reporté cet utilisateur pendant la session
 
-// Action button handlers (UI only for now)
+// Action button handlers with WebSocket integration
 const toggleLike = () => {
+  if (!ws) {
+    console.warn("WebSocket not available");
+    return;
+  }
+
   if (isLiked.value) {
     // Unlike
+    ws.send(
+      JSON.stringify({
+        type: "unlike",
+        userId,
+        message: { user: username, userUnliked: props.user.username },
+      })
+    );
     isLiked.value = false;
     isMatched.value = false;
     console.log(`Unliked user: ${props.user.username}`);
   } else {
     // Like
+    ws.send(
+      JSON.stringify({
+        type: "like",
+        userId,
+        message: { user: username, userLiked: props.user.username },
+      })
+    );
     isLiked.value = true;
 
     // Si l'autre utilisateur nous a déjà liké, c'est un match !
@@ -113,14 +140,62 @@ const toggleLike = () => {
 };
 
 const reportUser = () => {
-  console.log(`Report user as fake: ${props.user.username}`);
-  // TODO: Implement report functionality
-  alert(`Report ${props.user.username} as fake account (functionality to be implemented)`);
+  if (!ws) {
+    console.warn("WebSocket not available");
+    return;
+  }
+
+  // Vérifier si déjà reporté pendant cette session
+  if (hasReported.value) {
+    alert(`You have already reported ${props.user.username} during this session.`);
+    return;
+  }
+
+  // Envoyer le report via WebSocket
+  ws.send(
+    JSON.stringify({
+      type: "report",
+      userId,
+      message: { user: username, userReported: props.user.username },
+    })
+  );
+
+  // Marquer comme reporté pour cette session
+  hasReported.value = true;
+
+  console.log(`Reported user as fake: ${props.user.username}`);
+  alert(`You have reported ${props.user.username} as a fake account. Our team will review this report.`);
 };
 
 const blockUser = () => {
+  if (!ws) {
+    console.warn("WebSocket not available");
+    return;
+  }
+
+  const action = isBlocked.value ? "unblock" : "block";
+
+  // Envoyer le block/unblock via WebSocket
+  ws.send(
+    JSON.stringify({
+      type: "block",
+      userId,
+      message: { user: username, userBlocked: props.user.username, action: action },
+    })
+  );
+
+  // Toggle l'état local
   isBlocked.value = !isBlocked.value;
+
   console.log(`${isBlocked.value ? "Blocked" : "Unblocked"} user: ${props.user.username}`);
+};
+
+const onSwiper = (swiper) => {
+  // Swiper instance available if needed
+};
+
+const onSlideChange = () => {
+  // Handle slide change if needed
 };
 
 const checkRelationshipStatus = async () => {
@@ -134,7 +209,7 @@ const checkRelationshipStatus = async () => {
     if (response.response.status === 200) {
       const currentUserData = response.data.user;
       const viewedUserId = String(props.user.id);
-      console.log("Checking relationship status with user ID:", viewedUserId);
+      console.log("Checking relationship status with user ID:", viewedUserId, props.user);
       console.log("Current user data:", currentUserData);
 
       // Reset all states
@@ -142,6 +217,17 @@ const checkRelationshipStatus = async () => {
       isLiked.value = false;
       isLikedByUser.value = false;
       isViewedByUser.value = false;
+      isBlocked.value = false;
+
+      // Check if user is blocked
+      if (
+        currentUserData.blacklist &&
+        Array.isArray(currentUserData.blacklist) &&
+        currentUserData.blacklist.some((id) => String(id) === viewedUserId)
+      ) {
+        isBlocked.value = true;
+        console.log(`User ${props.user.username} is blocked`);
+      }
 
       // Priority 1: Check if it's a match (matcha) - mutual like
       if (
@@ -371,10 +457,16 @@ onMounted(() => {
         <!-- Report Button -->
         <button
           @click="reportUser"
-          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto justify-center"
+          :disabled="hasReported"
+          :class="
+            hasReported
+              ? 'bg-gray-400 cursor-not-allowed opacity-60'
+              : 'bg-yellow-500 hover:bg-yellow-600 hover:shadow-lg transform hover:scale-105'
+          "
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-md w-full sm:w-auto justify-center"
         >
-          <span class="text-xl">⚠️</span>
-          <span>Report as Fake</span>
+          <span class="text-xl">{{ hasReported ? "✓" : "⚠️" }}</span>
+          <span>{{ hasReported ? "Already Reported" : "Report as Fake" }}</span>
         </button>
 
         <!-- Block Button -->
