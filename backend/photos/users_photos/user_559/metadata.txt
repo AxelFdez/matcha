@@ -1,0 +1,3 @@
+gender: female
+age_category: old
+original_file: female_adult_063.jpg

@@ -1,0 +1,3 @@
+gender: male
+age_category: young
+original_file: male_young_095.jpg

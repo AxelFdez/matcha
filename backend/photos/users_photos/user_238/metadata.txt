@@ -1,0 +1,3 @@
+gender: male
+age_category: adult
+original_file: male_adult_012.jpg
