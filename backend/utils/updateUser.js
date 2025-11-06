@@ -90,14 +90,15 @@ async function updateUser(req, res) {
       await compressImageToUnder1MB(resizedImageFilename, compressImageFilename);
 
       // Move the compressed file to the final path
+      const filename = user.username + "_" + imageIndex + ".png";
       const newPhotoPath = path.join(
         __dirname,
-        "../photos/" + user.username + "_" + imageIndex + ".png"
+        "../photos/" + filename
       );
       fs.renameSync(compressImageFilename, newPhotoPath);
 
-      // Store the file path in the database
-      user.photos[imageIndex] = newPhotoPath;
+      // Store only the relative path in the database (for serving via /photos static route)
+      user.photos[imageIndex] = "/photos/" + filename;
       updates.photos = user.photos;
     }
     if (req.body.profilePicture !== undefined) {
