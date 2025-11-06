@@ -6,7 +6,7 @@
       @reset-filters="onResetFilters"
     />
     <ProfileCard v-if="tenUsers && tenUsers.length > 0" :user="tenUsers[0]" :key="componentKey" />
-    <p v-else class="mt-12">Aucuns utilisateurs à afficher...</p>
+    <p v-else class="mt-12 text-white">Aucuns utilisateurs à afficher pour le moment...</p>
   </section>
 
 
@@ -54,7 +54,7 @@ export default {
           }
 
           if (!tenUsers.value || tenUsers.value.length === 0) {
-            getTenUsers();
+            getTenUsers(currentFilters.value);
           } else {
             componentKey.value++;
           }
