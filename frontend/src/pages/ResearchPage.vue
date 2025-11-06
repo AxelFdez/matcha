@@ -102,6 +102,7 @@
             <th>Dernière connexion</th>
             <th>Intérêts</th>
             <th>Distance (km)</th>
+            <th>Actions</th> <!-- ✅ nouvelle colonne -->
           </tr>
         </thead>
         <tbody>
@@ -125,6 +126,16 @@
               <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
             </td>
             <td>{{ calculateDistance(user.location).toFixed(2) }} km</td>
+
+            <!-- ✅ Bouton Voir Profil -->
+            <td>
+              <button
+                @click="openProfile(user)"
+                class="px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition"
+              >
+                Voir Profil
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -155,6 +166,16 @@
               <div class="user-tags">
                 <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
               </div>
+
+              <!-- ✅ Bouton Voir Profil sur mobile -->
+              <div class="mt-3 text-right">
+                <button
+                  @click="openProfile(user)"
+                  class="px-3 py-1.5 rounded-md bg-white text-gray-800 text-sm font-medium border border-gray-300 hover:bg-pink-600 hover:text-white transition"
+                >
+                  Voir Profil
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -163,6 +184,45 @@
 
     <div v-if="loading" class="loading">Chargement...</div>
     <div v-if="error" class="error">{{ error }}</div>
+
+    <!-- 🪟 Modal -->
+    <TransitionRoot as="template" :show="open">
+      <Dialog class="relative z-10" @close="open = false">
+        <TransitionChild
+          as="template"
+          enter="ease-out duration-300"
+          enter-from="opacity-0"
+          enter-to="opacity-100"
+          leave="ease-in duration-200"
+          leave-from="opacity-100"
+          leave-to="opacity-0"
+        >
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" />
+        </TransitionChild>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div
+            class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
+          >
+            <TransitionChild
+              as="template"
+              enter="ease-out duration-300"
+              enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enter-to="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leave-from="opacity-100 translate-y-0 sm:scale-100"
+              leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel
+                class="relative my-8 w-9/12 transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-lg"
+              >
+                <ProfileInfos v-if="selectedUser" :user="selectedUser" />
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </TransitionRoot>
   </div>
 </template>
 
@@ -171,11 +231,13 @@ import { ref, computed, onMounted } from "vue";
 import axios from "axios";
 import RangeSlider from "@/components/RangeSlider.vue";
 import Multiselect from "vue-multiselect";
+import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
+import ProfileInfos from "@/components/ProfileInfos.vue";
 import "vue-multiselect/dist/vue-multiselect.min.css";
 
 export default {
   name: "ResearchPage",
-  components: { RangeSlider, Multiselect },
+  components: { RangeSlider, Multiselect, Dialog, DialogPanel, TransitionChild, TransitionRoot, ProfileInfos },
   setup() {
     const users = ref([]);
     const loading = ref(false);
@@ -190,6 +252,14 @@ export default {
     const sortBy = ref("");
     const sortOrder = ref("asc");
     const selectedTags = ref([]);
+
+    const open = ref(false);
+    const selectedUser = ref(null);
+
+    const openProfile = (user) => {
+      selectedUser.value = user;
+      open.value = true;
+    };
 
     const currentUserLocation = ref([0, 0]);
 
@@ -233,9 +303,7 @@ export default {
 
     const allTags = computed(() => {
       const tags = new Set();
-      users.value.forEach((u) => {
-        u.interests?.forEach((tag) => tags.add(tag));
-      });
+      users.value.forEach((u) => u.interests?.forEach((t) => tags.add(t)));
       return Array.from(tags);
     });
 
@@ -309,10 +377,14 @@ export default {
       resetFilters,
       selectedTags,
       allTags,
+      open,
+      selectedUser,
+      openProfile,
     };
   },
 };
 </script>
+
 
 <style scoped>
 /* --- Général --- */
