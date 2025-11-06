@@ -6,7 +6,7 @@
       <swiper
         :modules="modules"
         :slides-per-view="1"
-        :loop="true"
+        :loop="photos.length >= 3"
         navigation
         :pagination="{ clickable: true }"
         :scrollbar="{ draggable: true }"
