@@ -1,0 +1,3 @@
+gender: female
+age_category: adult
+original_file: female_adult_115.jpg

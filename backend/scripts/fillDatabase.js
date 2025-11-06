@@ -1,8 +1,11 @@
 const { Pool } = require('pg');
 const { faker } = require('@faker-js/faker');
+const fs = require('fs').promises;
+const path = require('path');
+const cities = require('all-the-cities');
 require('dotenv').config();
 
-const USERS_TO_CREATE = 500;
+const USERS_PHOTOS_DIR = 'photos/users_photos';
 
 // Fonction pour attendre que PostgreSQL soit prêt
 const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
@@ -38,33 +41,102 @@ const pool = new Pool({
   database: process.env.PGDATABASE,
 });
 
-function generateFakeUser() {
+// Filtrer les villes pour ne garder que celles de taille moyenne/grande (> 50k habitants)
+const largeCities = cities.filter(city => city.population > 50000);
+
+// Fonction pour obtenir une ville aléatoire
+function getRandomCity() {
+  const city = largeCities[Math.floor(Math.random() * largeCities.length)];
   return {
-    username: faker.internet.username(),
+    name: city.name,
+    country: city.country,
+    coordinates: [city.loc.coordinates[0], city.loc.coordinates[1]] // [longitude, latitude]
+  };
+}
+
+// Fonction pour lire les métadonnées
+async function readMetadata(userFolder) {
+  try {
+    const metadataPath = path.join(userFolder, 'metadata.txt');
+    const content = await fs.readFile(metadataPath, 'utf-8');
+
+    const metadata = {};
+    content.split('\n').forEach(line => {
+      const [key, value] = line.split(':').map(s => s.trim());
+      if (key && value) {
+        metadata[key] = value;
+      }
+    });
+
+    return metadata;
+  } catch (err) {
+    throw new Error(`Erreur lecture metadata: ${err.message}`);
+  }
+}
+
+// Fonction pour convertir age_category en âge numérique
+function getAgeFromCategory(category) {
+  switch(category) {
+    case 'young':
+      return faker.number.int({ min: 18, max: 30 });
+    case 'adult':
+      return faker.number.int({ min: 31, max: 55 });
+    case 'old':
+      return faker.number.int({ min: 56, max: 75 });
+    default:
+      return faker.number.int({ min: 18, max: 75 });
+  }
+}
+
+// Fonction pour générer un utilisateur basé sur les métadonnées
+function generateFakeUser(metadata, userFolder) {
+  const gender = metadata.gender; // 'male' ou 'female'
+  const age = getAgeFromCategory(metadata.age_category);
+
+  // Générer un prénom et nom cohérent avec le genre
+  const firstname = gender === 'male'
+    ? faker.person.firstName('male')
+    : faker.person.firstName('female');
+  const lastname = faker.person.lastName();
+
+  // Construire les chemins des photos
+  const photos = [
+    path.join(userFolder, 'base.jpg'),
+    path.join(userFolder, 'variant_1.jpg'),
+    path.join(userFolder, 'variant_2.jpg'),
+    path.join(userFolder, 'variant_3.jpg'),
+    path.join(userFolder, 'variant_4.jpg')
+  ];
+
+  // Obtenir une ville aléatoire
+  const city = getRandomCity();
+
+  return {
+    username: faker.internet.username({ firstName: firstname, lastName: lastname }),
     password: faker.internet.password(),
-    firstname: faker.person.firstName(),
-    lastname: faker.person.lastName(),
-    email: faker.internet.email(),
-    gender: faker.person.sex(), // "male" ou "female"
+    firstname: firstname,
+    lastname: lastname,
+    email: faker.internet.email({ firstName: firstname, lastName: lastname }),
+    gender: gender,
     sexualPreferences: faker.person.sex(),
     biography: faker.lorem.sentence(),
     lastconnection: faker.date.recent(),
-    age: faker.number.int({ min: 18, max: 99 }),
+    age: age,
     interests: [faker.hacker.noun(), faker.music.genre()],
-    photos: [null, null, null, null, null],
+    photos: photos,
+    reported: 0,
     profilePicture: faker.number.int({ min: 0, max: 4 }),
     fameRating: faker.number.int({ min: 0, max: 1000 }),
     location: {
       authorization: faker.datatype.boolean(),
       manualMode: false,
       type: 'Point',
-      coordinates: [faker.location.longitude(), faker.location.latitude()]
+      coordinates: city.coordinates,
     },
     verified: true,
-    ready : true
+    ready: true
   };
 }
-
 
 // Fonction pour insérer un utilisateur
 async function insertUser(user) {
@@ -82,7 +154,7 @@ async function insertUser(user) {
     `;
     const values = [
       user.username, user.password, user.firstname, user.lastname, user.email, user.gender,
-      user.sexualPreferences, user.biography, user.lastconnnection, user.age, user.interests, user.photos,
+      user.sexualPreferences, user.biography, user.lastconnection, user.age, user.interests, user.photos,
       user.profilePicture, user.fameRating, user.reported, JSON.stringify(user.location),
       user.verified, user.ready
     ];
@@ -90,8 +162,22 @@ async function insertUser(user) {
     if (!result.rows.length) {
       throw new Error('Insertion échouée');
     }
+    return result.rows[0].id;
   } catch (err) {
     throw err;
+  }
+}
+
+// Fonction pour récupérer tous les dossiers utilisateurs
+async function getUserFolders() {
+  try {
+    const entries = await fs.readdir(USERS_PHOTOS_DIR, { withFileTypes: true });
+    return entries
+      .filter(entry => entry.isDirectory() && entry.name.startsWith('user_'))
+      .map(entry => path.join(USERS_PHOTOS_DIR, entry.name))
+      .sort(); // Trier pour avoir user_000, user_001, etc.
+  } catch (err) {
+    throw new Error(`Erreur lecture dossier: ${err.message}`);
   }
 }
 
@@ -101,16 +187,48 @@ async function insertUser(user) {
     console.log('Waiting for PostgreSQL to be ready for seeding...');
     await waitForPostgres();
 
-    console.log('Insertion des utilisateurs...');
-    const fakeUsers = Array.from({ length: USERS_TO_CREATE }, generateFakeUser);
-    for (const user of fakeUsers) {
-      await insertUser(user);
+    console.log('\n🔍 Recherche des utilisateurs avec photos...');
+    const userFolders = await getUserFolders();
+    console.log(`✅ ${userFolders.length} utilisateurs trouvés`);
+    console.log(`🌍 Base de données: ${largeCities.length} villes disponibles\n`);
+
+    console.log('📝 Insertion des utilisateurs...\n');
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const userFolder of userFolders) {
+      try {
+        // Lire les métadonnées
+        const metadata = await readMetadata(userFolder);
+
+        // Générer l'utilisateur basé sur les métadonnées
+        const user = generateFakeUser(metadata, userFolder);
+
+        // Insérer en base de données
+        const userId = await insertUser(user);
+
+        successCount++;
+        const folderName = path.basename(userFolder);
+        console.log(`✅ [${successCount}/${userFolders.length}] ${folderName} - ${user.firstname} ${user.lastname} (${user.gender}, ${user.age} ans) - 📍 ${user.location.city}, ${user.location.country} - ID: ${userId}`);
+
+      } catch (err) {
+        errorCount++;
+        console.error(`❌ Erreur pour ${path.basename(userFolder)}: ${err.message}`);
+      }
     }
-    console.log(`${USERS_TO_CREATE} utilisateurs ont été insérés avec succès.`);
+
+    console.log('\n' + '='.repeat(60));
+    console.log('📊 RÉSULTAT FINAL');
+    console.log('='.repeat(60));
+    console.log(`✅ Succès: ${successCount} utilisateurs`);
+    console.log(`❌ Erreurs: ${errorCount} utilisateurs`);
+    console.log('='.repeat(60));
+
   } catch (err) {
-    console.error('Erreur lors de l\'insertion :', err.message);
+    console.error('❌ Erreur critique:', err.message);
     process.exit(1);
   } finally {
-    await pool.end(); // Fermer le pool de connexions
+    await pool.end();
   }
 })();
