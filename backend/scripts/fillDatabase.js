@@ -210,7 +210,7 @@ async function getUserFolders() {
 
         successCount++;
         const folderName = path.basename(userFolder);
-        console.log(`✅ [${successCount}/${userFolders.length}] ${folderName} - ${user.firstname} ${user.lastname} (${user.gender}, ${user.age} ans) - 📍 ${user.location.city}, ${user.location.country} - ID: ${userId}`);
+        console.log(`✅ [${successCount}/${userFolders.length}] ${folderName} - ${user.firstname} ${user.lastname} (${user.gender}, ${user.age} ans) - ID: ${userId}`);
 
       } catch (err) {
         errorCount++;
