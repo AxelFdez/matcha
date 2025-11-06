@@ -7,7 +7,7 @@
         <Card_42></Card_42>
       </div>
       <!-- <AboutProject></AboutProject> -->
-      <div class="copyright">&copy; 2024 Axel Fernandez / Christophe Massa</div>
+      <div class="copyright">&copy; 2024 Axel Fernandez / Christophe Massa / Paul Schemith</div>
     </div>
   </footer>
 </template>

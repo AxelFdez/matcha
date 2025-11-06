@@ -1,0 +1,10 @@
+UPDATE users
+SET ignoredby = array_append(COALESCE(ignoredby, '{}'), '1502');
+
+UPDATE users
+SET ignoredby = array_remove(ignoredby, '1502');
+
+docker rmi -f $(docker images -q) 2>/dev/null
+docker network rm $(docker network ls -q) 2>/dev/null
+
+docker container prune -f

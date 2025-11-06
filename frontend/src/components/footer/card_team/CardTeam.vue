@@ -7,6 +7,8 @@
     <RowChris :person="chris_obj"></RowChris>
     <hr />
     <RowAxel :person="axel_obj"></RowAxel>
+    <hr />
+    <RowChris :person="paul_obj"></RowChris>
   </div>
 </template>
 
@@ -38,19 +40,29 @@ export default {
       techUsed: "Node.js",
       imgProfile: "src/img-axel.jpg",
     };
+    const paul_obj = {
+      vueLogo: "src/node-js-logo.png",
+      firstName: "Paul",
+      lastName: "Schemith",
+      role: "Fullstack Developer",
+      imgProfile: "src/img-paul.png",
+      techUsed: "JavaScript",
+
+    };
     const { t } = useI18n();
     // Utilisation de la fonction de traduction
     const projectMadeBy = t("projectMadeBy");
     return {
       chris_obj,
       axel_obj,
+      paul_obj,
       projectMadeBy,
     };
   },
 };
 </script>
 
-<style lang=scss>
+<style lang="scss">
 .col--infos--team {
   box-shadow: 0 0 6px var(--gray);
   padding: 10px 0px 10px 0px;
