@@ -1,12 +1,11 @@
-
 export const aboutProjectFooter_fr = `Le projet Matcha de l'école 42 est un projet de développement web qui vise à créer une application de rencontres en ligne.
 Les étudiants sont chargés de construire une plateforme de rencontres où les utilisateurs peuvent créer des profils,
 rechercher d'autres utilisateurs, discuter et interagir les uns avec les autres.
-Ce projet permet aux étudiants de mettre en pratique leurs compétences en développement web en utilisant des technologies telles que 
+Ce projet permet aux étudiants de mettre en pratique leurs compétences en développement web en utilisant des technologies telles que
 HTML, CSS, JavaScript, les frameworks front-end comme Vue.js ou React.
-Les frameworks back-end comme Node.js ou Laravel, 
+Les frameworks back-end comme Node.js ou Laravel,
 les bases de données relationnelles ou non relationnelles, etc.
-Il met également l'accent sur la conception d'interfaces utilisateur conviviales, 
+Il met également l'accent sur la conception d'interfaces utilisateur conviviales,
 la gestion des interactions utilisateur, la gestion des requêtes asynchrones, la sécurité des données et la gestion des performances.
 * Toutes les photos présentes sur ce site sont générées par une intelligence artificielle et utilisées à des fins d'illustrations.`;
 
@@ -61,32 +60,38 @@ Veuillez vérifier votre nom d'utilisateur et votre mot de passe et réessayer.
 Si vous avez oublié vos informations de connexion,
 veuillez utiliser l'option de récupération de mot de passe.`;
 
-
-
 export const chris_infos = {
-  
   firstName: "christophe",
-  lastName: 'massa',
+  lastName: "massa",
   website: "https://chrisdev.pro",
   git: "https://github.com/ChrisDev427",
   linkedin: "https://www.linkedin.com/in/christophe-massa-2406b4273/",
   email: "chrisdev427@gmail.com",
 };
 export const axel_infos = {
-  
   firstName: "axel",
-  lastName: 'fernandez',
+  lastName: "fernandez",
   website: "",
   git: "https://github.com/AxelFdez",
   linkedin: "https://www.linkedin.com/in/axelfernandez06/",
   email: "axe06@hotmail.fr",
 };
+
+export const paul_infos = {
+  firstName: "paul",
+  lastName: "schemith",
+  website: "",
+  git: "https://github.com/PaulSchemith",
+  linkedin: "https://www.linkedin.com/in/paul-schemith/",
+  email: "paulschemith95@gmail.com",
+};
+
 export const ecole_infos = {
-  img: 'src/img-42.jpeg',
-  address: '61 Av. Simone Veil',
-  cp: '0600 Nice',
-  website: 'https://42nice.fr/',
-  instagram: 'https://www.instagram.com/42nice/',
-  linkedin: 'https://www.linkedin.com/school/42nice/',
-  facebook: 'https://www.facebook.com/42nice/?locale=fr_FR'
+  img: "src/img-42.jpeg",
+  address: "61 Av. Simone Veil",
+  cp: "0600 Nice",
+  website: "https://42nice.fr/",
+  instagram: "https://www.instagram.com/42nice/",
+  linkedin: "https://www.linkedin.com/school/42nice/",
+  facebook: "https://www.facebook.com/42nice/?locale=fr_FR",
 };

@@ -6,13 +6,14 @@
     <div class="contact--container">
       <Contact :infos="chris_infos"></Contact>
       <Contact :infos="axel_infos"></Contact>
+      <Contact :infos="paul_infos"></Contact>
     </div>
   </div>
 </template>
 
 <script>
 import Contact from "./ContactCmp.vue";
-import { chris_infos, axel_infos } from "../../../data/data.js";
+import { chris_infos, axel_infos, paul_infos } from "../../../data/data.js";
 import { useI18n } from "vue-i18n";
 
 export default {
@@ -24,6 +25,7 @@ export default {
     return {
       chris_infos,
       axel_infos,
+      paul_infos,
     };
   },
   setup() {
