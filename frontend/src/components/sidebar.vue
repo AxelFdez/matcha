@@ -585,9 +585,10 @@ export default {
       selectedConversation.value = null;
     };
 
-    const backToConversations = () => {
+    const backToConversations = async () => {
       showChatMessages.value = false;
       selectedConversation.value = null;
+      await fetchConversations();
     };
 
     const loadUserProfile = async (username) => {

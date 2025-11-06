@@ -38,6 +38,12 @@ module.exports = async function browseUsers(req, res) {
     const userId = user.id;
     const userLocation = user.location.coordinates;
 
+    console.log('👤 Current user location:', {
+      username: user.username,
+      location: user.location,
+      coordinates: userLocation
+    });
+
     // Genres à filtrer selon la préférence de l’utilisateur
     let genderFilterArray = [];
     switch (user.sexualpreferences) {
@@ -54,15 +60,25 @@ module.exports = async function browseUsers(req, res) {
         genderFilterArray = ["male", "female"];
     }
 
-    // Construction requête SQL
+    // Construction requête SQL avec score intelligent
     let query = `
-      SELECT *, array_length(
+      SELECT *,
+        array_length(
           array(
             SELECT unnest(interests)
             INTERSECT
-            SELECT unnest($${4}::text[])
+            SELECT unnest($4::text[])
           ), 1
-        ) AS shared_tags_count
+        ) AS shared_tags_count,
+        (
+          6371 * acos(
+            cos(radians($5::float)) *
+            cos(radians((location->'coordinates'->1)::text::float)) *
+            cos(radians((location->'coordinates'->0)::text::float) - radians($6::float)) +
+            sin(radians($5::float)) *
+            sin(radians((location->'coordinates'->1)::text::float))
+          )
+        ) AS distance
       FROM users
       WHERE ready = true
         AND id::text != $1::text
@@ -74,8 +90,8 @@ module.exports = async function browseUsers(req, res) {
         AND (sexualpreferences = 'both' OR sexualpreferences = $3)
     `;
 
-    const queryParams = [userId, genderFilterArray, user.gender, user.interests];
-    let paramIndex = 5; // déjà 4 params utilisés
+    const queryParams = [userId, genderFilterArray, user.gender, user.interests, userLocation[0], userLocation[1]];
+    let paramIndex = 7; // déjà 6 params utilisés
 
     // Filtres supplémentaires
     if (ageGap?.min) {
@@ -157,18 +173,10 @@ module.exports = async function browseUsers(req, res) {
         orderBy = "famerating DESC";
         break;
       case "locationIncreasing":
-        orderBy = `ST_Distance(location, ST_SetSRID(ST_MakePoint($${paramIndex}, $${
-          paramIndex + 1
-        }),4326)) ASC`;
-        queryParams.push(userLocation[0], userLocation[1]);
-        paramIndex += 2;
+        orderBy = "distance ASC";
         break;
       case "locationDecreasing":
-        orderBy = `ST_Distance(location, ST_SetSRID(ST_MakePoint($${paramIndex}, $${
-          paramIndex + 1
-        }),4326)) DESC`;
-        queryParams.push(userLocation[0], userLocation[1]);
-        paramIndex += 2;
+        orderBy = "distance DESC";
         break;
       case "tagsSharedDecreasing":
         orderBy = "shared_tags_count DESC";
@@ -177,18 +185,58 @@ module.exports = async function browseUsers(req, res) {
         orderBy = "shared_tags_count ASC";
         break;
       default:
-        orderBy = "shared_tags_count DESC";
+        // Score intelligent combinant les 3 critères :
+        // - Proximité géographique (distance normalisée, inversée pour que proche = meilleur score)
+        // - Tags partagés (pondéré x10 pour avoir un impact significatif)
+        // - Fame rating (pondéré x0.1 pour équilibrer avec les autres critères)
+        // Plus le score est élevé, meilleur est le match
+        orderBy = `(
+          COALESCE(array_length(
+            array(
+              SELECT unnest(interests)
+              INTERSECT
+              SELECT unnest($4::text[])
+            ), 1
+          ), 0) * 10 +
+          COALESCE(famerating, 0) * 0.1 -
+          ((6371 * acos(
+            cos(radians($5::float)) *
+            cos(radians((location->'coordinates'->1)::text::float)) *
+            cos(radians((location->'coordinates'->0)::text::float) - radians($6::float)) +
+            sin(radians($5::float)) *
+            sin(radians((location->'coordinates'->1)::text::float))
+          )) / 1000)
+        ) DESC`;
     }
 
     query += ` ORDER BY ${orderBy}`;
 
     // console.log("SQL Query:", query);
-    console.log("Query Params:", queryParams);
+    // console.log("Query Params:", queryParams);
 
     const usersResult = await pool.query(query, queryParams);
     const users = usersResult.rows;
 
     console.log(`Found ${users.length} users matching criteria.`);
+
+    // 🔍 Debug: Afficher les détails des 5 premiers utilisateurs pour vérifier le tri
+    if (users.length > 0 && !sortBy) {
+      console.log('\n📊 Top 5 users (intelligent matching):');
+      users.slice(0, 5).forEach((user, index) => {
+        const sharedTags = user.shared_tags_count || 0;
+        const fameRating = user.famerating || 0;
+        const distance = user.distance || 0;
+        const score = (sharedTags * 10) + (fameRating * 0.1) - (distance / 1000);
+
+        console.log(`\n${index + 1}. ${user.username} (${user.firstname} ${user.lastname})`);
+        console.log(`   📍 Distance: ${distance.toFixed(2)} km`);
+        console.log(`   📌 Location data:`, user.location);
+        console.log(`   🏷️  Shared tags: ${sharedTags}`);
+        console.log(`   ⭐ Fame rating: ${fameRating}`);
+        console.log(`   🎯 Total score: ${score.toFixed(2)}`);
+      });
+      console.log('\n');
+    }
 
     if (!users.length) return res.status(404).json({ message: "No users found" });
     return res.status(200).json({ users });

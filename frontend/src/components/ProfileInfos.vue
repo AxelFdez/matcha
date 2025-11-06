@@ -2,7 +2,7 @@
 import { defineProps } from "vue";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { fetchData } from "@/config/api";
 import { useStore } from "vuex";
 import "swiper/css";
@@ -12,7 +12,6 @@ import "swiper/css/scrollbar";
 import "leaflet/dist/leaflet.css";
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
 import { Date } from "core-js";
-import { computed } from "vue";
 
 const props = defineProps({
   user: {
@@ -122,6 +121,49 @@ const calculateTimeSince = (date) => {
 const lastConnectionTime = computed(() => {
   return calculateTimeSince(props.user.lastconnection);
 });
+
+/* 📏 Calcul de la distance entre deux users */
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance en km
+};
+
+const userDistance = computed(() => {
+  const currentUserLocation = store.getters.getLocation;
+  const otherUserLocation = props.user?.location;
+
+
+  if (!currentUserLocation || !otherUserLocation) {
+    console.log('❌ Missing location data');
+    return null;
+  }
+
+  const lat1 = currentUserLocation.latitude || currentUserLocation.coordinates?.[0];
+  const lon1 = currentUserLocation.longitude || currentUserLocation.coordinates?.[1];
+  const lat2 = otherUserLocation.coordinates?.[0];
+  const lon2 = otherUserLocation.coordinates?.[1];
+
+
+  if (!lat1 || !lon1 || !lat2 || !lon2) {
+    console.log('❌ Invalid coordinates');
+    return null;
+  }
+
+  const distance = calculateDistance(lat1, lon1, lat2, lon2);
+  const formatted = distance < 1
+    ? `${Math.round(distance * 1000)} m`
+    : `${distance.toFixed(1)} km`;
+
+  return formatted;
+});
+
 const photos = ref([]);
 const imgPlaceholder = "src/default-avatar-img.jpeg";
 
@@ -352,6 +394,9 @@ onMounted(() => {
         </h2>
         <h3 class="mt-1 max-w-2xl text-m text-gray-700">{{ user.username }}</h3>
         <h3 class="mt-1 max-w-2xl text-2xl text-gray-900">{{ user.age }} yo</h3>
+        <p v-if="userDistance" class="mt-1 text-sm text-gray-600">
+          📍 {{ userDistance }}
+        </p>
 
         <!-- Status Badges -->
         <div class="mt-2 flex flex-wrap gap-2">
