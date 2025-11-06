@@ -49,6 +49,13 @@ router.post(
   require("../utils/updateUser"),
   (req, res) => {}
 );
+// Delete photo
+router.post(
+  "/deletePhoto",
+  verifyToken,
+  require("../utils/deletePhoto"),
+  (req, res) => {}
+);
 // Get profile visitors
 router.get(
   "/profile/visitors",

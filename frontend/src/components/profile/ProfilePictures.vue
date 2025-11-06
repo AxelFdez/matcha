@@ -39,6 +39,13 @@
             :title="profilePicture === index + 1 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
             &#9733;
           </span>
+          <span
+            v-if="isPhotoSet(index + 1)"
+            @click="deletePhoto(index + 1)"
+            class="delete-icon"
+            title="Supprimer cette photo">
+            <i class="fi fi-br-trash"></i>
+          </span>
           <img :src="image" alt="" />
           <span
             v-if="canAddPhoto(index + 1)"
@@ -76,6 +83,13 @@
             :class="['star-icon', { 'active': profilePicture === index + 3 }]"
             :title="profilePicture === index + 3 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
             &#9733;
+          </span>
+          <span
+            v-if="isPhotoSet(index + 3)"
+            @click="deletePhoto(index + 3)"
+            class="delete-icon"
+            title="Supprimer cette photo">
+            <i class="fi fi-br-trash"></i>
           </span>
           <img :src="image" alt="" />
           <span
@@ -126,6 +140,18 @@ export default {
   computed: {
     profilePicture() {
       return this.$store.getters.getProfilePicture;
+    },
+    storePhotos() {
+      return this.$store.getters.getPhotos;
+    },
+  },
+  watch: {
+    storePhotos: {
+      handler() {
+        // Recharger les photos quand le store change
+        this.getPhotos();
+      },
+      deep: true,
     },
   },
   methods: {
@@ -227,6 +253,8 @@ export default {
             console.log(data);
             if (data.alert.type === "success") {
               if (data.imageIndex) this.getPhoto(data.imageIndex);
+              // Rafraîchir les infos utilisateur depuis le store
+              this.$store.dispatch("getUserInfos", localStorage.getItem("userName"));
             } else {
               alert(
                 "Erreur lors du téléchargement de l'image, reessayer plus tard"
@@ -256,8 +284,8 @@ export default {
         .then((data) => {
           console.log(data);
           if (data.alert.type === "success") {
-            // Mettre à jour le store Vuex
-            this.$store.commit("setProfilePicture", index);
+            // Rafraîchir les infos utilisateur depuis le store
+            this.$store.dispatch("getUserInfos", localStorage.getItem("userName"));
             this.$store.commit("setAlertMessage", {
               type: "success",
               message: "Photo de profil mise à jour",
@@ -281,6 +309,60 @@ export default {
             "Erreur lors de la mise à jour de la photo de profil :",
             error
           );
+          this.$store.commit("setAlertMessage", {
+            type: "warning",
+            message: "Erreur de connexion au serveur",
+          });
+          setTimeout(() => {
+            this.$store.commit("clearAlertMessage");
+          }, 3000);
+        });
+    },
+
+    deletePhoto(index) {
+      // Demander confirmation avant suppression
+      if (!confirm("Voulez-vous vraiment supprimer cette photo ?")) {
+        return;
+      }
+
+      // Envoyer la requête pour supprimer la photo
+      fetch(process.env.VUE_APP_API_URL + "/deletePhoto", {
+        method: "POST",
+        body: JSON.stringify({ imageIndex: index }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          if (data.alert.type === "success") {
+            // Remettre l'image par défaut localement
+            this.images[index] = this.defaultImage;
+
+            // Rafraîchir les infos utilisateur depuis le store
+            this.$store.dispatch("getUserInfos", localStorage.getItem("userName"));
+
+            this.$store.commit("setAlertMessage", {
+              type: "success",
+              message: "Photo supprimée avec succès",
+            });
+            setTimeout(() => {
+              this.$store.commit("clearAlertMessage");
+            }, 3000);
+          } else {
+            this.$store.commit("setAlertMessage", {
+              type: "warning",
+              message: data.alert.message || "Erreur lors de la suppression",
+            });
+            setTimeout(() => {
+              this.$store.commit("clearAlertMessage");
+            }, 3000);
+          }
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la suppression de la photo :", error);
           this.$store.commit("setAlertMessage", {
             type: "warning",
             message: "Erreur de connexion au serveur",
@@ -371,6 +453,23 @@ export default {
           }
           50% {
             transform: scale(1.1);
+          }
+        }
+
+        .delete-icon {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          z-index: 10;
+          font-size: 1.3rem;
+          color: rgba(255, 70, 70, 0.8);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
+          &:hover {
+            color: #ff0000;
+            transform: scale(1.2);
           }
         }
 

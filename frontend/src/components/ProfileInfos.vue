@@ -44,7 +44,17 @@ const ws = store.getters.getWebSocket;
 
 const loadImages = async (username) => {
   try {
-    const imagePromises = props.user.photos.map(async (_, index) => {
+    // Filtrer les photos null/undefined avant de charger
+    const validPhotos = props.user.photos
+      .map((photo, index) => (photo !== null && photo !== undefined ? index : null))
+      .filter(index => index !== null);
+
+    if (validPhotos.length === 0) {
+      photos.value = [imgPlaceholder];
+      return;
+    }
+
+    const imagePromises = validPhotos.map(async (index) => {
       const response = await fetch(
         `${process.env.VUE_APP_API_URL.replace(/\/app$/, "")}/getPhotos/${username}?index=${index}`,
         {
@@ -55,13 +65,37 @@ const loadImages = async (username) => {
         }
       );
 
-      if (!response.ok) return imgPlaceholder;
+      if (!response.ok) return null;
 
       const blob = await response.blob();
-      return URL.createObjectURL(blob);
+      return {
+        url: URL.createObjectURL(blob),
+        originalIndex: index
+      };
     });
 
-    photos.value = await Promise.all(imagePromises);
+    let loadedPhotos = await Promise.all(imagePromises);
+
+    // Filtrer les photos qui n'ont pas pu être chargées
+    loadedPhotos = loadedPhotos.filter(photo => photo !== null);
+
+    // 🎯 Mettre la photo de profil en premier si l'index existe
+    const profilePictureIndex = props.user?.profilepicture;
+    if (profilePictureIndex !== undefined && profilePictureIndex !== null) {
+      const profilePhotoIndex = loadedPhotos.findIndex(photo => photo.originalIndex === profilePictureIndex);
+      if (profilePhotoIndex !== -1) {
+        const profilePhoto = loadedPhotos[profilePhotoIndex];
+        // Retirer la photo de profil de sa position actuelle
+        loadedPhotos.splice(profilePhotoIndex, 1);
+        // Ajouter la photo de profil en première position
+        loadedPhotos.unshift(profilePhoto);
+      }
+    }
+
+    // Extraire seulement les URLs
+    photos.value = loadedPhotos.length > 0
+      ? loadedPhotos.map(photo => photo.url)
+      : [imgPlaceholder];
   } catch (err) {
     console.error("Erreur chargement images:", err);
     photos.value = [imgPlaceholder];

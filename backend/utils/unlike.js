@@ -121,6 +121,19 @@ async function unlike(userId, message) {
       ]
     );
 
+    // Supprimer la conversation associée au match
+    try {
+      const sortedParticipants = [user.id, userUnliked.id].sort((a, b) => a - b);
+      console.log(`Deleting conversation between ${user.username} and ${userUnliked.username}`);
+      await pool.query(
+        "DELETE FROM chat_conversations WHERE (user1_id = $1 AND user2_id = $2) OR (user1_id = $2 AND user2_id = $1)",
+        [sortedParticipants[0], sortedParticipants[1]]
+      );
+      console.log(`Conversation deleted between ${user.username} and ${userUnliked.username}`);
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+    }
+
     // Envoyer notifications unmatch via WebSocket
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(

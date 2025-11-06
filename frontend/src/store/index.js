@@ -567,7 +567,7 @@ export const store = createStore({
       }
     },
 
-    async updateUserInfosForm({ commit }, formData) {
+    async updateUserInfosForm({ commit, dispatch }, formData) {
       console.log("updateUserInfosForm", JSON.stringify(formData));
       try {
         const response = await fetchData("/updateUser", {
@@ -582,6 +582,8 @@ export const store = createStore({
         switch (response.response.status) {
           case 200:
             console.log("profil Updated");
+            // Rafraîchir les infos utilisateur depuis la base de données
+            await dispatch("getUserInfos", localStorage.getItem("userName"));
             // Si responseData.alert est déjà un objet, l'utiliser tel quel
             if (responseData.alert && typeof responseData.alert === 'object') {
               commit("setAlertMessage", responseData.alert);

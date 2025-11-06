@@ -10,11 +10,12 @@
         navigation
         :pagination="{ clickable: true }"
         :scrollbar="{ draggable: true }"
-        class="m-2 h-1/4 w-2/3 rounded shadow-sm shadow-black"
+        class="m-2 w-[500px] rounded shadow-sm shadow-black"
+        style="height: 500px;"
         @swiper="onSwiper"
       >
         <swiper-slide v-for="(photo, index) in photos" :key="index">
-          <img :src="photo" :alt="`Photo ${index + 1}`" class="w-full rounded-lg object-cover" />
+          <img :src="photo" :alt="`Photo ${index + 1}`" class="h-full w-full rounded-lg object-cover" />
         </swiper-slide>
       </swiper>
 
@@ -126,6 +127,7 @@ const props = defineProps({
 /* ✅ Charge les photos du user */
 const parsePhotos = () => {
   const rawPhotos = props.user?.photos;
+  const profilePictureIndex = props.user?.profilepicture;
 
   if (!rawPhotos) {
     photos.value = ["src/default-avatar-img.jpeg"];
@@ -134,7 +136,7 @@ const parsePhotos = () => {
 
   let list = [];
 
-  // 📦 Si c’est déjà un tableau
+  // 📦 Si c'est déjà un tableau
   if (Array.isArray(rawPhotos)) {
     list = rawPhotos.filter((p) => typeof p === "string" && p.trim() !== "");
   }
@@ -145,6 +147,15 @@ const parsePhotos = () => {
     cleaned = cleaned.startsWith("/") ? cleaned : `/${cleaned}`; // s'assure qu'il y a un slash
     return `${process.env.VUE_APP_API_URL}${cleaned}`;
   });
+
+  // 🎯 Mettre la photo de profil en premier si l'index existe
+  if (profilePictureIndex !== undefined && profilePictureIndex !== null && list[profilePictureIndex]) {
+    const profilePhoto = list[profilePictureIndex];
+    // Retirer la photo de profil de sa position actuelle
+    list.splice(profilePictureIndex, 1);
+    // Ajouter la photo de profil en première position
+    list.unshift(profilePhoto);
+  }
 
   photos.value = list.length ? list : ["src/default-avatar-img.jpeg"];
 };
