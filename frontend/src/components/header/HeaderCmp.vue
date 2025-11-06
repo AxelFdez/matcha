@@ -1,49 +1,62 @@
 <template>
   <div class="header bg-zinc-900">
-      <TitleCmp />
+    <TitleCmp />
 
-      <div class="buttons--container">
-        <div class="buttons">
-          <!-- <LangSelectBtn /> -->
+    <div class="buttons--container">
+      <div class="buttons">
+        <!-- <LangSelectBtn /> -->
 
-          <ConnectBtn v-if="!$store.getters.getIsConnected" />
-          <button v-if="$store.getters.getIsConnected" @click="toggleSidebar" class="burger-btn">
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </span>
-          </button>
+        <ConnectBtn v-if="!$store.getters.getIsConnected" />
+        <button
+          v-if="$store.getters.getIsConnected"
+          @click="redirectToResearchPage"
+          class="burger-btn"
+        >
+          <span class="icon-wrapper">
+            <i class="fa fa-search"></i>
+          </span>
+        </button>
+        <button v-if="$store.getters.getIsConnected" @click="toggleSidebar" class="burger-btn">
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </span>
+        </button>
 
-          <Sidebar v-if="$store.getters.getIsConnected && open" @close="toggleSidebar" />
-        </div>
+        <Sidebar v-if="$store.getters.getIsConnected && open" @close="toggleSidebar" />
       </div>
     </div>
+  </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from "vue";
 import TitleCmp from "./TitleCmp.vue";
 import LangSelectBtn from "./LangSelectBtn.vue";
 import ConnectBtn from "./ConnectBtn.vue";
-import Sidebar from '@/components/sidebar.vue';
-
+import Sidebar from "@/components/sidebar.vue";
+import { useRouter } from "vue-router";
 export default {
   name: "HeaderCmp",
   components: {
     TitleCmp,
     LangSelectBtn,
     ConnectBtn,
-    Sidebar
+    Sidebar,
   },
   setup() {
     const headerOpacity = ref(1);
     const open = ref(false);
-
+    const router = useRouter();
     const toggleSidebar = () => {
       open.value = !open.value;
+    };
+
+    const redirectToResearchPage = () => {
+      router.push("/ResearchPage");
     };
 
     const handleScroll = () => {
@@ -63,47 +76,71 @@ export default {
     return {
       headerOpacity,
       open,
-      toggleSidebar
+      toggleSidebar,
+      redirectToResearchPage,
     };
-  }
+  },
 };
 </script>
 
 <style lang="scss">
+.header {
+  position: fixed;
 
-  .header {
-    position: fixed;
+  width: 100%;
+  display: flex;
+  align-items: top;
+  justify-content: space-between;
 
-    width: 100%;
+  z-index: 1100;
+
+  .buttons--container {
     display: flex;
     align-items: top;
-    justify-content: space-between;
 
-    z-index: 1100;
-
-    .buttons--container {
+    .buttons {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-right: 10px;
+      width: auto;
+    }
+
+    @media (max-width: 700px) {
       align-items: top;
 
       .buttons {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         margin-right: 10px;
-        width: auto;
-      }
-
-      @media (max-width: 700px) {
-        align-items: top;
-
-        .buttons {
-          margin-right: 10px;
-          display: grid;
-          align-items: center;
-        }
+        display: grid;
+        align-items: center;
       }
     }
   }
+}
+
+.icon-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  font-size: 24px;
+}
+
+.icon-wrapper .fa-search {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 1em;
+}
+
+.icon-wrapper .fa-user {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.5em;
+}
+
 .burger-btn {
   text-decoration: none;
   display: flex;
