@@ -4,7 +4,7 @@ module.exports = async (req, res) => {
   try {
     const userId = req.user.id; // ID de l'utilisateur connecté depuis le token JWT
 
-    console.log("Fetching profile visitors for user ID:", userId);
+    // console.log("Fetching profile visitors for user ID:", userId);
 
     // Récupérer les IDs des visiteurs du profil
     const viewedByQuery = `

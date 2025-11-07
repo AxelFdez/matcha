@@ -19,8 +19,9 @@ module.exports = async (req, res) => {
     }
 
     // Construire l'objet location
+    // Format GeoJSON standard: [longitude, latitude]
     const locationData = {
-      coordinates: [latitude, longitude],
+      coordinates: [longitude, latitude],
       city: city || "Inconnue",
       country: country || "Inconnu",
       latitude: latitude,

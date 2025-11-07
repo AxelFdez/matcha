@@ -106,8 +106,8 @@ export default {
       const queryString = buildQueryString(filters);
       const url = queryString ? `/browseUsers?${queryString}` : '/browseUsers';
 
-      console.log('getTenUsers - URL:', url);
-      console.log('getTenUsers - filters:', filters);
+      // console.log('getTenUsers - URL:', url);
+      // console.log('getTenUsers - filters:', filters);
 
       const response = await fetchData(url, {
         method: 'GET',
@@ -116,7 +116,7 @@ export default {
         },
       });
 
-      console.log('getTenUsers - response:', response);
+      // console.log('getTenUsers - response:', response);
 
       if (response) {
         tenUsers.value = response.data.users;
@@ -125,7 +125,7 @@ export default {
     };
 
     const onApplyFilters = (filters) => {
-      console.log('onApplyFilters received:', filters);
+      // console.log('onApplyFilters received:', filters);
       currentFilters.value = filters;
       getTenUsers(filters);
     };

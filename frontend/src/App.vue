@@ -3,15 +3,12 @@
     <LoadingStartApp v-if="$store.getters.getIsLoadingStartApp"></LoadingStartApp>
     <LoadingCmp v-if="$store.getters.getIsLoading"></LoadingCmp>
     <div v-if="$store.getters.getIsReady">
-
-         <Header></Header>
-        <router-view> </router-view>
-        <Footer></Footer>
-
+      <Header></Header>
+      <router-view> </router-view>
+      <Footer></Footer>
     </div>
   </div>
 </template>
-
 
 <script>
 import Header from "./components/header/HeaderCmp.vue";
@@ -20,7 +17,7 @@ import LoadingStartApp from "./components/LoadingStartApp.vue";
 import LoadingCmp from "./components/LoadingCmp.vue";
 import { onMounted } from "vue";
 import { useStore } from "vuex";
-import { fetchData } from "./config/api"
+import { fetchData } from "./config/api";
 
 // import { useRouter } from 'vue-router';
 // import { useStore } from "vuex";
@@ -38,62 +35,53 @@ export default {
   setup() {
     const store = useStore();
     onMounted(() => {
-      store.commit('setIsLoadingStartApp', true);
+      store.commit("setIsLoadingStartApp", true);
       setTimeout(() => {
-        if (localStorage.getItem('accessToken')) {
+        if (localStorage.getItem("accessToken")) {
           checkAccessToken();
-          store.commit('setIsLoadingStartApp', false);
-
+          store.commit("setIsLoadingStartApp", false);
         } else {
-
-          store.commit('setIsReady', true);
-          store.commit('setIsLoadingStartApp', false);
+          store.commit("setIsReady", true);
+          store.commit("setIsLoadingStartApp", false);
         }
       }, 2000);
-
     });
 
     async function checkAccessToken() {
-      console.log('check Token');
 
       try {
         const response = await fetchData("/verifyToken", {
-          method: 'GET'
+          method: "GET",
         });
+        // console.log(response.response);
         const responseData = response.data;
         if (response.response.status === 200) {
-
           if (responseData.accessToken) {
-            localStorage.setItem('accessToken', responseData.accessToken)
-            console.log('ACCESS Token');
+            localStorage.setItem("accessToken", responseData.accessToken);
           }
 
-          await store.dispatch('getUserInfos', localStorage.getItem('userName'));
+          await store.dispatch("getUserInfos", localStorage.getItem("userName"));
           if (store.getters.getVerified === true) {
-            await store.dispatch('initWebSocket');
-            // console.log(store.getters);
-            // console.log('verified');
-            store.commit('setIsReady', true);
-            store.commit('setIsConnected', true);
+            await store.dispatch("initWebSocket");
+            store.commit("setIsReady", true);
+            store.commit("setIsConnected", true);
+          } else {
+            console.log("not verified");
+            store.commit("setIsReady", true);
+            store.commit("setIsConnected", false);
           }
-          else {
-            console.log('not verified');
-            store.commit('setIsReady', true);
-            store.commit('setIsConnected', false);
-          }
-
-        } else if (response.status >= 400) {
-
-          store.commit('setIsReady', true);
-          store.commit('setIsConnected', false);
+        } else if (response.response.status >= 400) {
+          localStorage.clear()
+          store.commit("setIsReady", true);
+          store.commit("setIsConnected", false);
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération du profil :', error);
-        store.commit('setIsReady', true);
-        store.commit('setIsConnected', false);
+        console.error("Erreur lors de la récupération du profil :", error);
+        store.commit("setIsReady", true);
+        store.commit("setIsConnected", false);
       }
     }
-  }
+  },
 };
 </script>
 
@@ -117,9 +105,7 @@ export default {
   /* padding: 0px 20px; */
   background: url(../public/src/couple-bg.jpg) fixed center/cover;
   background-color: rgb(34, 34, 34);
-
 }
-
 
 .hidden-element {
   display: none !important;
@@ -148,7 +134,6 @@ export default {
 }
 
 .spinner {
-
   width: 25px;
   height: 25px;
   margin: auto;

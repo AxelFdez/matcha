@@ -250,30 +250,30 @@ export const store = createStore({
       );
 
       state.ws.onopen = function () {
-        console.log("Connection is open ...");
-        let message = JSON.stringify({
-          type: "test",
-          userId: userId,
-          message: "Hello Server!",
-        });
+        // console.log("Connection is open ...");
+        // let message = JSON.stringify({
+        //   type: "test",
+        //   userId: userId,
+        //   message: "Hello Server!",
+        // });
         store.commit("setWebSocket", state.ws);
-        state.ws.send(message);
+        // state.ws.send(message);
       };
       state.ws.onmessage = function (messageEvent) {
         const data = JSON.parse(messageEvent.data);
-        console.log("Server says: " + data.type);
+        // console.log("Server says: " + data.type);
 
         if (data.type === "notification" && data.message && data.message.title === "viewed") {
           // Incrémenter le fameRating quand quelqu'un voit le profil
           const currentFameRating = state.fameRating || 0;
           store.commit("setFameRating", currentFameRating + 2);
-          console.log("👁️ Profil vu ! Fame Rating:", currentFameRating + 2);
+          // console.log("👁️ Profil vu ! Fame Rating:", currentFameRating + 2);
         } else if (data.type === "pingLocation") {
           // Vérifier si l'utilisateur a défini sa position manuellement
           const isManualMode = state.location && state.location.manualMode === true;
 
           if (isManualMode) {
-            console.log("🔒 Skipping location update (manualMode: true)");
+            // console.log("🔒 Skipping location update (manualMode: true)");
             return; // Ne pas envoyer la localisation
           }
 
@@ -290,7 +290,7 @@ export const store = createStore({
                 location: location,
               });
               state.ws.send(message);
-              console.log("📍 Envoyé newLocation :", message);
+              // console.log("📍 Envoyé newLocation :", message);
             },
             function (error) {
               console.error(
@@ -409,7 +409,7 @@ export const store = createStore({
     },
 
     async getUserInfos({ commit, dispatch, state }, username) {
-      console.log("getUserInfos");
+      // console.log("getUserInfos");
       dispatch("initWebSocket");
 
       try {
@@ -482,7 +482,7 @@ export const store = createStore({
 
     async forgotPasswordForm({ commit }, formData) {
       // commit('setIsLoading', true);
-      console.log("forgotPasswordForm");
+      // console.log("forgotPasswordForm");
 
       try {
         const response = await fetchData("/resetPasswordSendEmail", {
@@ -522,7 +522,7 @@ export const store = createStore({
     },
 
     async changeEmailForm({ commit }, formData) {
-      console.log("changeEmailForm");
+      // console.log("changeEmailForm");
       // console.log(formData);
       try {
         const response = await fetchData("/resetEmail", {
@@ -568,7 +568,7 @@ export const store = createStore({
     },
 
     async updateUserInfosForm({ commit, dispatch }, formData) {
-      console.log("updateUserInfosForm", JSON.stringify(formData));
+      // console.log("updateUserInfosForm", JSON.stringify(formData));
       try {
         const response = await fetchData("/updateUser", {
           method: "POST",
@@ -581,7 +581,7 @@ export const store = createStore({
 
         switch (response.response.status) {
           case 200:
-            console.log("profil Updated");
+            // console.log("profil Updated");
             // Rafraîchir les infos utilisateur depuis la base de données
             await dispatch("getUserInfos", localStorage.getItem("userName"));
             // Si responseData.alert est déjà un objet, l'utiliser tel quel

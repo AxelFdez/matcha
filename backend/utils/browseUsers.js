@@ -3,14 +3,14 @@ const pool = require("../config/connectBdd");
 module.exports = async function browseUsers(req, res) {
   let { location, tags, ageGap, fameRatingGap, filterBy, sortBy } = req.query;
 
-  console.log("BrowseUsers called with:", {
-    location,
-    tags,
-    ageGap,
-    fameRatingGap,
-    filterBy,
-    sortBy,
-  });
+  // console.log("BrowseUsers called with:", {
+  //   location,
+  //   tags,
+  //   ageGap,
+  //   fameRatingGap,
+  //   filterBy,
+  //   sortBy,
+  // });
 
   // Parse les paramètres si nécessaire
   if (typeof ageGap === "string") {
@@ -38,11 +38,11 @@ module.exports = async function browseUsers(req, res) {
     const userId = user.id;
     const userLocation = user.location.coordinates;
 
-    console.log('👤 Current user location:', {
-      username: user.username,
-      location: user.location,
-      coordinates: userLocation
-    });
+    // console.log('👤 Current user location:', {
+    //   username: user.username,
+    //   location: user.location,
+    //   coordinates: userLocation
+    // });
 
     // Genres à filtrer selon la préférence de l’utilisateur
     let genderFilterArray = [];
@@ -157,36 +157,38 @@ module.exports = async function browseUsers(req, res) {
       }
     }
 
-    // Sorting
+    // Sorting avec tris secondaires pour améliorer la pertinence
     let orderBy = "";
     switch (sortBy) {
       case "ageIncreasing":
-        orderBy = "age ASC";
+        orderBy = "age ASC, distance ASC";  // Tri secondaire par proximité
         break;
       case "ageDecreasing":
-        orderBy = "age DESC";
+        orderBy = "age DESC, distance ASC";  // Tri secondaire par proximité
         break;
       case "fameRatingIncreasing":
-        orderBy = "famerating ASC";
+        orderBy = "famerating ASC, distance ASC";  // Tri secondaire par proximité
         break;
       case "fameRatingDecreasing":
-        orderBy = "famerating DESC";
+        orderBy = "famerating DESC, distance ASC";  // Tri secondaire par proximité
         break;
       case "locationIncreasing":
-        orderBy = "distance ASC";
+        orderBy = "distance ASC, shared_tags_count DESC NULLS LAST, famerating DESC";  // Tris secondaires par tags puis fame
         break;
       case "locationDecreasing":
-        orderBy = "distance DESC";
+        orderBy = "distance DESC, shared_tags_count DESC NULLS LAST, famerating DESC";  // Tris secondaires par tags puis fame
         break;
-      case "tagsSharedDecreasing":
-        orderBy = "shared_tags_count DESC";
+      case "tagsDecreasing":
+        orderBy = "shared_tags_count DESC NULLS LAST, distance ASC";  // Tri secondaire par proximité
         break;
-      case "tagsSharedIncreasing":
-        orderBy = "shared_tags_count ASC";
+      case "tagsIncreasing":
+        orderBy = "shared_tags_count ASC NULLS FIRST, distance ASC";  // Tri secondaire par proximité
         break;
       default:
         // Score intelligent combinant les 3 critères :
         // - Proximité géographique (distance normalisée, inversée pour que proche = meilleur score)
+        //   Divisé par 20 au lieu de 1000 pour pondérer BEAUCOUP plus la distance proche
+        //   Exemples: 10km = 0.5 pénalité, 50km = 2.5 pénalité, 100km = 5 pénalité
         // - Tags partagés (pondéré x10 pour avoir un impact significatif)
         // - Fame rating (pondéré x0.1 pour équilibrer avec les autres critères)
         // Plus le score est élevé, meilleur est le match
@@ -205,7 +207,7 @@ module.exports = async function browseUsers(req, res) {
             cos(radians((location->'coordinates'->0)::text::float) - radians($6::float)) +
             sin(radians($5::float)) *
             sin(radians((location->'coordinates'->1)::text::float))
-          )) / 1000)
+          )) / 20)
         ) DESC`;
     }
 
@@ -217,26 +219,26 @@ module.exports = async function browseUsers(req, res) {
     const usersResult = await pool.query(query, queryParams);
     const users = usersResult.rows;
 
-    console.log(`Found ${users.length} users matching criteria.`);
+    // console.log(`Found ${users.length} users matching criteria.`);
 
     // 🔍 Debug: Afficher les détails des 5 premiers utilisateurs pour vérifier le tri
-    if (users.length > 0 && !sortBy) {
-      console.log('\n📊 Top 5 users (intelligent matching):');
-      users.slice(0, 5).forEach((user, index) => {
-        const sharedTags = user.shared_tags_count || 0;
-        const fameRating = user.famerating || 0;
-        const distance = user.distance || 0;
-        const score = (sharedTags * 10) + (fameRating * 0.1) - (distance / 1000);
+    // if (users.length > 0) {
+    //   console.log('\n📊 Top 5 users (intelligent matching):');
+    //   users.slice(0, 5).forEach((user, index) => {
+    //     const sharedTags = user.shared_tags_count || 0;
+    //     const fameRating = user.famerating || 0;
+    //     const distance = user.distance || 0;
+    //     const score = (sharedTags * 10) + (fameRating * 0.1) - (distance / 20);
 
-        console.log(`\n${index + 1}. ${user.username} (${user.firstname} ${user.lastname})`);
-        console.log(`   📍 Distance: ${distance.toFixed(2)} km`);
-        console.log(`   📌 Location data:`, user.location);
-        console.log(`   🏷️  Shared tags: ${sharedTags}`);
-        console.log(`   ⭐ Fame rating: ${fameRating}`);
-        console.log(`   🎯 Total score: ${score.toFixed(2)}`);
-      });
-      console.log('\n');
-    }
+    //     console.log(`\n${index + 1}. ${user.username} (${user.firstname} ${user.lastname})`);
+    //     console.log(`   📍 Distance: ${distance.toFixed(2)} km`);
+    //     console.log(`   📌 Location data:`, user.location);
+    //     console.log(`   🏷️  Shared tags: ${sharedTags}`);
+    //     console.log(`   ⭐ Fame rating: ${fameRating}`);
+    //     console.log(`   🎯 Total score: ${score.toFixed(2)}`);
+    //   });
+    //   console.log('\n');
+    // }
 
     if (!users.length) return res.status(404).json({ message: "No users found" });
     return res.status(200).json({ users });
