@@ -145,10 +145,11 @@ const userDistance = computed(() => {
     return null;
   }
 
-  const lat1 = currentUserLocation.latitude || currentUserLocation.coordinates?.[0];
-  const lon1 = currentUserLocation.longitude || currentUserLocation.coordinates?.[1];
-  const lat2 = otherUserLocation.coordinates?.[0];
-  const lon2 = otherUserLocation.coordinates?.[1];
+  // Format GeoJSON: coordinates[0] = longitude, coordinates[1] = latitude
+  const lat1 = currentUserLocation.latitude || currentUserLocation.coordinates?.[1];
+  const lon1 = currentUserLocation.longitude || currentUserLocation.coordinates?.[0];
+  const lat2 = otherUserLocation.coordinates?.[1];
+  const lon2 = otherUserLocation.coordinates?.[0];
 
 
   if (!lat1 || !lon1 || !lat2 || !lon2) {
@@ -500,14 +501,14 @@ onMounted(() => {
               class="rounded"
               ref="map "
               :zoom="zoom"
-              :center="[user.location.coordinates[0], user.location.coordinates[1]]"
+              :center="[user.location.coordinates[1], user.location.coordinates[0]]"
             >
               <l-tile-layer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 layer-type="base"
                 name="OpenStreetMap"
               ></l-tile-layer>
-              <l-marker :lat-lng="[user.location.coordinates[0], user.location.coordinates[1]]" />
+              <l-marker :lat-lng="[user.location.coordinates[1], user.location.coordinates[0]]" />
             </l-map>
           </div>
         </div>

@@ -87,7 +87,8 @@ async function setupWebSocket(server) {
 
 					// Ne mettre à jour que si manualMode est false ou n'existe pas
 					if (!locationData.manualMode) {
-						locationData.coordinates = [parsedMessage.location.latitude, parsedMessage.location.longitude];
+						// Format GeoJSON standard: [longitude, latitude]
+						locationData.coordinates = [parsedMessage.location.longitude, parsedMessage.location.latitude];
 						locationData.latitude = parsedMessage.location.latitude;
 						locationData.longitude = parsedMessage.location.longitude;
 

@@ -108,10 +108,11 @@
         <tbody>
           <tr v-for="user in filteredUsers" :key="user.id">
             <td>
+              <!-- <pre>
+                {{ user.photos[0] }}
+              </pre> -->
               <img
-                v-for="(photo, i) in user.photos.filter(p => p)"
-                :key="i"
-                :src="formatPhotoUrl(photo)"
+                :src="formatPhotoUrl((user.photos[user.profilepicture]))"
                 class="small-photo"
                 @error="e => e.target.style.display='none'"
               />
@@ -228,6 +229,7 @@
 
 <script>
 import { ref, computed, onMounted } from "vue";
+import { useStore } from "vuex";
 import axios from "axios";
 import RangeSlider from "@/components/RangeSlider.vue";
 import Multiselect from "vue-multiselect";
@@ -239,6 +241,7 @@ export default {
   name: "ResearchPage",
   components: { RangeSlider, Multiselect, Dialog, DialogPanel, TransitionChild, TransitionRoot, ProfileInfos },
   setup() {
+    const store = useStore();
     const users = ref([]);
     const loading = ref(false);
     const error = ref(null);
@@ -261,22 +264,33 @@ export default {
       open.value = true;
     };
 
-    const currentUserLocation = ref([0, 0]);
-
     const formatPhotoUrl = (photoPath) =>
-      photoPath ? `http://localhost:3000${photoPath.replace("/app", "")}` : "";
+      photoPath && photoPath.startsWith("/")
+        ? `http://localhost:3000${photoPath}`
+        : `http://localhost:3000/${photoPath}`;
 
     const calculateDistance = (loc) => {
-      if (!loc?.coordinates || !currentUserLocation.value) return Infinity;
-      const [lon1, lat1] = currentUserLocation.value;
-      const [lon2, lat2] = loc.coordinates;
-      const toRad = (v) => (v * Math.PI) / 180;
-      const R = 6371;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
+      if (!loc?.coordinates) return Infinity;
+
+      // Utiliser le store comme ProfileInfos
+      const currentUserLocation = store.getters.getLocation;
+      if (!currentUserLocation) return Infinity;
+
+      // Format GeoJSON: coordinates[0] = longitude, coordinates[1] = latitude
+      const lat1 = currentUserLocation.latitude || currentUserLocation.coordinates?.[1];
+      const lon1 = currentUserLocation.longitude || currentUserLocation.coordinates?.[0];
+      const lat2 = loc.coordinates?.[1];
+      const lon2 = loc.coordinates?.[0];
+
+      if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+
+      const R = 6371; // Rayon de la Terre en km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
       const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
@@ -290,9 +304,6 @@ export default {
         const response = await axios.get("http://localhost:3000/browseUsers", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (response.data.currentUser) {
-          currentUserLocation.value = response.data.currentUser.location.coordinates;
-        }
         users.value = response.data.users;
       } catch (err) {
         error.value = err.response?.data?.message || "Erreur lors du chargement des utilisateurs";

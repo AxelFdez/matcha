@@ -145,8 +145,9 @@ export default {
       const userLocation = store.getters.getLocation;
 
       if (userLocation && userLocation.coordinates) {
-        currentLatitude.value = userLocation.coordinates[0] || 48.8566;
-        currentLongitude.value = userLocation.coordinates[1] || 2.3522;
+        // Format GeoJSON: coordinates[0] = longitude, coordinates[1] = latitude
+        currentLatitude.value = userLocation.coordinates[1] || 48.8566;
+        currentLongitude.value = userLocation.coordinates[0] || 2.3522;
         currentCity.value = userLocation.city || "Inconnue";
         currentCountry.value = userLocation.country || "Inconnu";
 
@@ -221,9 +222,9 @@ export default {
           newCity.value = "";
           newCountry.value = "";
 
-          // Mettre à jour le store
+          // Mettre à jour le store avec format GeoJSON [longitude, latitude]
           store.commit("setLocation", {
-            coordinates: [savedLat, savedLng],
+            coordinates: [savedLng, savedLat],
             city: savedCity,
             country: savedCountry,
             latitude: savedLat,
