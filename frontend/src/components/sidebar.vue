@@ -1,10 +1,23 @@
 <template>
   <aside
     id="default-sidebar"
-    class="fixed right-0 top-20 z-50 h-screen w-64 -translate-x-full transition-transform sm:translate-x-0"
+    class="fixed right-0 top-0 z-[1200] h-screen w-full sm:w-80 md:w-96 translate-x-0 transition-transform shadow-2xl"
     aria-label="Sidenav"
   >
     <div class="h-full overflow-y-auto border-r border-gray-900 bg-zinc-900 px-3 py-5">
+      <!-- Close Button -->
+      <div class="mb-4 flex items-center justify-end">
+        <button
+          @click="closeSidebar"
+          class="rounded-lg p-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
+          aria-label="Fermer la sidebar"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
       <!-- Main Sidebar Content -->
       <div
         class="mb-4 flex items-center justify-around border-b border-gray-200 pb-4 dark:border-gray-600"
@@ -422,7 +435,7 @@
               leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <DialogPanel
-                class="relative my-8 w-9/12 transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-lg"
+                class="relative my-8 w-[90%] max-w-5xl transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all"
               >
                 <div v-if="loadingProfile" class="flex justify-center items-center p-8">
                   <p class="text-gray-500 dark:text-gray-400">Chargement du profil...</p>

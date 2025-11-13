@@ -56,15 +56,15 @@ export default {
     display: grid;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 35px;
-    border-radius: 6px;
+    width: 80px;
+    height: 50px;
+    border-radius: 8px;
     background-image: linear-gradient(to right, #ff24a7, #8890fe);
     cursor: pointer;
     user-select: none;
     opacity: 1;
     transition: all 0.2s;
-    font-size: 1.6rem;
+    font-size: 2rem;
     color: white;
     margin-top: 1px;
 
@@ -79,9 +79,9 @@ export default {
     margin: 5px 10px 0px 10px;
 
     span {
-      width: 35px;
-      height: 25px;
-      font-size: 1.2rem;
+      width: 60px;
+      height: 40px;
+      font-size: 1.5rem;
     }
   }
 }

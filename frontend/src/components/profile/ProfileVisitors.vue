@@ -100,7 +100,7 @@
               leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <DialogPanel
-                class="relative my-8 w-9/12 transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-lg"
+                class="relative my-8 w-[90%] max-w-5xl transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all"
               >
                 <ProfileInfos v-if="selectedVisitor" :user="selectedVisitor" />
               </DialogPanel>
@@ -148,8 +148,14 @@ export default {
     const getProfilePhoto = (visitor) => {
       if (visitor.photos && visitor.photos.length > 0) {
         const photoIndex = visitor.profilepicture || 0;
-        const photo = visitor.photos[photoIndex] || visitor.photos[0];
-        return photo || "/src/default-avatar-img.jpeg";
+        let photo = visitor.photos[photoIndex] || visitor.photos[0];
+
+        if (photo) {
+          // Nettoyer et construire l'URL complète
+          let cleaned = photo.replace("/app/", "/");
+          cleaned = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
+          return `${process.env.VUE_APP_API_URL}${cleaned}`;
+        }
       }
       return "/src/default-avatar-img.jpeg";
     };

@@ -360,10 +360,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="card-container p-4">
-    <!-- <div class="flex justify-between items-center px-4 me-4 sm:px-0"> -->
-    <div class="container flex justify-around items-center h-48">
-      <div class="relative">
+  <div class="card-container p-2 sm:p-4">
+    <!-- Section principale avec photo et infos -->
+    <div class="profile-header flex flex-col lg:flex-row lg:justify-around items-center gap-4 lg:gap-2">
+      <!-- Photo (Swiper) -->
+      <div class="profile-photo-section w-full lg:w-auto flex justify-center">
         <swiper
           :modules="modules"
           :slides-per-view="1"
@@ -373,91 +374,98 @@ onMounted(() => {
           :scrollbar="{ draggable: true }"
           @swiper="onSwiper"
           @slideChange="onSlideChange"
-          class="rounded shadow-black shadow-sm w-48 m-2 !important"
+          class="profile-swiper rounded shadow-black shadow-sm"
         >
           <swiper-slide v-for="(photo, index) in photos" :key="index">
             <img
               :src="photo || imgPlaceholder"
               :alt="`Photo ${index + 1}`"
-              class="w-full sm:h-48 object-cover rounded-lg"
+              class="w-full h-full object-cover rounded-lg"
             />
           </swiper-slide>
           ...
         </swiper>
       </div>
-      <div class="">
-        <h2 class="mt-1 max-w-2xl text-2xl text-gray-900">
-          {{ user.firstname }}
+
+      <!-- Infos utilisateur -->
+      <div class="profile-info-section text-center lg:text-left">
+        <h2 class="mt-1 text-xl sm:text-2xl text-gray-900 font-semibold">
+          {{ user.firstname }} {{ user.lastname }}
         </h2>
-        <h2 class="mt-1 max-w-2xl text-2xl text-gray-900">
-          {{ user.lastname }}
-        </h2>
-        <h3 class="mt-1 max-w-2xl text-m text-gray-700">{{ user.username }}</h3>
-        <h3 class="mt-1 max-w-2xl text-2xl text-gray-900">{{ user.age }} yo</h3>
+        <h3 class="mt-1 text-sm sm:text-base text-gray-700">{{ user.username }}</h3>
+        <h3 class="mt-1 text-lg sm:text-2xl text-gray-900">{{ user.age }} yo</h3>
         <p v-if="userDistance" class="mt-1 text-sm text-gray-600">
           📍 {{ userDistance }}
         </p>
 
         <!-- Status Badges -->
-        <div class="mt-2 flex flex-wrap gap-2">
+        <div class="mt-2 flex flex-wrap gap-2 justify-center lg:justify-start">
           <span
             v-if="isMatched"
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-700 border border-pink-300 animate-pulse"
+            class="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-700 border border-pink-300 animate-pulse"
           >
             💕 Match
           </span>
           <span
             v-else-if="isLiked"
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-300"
+            class="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-300"
           >
             ❤️ Liked
           </span>
           <span
             v-else-if="isLikedByUser"
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-300"
+            class="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-300"
           >
             💜 Likes You
           </span>
           <span
             v-else-if="isViewedByUser"
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300"
+            class="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-300"
           >
             👁️ Viewed You
           </span>
           <span
             v-if="isBlocked"
-            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300"
+            class="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300"
           >
             🚫 Blocked
           </span>
         </div>
       </div>
-      <div class="sm:self-start place-items-center">
-        <img
-          v-if="user.gender == 'female'"
-          class="mt-6 inline-block size-10 rounded-full ring-2 ring-white"
-          src="src/office-woman.png"
-          alt=""
-        />
-        <img
-          v-else
-          class="mt-6 inline-block size-10 rounded-full ring-2 ring-white"
-          src="src/office-man.png"
-          alt=""
-        />
-        <p class="mt-4">Famerating</p>
-        <p>{{ user.fameRating || user.famerating || 0 }}</p>
-        <div
-          v-if="user.connected"
-          class="relative mt-4 bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full"
-        ></div>
-        <div
-          v-else
-          class="relative mt-4 bottom-0 right-0 w-3.5 h-3.5 bg-grey-400 border-2 border-white rounded-full"
-        ></div>
-        <div v-if="user.connected">connected</div>
-        <div v-else class="flex flex-col justify-center items-center">
-          <p>{{ lastConnectionTime }}</p>
+
+      <!-- Fame Rating et Statut -->
+      <div class="profile-stats-section flex lg:flex-col items-center lg:items-center gap-4 lg:gap-2 lg:self-center">
+        <div class="text-center">
+          <img
+            v-if="user.gender == 'female'"
+            class="inline-block size-8 sm:size-10 rounded-full ring-2 ring-white"
+            src="src/office-woman.png"
+            alt=""
+          />
+          <img
+            v-else
+            class="inline-block size-8 sm:size-10 rounded-full ring-2 ring-white"
+            src="src/office-man.png"
+            alt=""
+          />
+        </div>
+        <div class="text-center">
+          <p class="text-xs sm:text-sm font-medium">Famerating</p>
+          <p class="text-sm sm:text-base font-bold">{{ user.fameRating || user.famerating || 0 }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div
+            v-if="user.connected"
+            class="w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-400 border-2 border-white rounded-full"
+          ></div>
+          <div
+            v-else
+            class="w-3 h-3 sm:w-3.5 sm:h-3.5 bg-gray-400 border-2 border-white rounded-full"
+          ></div>
+          <div v-if="user.connected" class="text-xs sm:text-sm">Online</div>
+          <div v-else class="text-xs sm:text-sm">
+            {{ lastConnectionTime }}
+          </div>
         </div>
       </div>
     </div>
@@ -562,4 +570,42 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.profile-swiper {
+  width: 100%;
+  max-width: 200px;
+  height: 200px;
+  margin: 0.5rem;
+
+  @media (min-width: 640px) {
+    max-width: 250px;
+    height: 250px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 200px;
+    height: 200px;
+  }
+}
+
+.profile-header {
+  @media (max-width: 1023px) {
+    padding: 1rem 0;
+  }
+}
+
+.profile-info-section {
+  @media (max-width: 1023px) {
+    width: 100%;
+    padding: 0 1rem;
+  }
+}
+
+.profile-stats-section {
+  @media (max-width: 1023px) {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem 0;
+  }
+}
+</style>

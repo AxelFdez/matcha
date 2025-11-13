@@ -21,22 +21,22 @@ export default {
     display: grid;
     align-items: center;
     justify-content: center;
-    width: 60px;
-    height: 35px;
-    border-radius: 6px;
+    width: 80px;
+    height: 50px;
+    border-radius: 8px;
     background-image: linear-gradient(to right, #ff24a7, #8890fe);
     cursor: pointer;
     user-select: none;
     opacity: 1;
     transition: all 0.2s;
-    font-size: 1.4rem;
+    font-size: 1.8rem;
     color: white;
     transition: all 0.2s;
-    
+
     margin-top: 1px;
 
     &:hover {
-      
+
       background-image: linear-gradient(to right, #ff24a796, #8890fe8e);
       box-shadow: 0 0 8px #0000008c;
     }
@@ -46,9 +46,9 @@ export default {
     margin: 10px 10px 0 10px;
 
     span {
-      width: 35px;
-      height: 25px;
-      font-size: 1.1rem;
+      width: 60px;
+      height: 40px;
+      font-size: 1.4rem;
     }
   }
 }

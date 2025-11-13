@@ -100,7 +100,7 @@
               leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <DialogPanel
-                class="relative my-8 w-9/12 transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:w-full sm:max-w-lg"
+                class="relative my-8 w-[90%] max-w-5xl transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all"
               >
                 <ProfileInfos v-if="selectedLiker" :user="selectedLiker" />
               </DialogPanel>
@@ -148,8 +148,14 @@ export default {
     const getProfilePhoto = (liker) => {
       if (liker.photos && liker.photos.length > 0) {
         const photoIndex = liker.profilepicture || 0;
-        const photo = liker.photos[photoIndex] || liker.photos[0];
-        return photo || "/src/default-avatar-img.jpeg";
+        let photo = liker.photos[photoIndex] || liker.photos[0];
+
+        if (photo) {
+          // Nettoyer et construire l'URL complète
+          let cleaned = photo.replace("/app/", "/");
+          cleaned = cleaned.startsWith("/") ? cleaned : `/${cleaned}`;
+          return `${process.env.VUE_APP_API_URL}${cleaned}`;
+        }
       }
       return "/src/default-avatar-img.jpeg";
     };

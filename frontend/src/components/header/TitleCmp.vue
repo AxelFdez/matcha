@@ -18,23 +18,22 @@ export default {
 <style lang="scss">
 .title--header--container {
   display: flex;
+  align-items: center;
   height: fit-content;
   // border: solid 1px white;
 
   img {
     margin-left: 15px;
-    margin-top: 15px;
     width: 55px;
     height: 55px;
   }
 
   .title--header {
     text-decoration: none;
-    margin-top: 10px;
     padding: -10px;
 
     h1 {
-      margin: 6px 0 0 0;
+      margin: 0;
       padding: 0 6px 0 6px;
       font-weight: 900;
       font-size: 3rem;
@@ -55,14 +54,14 @@ export default {
 
   @media (min-width: 200px) and (max-width: 700px) {
     img {
-      width: 45px;
-      height: 45px;
-      margin-top: 15px;
+      width: 35px;
+      height: 35px;
+      margin-left: 10px;
     }
 
     .title--header {
       h1 {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
       }
     }
   }

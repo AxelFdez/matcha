@@ -89,14 +89,14 @@ export default {
 
   width: 100%;
   display: flex;
-  align-items: top;
+  align-items: center;
   justify-content: space-between;
 
   z-index: 1100;
 
   .buttons--container {
     display: flex;
-    align-items: top;
+    align-items: center;
 
     .buttons {
       display: flex;
@@ -107,11 +107,11 @@ export default {
     }
 
     @media (max-width: 700px) {
-      align-items: top;
+      align-items: center;
 
       .buttons {
         margin-right: 10px;
-        display: grid;
+        display: flex;
         align-items: center;
       }
     }
@@ -176,11 +176,12 @@ export default {
   }
 
   @media (min-width: 200px) and (max-width: 700px) {
-    margin: 10px 10px 0 10px;
+    margin: 0 5px;
 
     span {
       width: 35px;
       height: 35px;
+      margin-top: 0;
 
       svg {
         width: 18px;

@@ -1,6 +1,6 @@
 <template>
   <!-- Bouton pour ouvrir/fermer la Sidebar -->
-  <section class="container p-12 mx-auto px-4">
+  <section class="container mx-auto p-4 sm:p-8 lg:p-12">
     <FilterBar
       @apply-filters="onApplyFilters"
       @reset-filters="onResetFilters"
