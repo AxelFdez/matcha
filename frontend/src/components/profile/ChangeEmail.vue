@@ -12,8 +12,14 @@
                 </button>
             </form>
         </div>
-        <div v-if="$store.getters.getServerMessage.type === 'success'">
+        <div v-if="$store.getters.getServerMessage.type === 'success'" class="success-message">
             <h3 v-html="replace_newLine_to_br_tags($t('changeEmailSuccess'))"></h3>
+            <div class="email-verification-notice">
+                <i class="fa-solid fa-envelope"></i>
+                <p><strong>Vérifiez votre boîte mail !</strong></p>
+                <p class="small-text">Un email de vérification a été envoyé à votre nouvelle adresse.</p>
+                <p class="small-text">Vous serez déconnecté dans <span class="countdown">{{ countdown }}</span> secondes...</p>
+            </div>
         </div>
 
         <div v-if="$store.getters.getServerMessage.type === 'warning'">
@@ -27,9 +33,10 @@
 </template>
 
 <script>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { validateEmail } from "../../libft/libft.js";
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 import { replace_newLine_to_br_tags } from '@/libft/libft.js';
 
 export default {
@@ -48,6 +55,10 @@ export default {
 
     setup() {
         const store = useStore();
+        const router = useRouter();
+        const countdown = ref(5);
+        let countdownInterval = null;
+
         store.commit("setIsFormSent", false);
 
 
@@ -55,6 +66,33 @@ export default {
             email: "",
             emailValid: false,
         });
+
+        // Watcher pour détecter le succès et démarrer le compte à rebours
+        const serverMessage = computed(() => store.getters.getServerMessage);
+
+        watch(
+            serverMessage,
+            (newMessage) => {
+                if (newMessage.type === 'success') {
+                    // Démarrer le compte à rebours
+                    countdown.value = 5;
+                    countdownInterval = setInterval(() => {
+                        countdown.value--;
+                        if (countdown.value <= 0) {
+                            clearInterval(countdownInterval);
+                            // Déconnecter l'utilisateur et rediriger
+                            store.commit("setIsConnected", false);
+                            localStorage.clear();
+                            const ws = store.getters.getWebSocket;
+                            if (ws) {
+                                ws.close();
+                            }
+                            router.push({ name: "LoginPage" });
+                        }
+                    }, 1000);
+                }
+            }
+        );
 
         watch(
             inputs,
@@ -71,14 +109,21 @@ export default {
         );
 
         function submitForm(event) {
-            console.log("submitFormChangeEmail");
+            // console.log("submitFormChangeEmail");
             event.preventDefault();
 
+            // Confirmation avant de réinitialiser l'email
+            const newEmail = event.target.email.value;
+            const confirmMessage = `Êtes-vous sûr de vouloir changer votre email pour "${newEmail}" ?\n\nVous devrez vérifier votre nouveau email et vous serez déconnecté.`;
+
+            if (!window.confirm(confirmMessage)) {
+                return; // L'utilisateur a annulé
+            }
 
             // Récupérer les données du formulaire
             const formData = {
                 username : store.getters.getUserName,
-                email: event.target.email.value,
+                email: newEmail,
             };
             setTimeout(() => {
                 store.commit("setIsLoading", true);
@@ -94,6 +139,7 @@ export default {
             inputs,
             submitForm,
             replace_newLine_to_br_tags,
+            countdown,
         };
 
     },
@@ -218,6 +264,73 @@ export default {
                 color: var(--light-pink);
             }
         }
+    }
+
+    .success-message {
+        .email-verification-notice {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+
+            i {
+                font-size: 3rem;
+                color: white;
+                animation: pulse 2s infinite;
+            }
+
+            p {
+                margin: 0;
+                color: white;
+                text-align: center;
+                font-size: 1rem;
+
+                strong {
+                    font-size: 1.1rem;
+                    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                }
+            }
+
+            .small-text {
+                font-size: 0.9rem;
+                opacity: 0.95;
+            }
+
+            .countdown {
+                display: inline-block;
+                min-width: 1.5rem;
+                font-weight: 900;
+                font-size: 1.3rem;
+                color: #ffd700;
+                text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+                animation: countdownPulse 1s infinite;
+            }
+        }
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes countdownPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
     }
 }
 </style>

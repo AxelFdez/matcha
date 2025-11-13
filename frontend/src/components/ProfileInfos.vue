@@ -32,7 +32,6 @@ const props = defineProps({
     default: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   },
 });
-
 const modules = [Navigation, Pagination, Scrollbar, A11y];
 const store = useStore();
 
@@ -194,7 +193,7 @@ const toggleLike = () => {
     );
     isLiked.value = false;
     isMatched.value = false;
-    console.log(`Unliked user: ${props.user.username}`);
+    // console.log(`Unliked user: ${props.user.username}`);
   } else {
     // Like
     ws.send(
@@ -209,9 +208,9 @@ const toggleLike = () => {
     // Si l'autre utilisateur nous a déjà liké, c'est un match !
     if (isLikedByUser.value) {
       isMatched.value = true;
-      console.log(`🎉 MATCH avec ${props.user.username}!`);
+      // console.log(`🎉 MATCH avec ${props.user.username}!`);
     } else {
-      console.log(`Liked user: ${props.user.username}`);
+      // console.log(`Liked user: ${props.user.username}`);
     }
   }
 };

@@ -4,7 +4,7 @@ const pool = require('../config/connectBdd');
 async function reSendEmail(req, res) {
 	try {
 		const { username } = req.body;
-		const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+		const userResult = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [username]);
 
 		if (userResult.rows.length === 0) {
 			return res.status(404).json({ message: "User not match" });

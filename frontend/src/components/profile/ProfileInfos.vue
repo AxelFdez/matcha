@@ -206,7 +206,7 @@ export default {
 
         function submitForm(event) {
             event.preventDefault();
-            console.log("submit form function");
+            // console.log("submit form function");
 
             // Normaliser les tags : s'assurer qu'ils ont tous un # devant
             if (formData.value.interests && Array.isArray(formData.value.interests)) {
@@ -218,7 +218,7 @@ export default {
                 });
             }
 
-            console.log("formData = ", formData.value);
+            // console.log("formData = ", formData.value);
             store.dispatch("updateUserInfosForm", formData.value);
         }
 
@@ -298,7 +298,7 @@ export default {
             if (!this.formData.sexualpreferences[index]) {
                 this.formData.sexualpreferences[index] = value;
             } else {
-                console.log("I passed here")
+                // console.log("I passed here")
                 this.formData.sexualpreferences[index] = "";
             }
             // console.log("form ", this.formData.sexualPreferences[index]);

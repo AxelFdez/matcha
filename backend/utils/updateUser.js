@@ -131,6 +131,7 @@ async function updateUser(req, res) {
         userUpdated.age &&
         userUpdated.gender &&
         userUpdated.gender != "None" &&
+        userUpdated.biography &&
         userUpdated.sexualpreferences &&
         userUpdated.interests.length > 0 &&
         userUpdated.photos[0]

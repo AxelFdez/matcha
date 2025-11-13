@@ -82,6 +82,11 @@ const createUsersTable = async () => {
         await client.query(createIndexQuery);
         console.log("Index pour 'location' créé.");
 
+        // Création de l'index pour les recherches insensibles à la casse sur username
+        const createUsernameLowerIndexQuery = `CREATE INDEX IF NOT EXISTS username_lower_idx ON users (LOWER(username));`;
+        await client.query(createUsernameLowerIndexQuery);
+        console.log("Index pour 'LOWER(username)' créé pour les recherches insensibles à la casse.");
+
     } catch (err) {
         console.error("Erreur lors de la configuration de la base de données :", err);
     } finally {

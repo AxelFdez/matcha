@@ -38,7 +38,7 @@ async function sendEmail(to, refreshToken) {
     sendSmtpEmail.htmlContent = html;
 
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log("Verification email sent successfully:", data);
+    // console.log("Verification email sent successfully:", data);
     return data;
   } catch (error) {
     console.error("Error sending verification email:", error);

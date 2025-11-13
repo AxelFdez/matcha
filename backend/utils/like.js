@@ -22,7 +22,7 @@ async function likeUser(userId, message) {
 		return;
 	}
 
-	let user = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+	let user = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [username]);
 	user = user["rows"][0];
 
 	if (!user) {
@@ -36,7 +36,7 @@ async function likeUser(userId, message) {
 		return;
 	}
 
-	userliked = await pool.query('SELECT * FROM users WHERE username = $1', [userLikedM]);
+	userliked = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [userLikedM]);
 	userliked = userliked["rows"][0];
 
 	if (!userliked) {

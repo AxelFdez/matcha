@@ -29,7 +29,7 @@ module.exports = async function browseUsers(req, res) {
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-    const userResult = await pool.query("SELECT * FROM users WHERE username = $1", [
+    const userResult = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
       req.user.username,
     ]);
     const user = userResult.rows[0];
@@ -90,7 +90,7 @@ module.exports = async function browseUsers(req, res) {
         AND (sexualpreferences = 'both' OR sexualpreferences = $3)
     `;
 
-    const queryParams = [userId, genderFilterArray, user.gender, user.interests, userLocation[0], userLocation[1]];
+    const queryParams = [userId, genderFilterArray, user.gender, user.interests, userLocation[1], userLocation[0]];
     let paramIndex = 7; // déjà 6 params utilisés
 
     // Filtres supplémentaires
@@ -187,10 +187,10 @@ module.exports = async function browseUsers(req, res) {
       default:
         // Score intelligent combinant les 3 critères :
         // - Proximité géographique (distance normalisée, inversée pour que proche = meilleur score)
-        //   Divisé par 20 au lieu de 1000 pour pondérer BEAUCOUP plus la distance proche
+        //   Divisé par 5 pour pondérer plus la distance proche
         //   Exemples: 10km = 0.5 pénalité, 50km = 2.5 pénalité, 100km = 5 pénalité
         // - Tags partagés (pondéré x10 pour avoir un impact significatif)
-        // - Fame rating (pondéré x0.1 pour équilibrer avec les autres critères)
+        // - Fame rating (pondéré x0.05 pour équilibrer avec les autres critères)
         // Plus le score est élevé, meilleur est le match
         orderBy = `(
           COALESCE(array_length(
@@ -200,14 +200,14 @@ module.exports = async function browseUsers(req, res) {
               SELECT unnest($4::text[])
             ), 1
           ), 0) * 10 +
-          COALESCE(famerating, 0) * 0.1 -
+          COALESCE(famerating, 0) * 0.05 -
           ((6371 * acos(
             cos(radians($5::float)) *
             cos(radians((location->'coordinates'->1)::text::float)) *
             cos(radians((location->'coordinates'->0)::text::float) - radians($6::float)) +
             sin(radians($5::float)) *
             sin(radians((location->'coordinates'->1)::text::float))
-          )) / 20)
+          )) / 5)
         ) DESC`;
     }
 

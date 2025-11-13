@@ -32,7 +32,7 @@ async function chatUser(userId, message){
 		const user = userResult.rows[0];
 
 		// Get recipient user from PostgreSQL
-		const userRecipientResult = await pool.query('SELECT * FROM users WHERE username = $1', [message.UserRecipient]);
+		const userRecipientResult = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [message.UserRecipient]);
 		if (userRecipientResult.rows.length === 0) {
 			return ws.send(JSON.stringify({
 				type: 'error',

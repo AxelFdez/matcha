@@ -23,7 +23,7 @@ async function reportUser(userId, message) {
     return;
   }
 
-  let user = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+  let user = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [username]);
   user = user.rows[0];
 
   if (!user) {
@@ -37,7 +37,7 @@ async function reportUser(userId, message) {
     return;
   }
 
-  let userReported = await pool.query("SELECT * FROM users WHERE username = $1", [userReportedM]);
+  let userReported = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [userReportedM]);
   userReported = userReported.rows[0];
 
   if (!userReported) {

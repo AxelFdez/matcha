@@ -9,7 +9,7 @@ async function viewedUser(userId, message) {
 
   try {
     // 🔹 Récupérer l'utilisateur qui regarde
-    const userRes = await pool.query("SELECT * FROM users WHERE username = $1", [message.user]);
+    const userRes = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [message.user]);
     const user = userRes.rows[0];
     if (!user) {
       console.warn("Viewer not found in DB:", message.user);
@@ -17,7 +17,7 @@ async function viewedUser(userId, message) {
     }
 
     // 🔹 Récupérer l'utilisateur regardé
-    const userViewedRes = await pool.query("SELECT * FROM users WHERE username = $1", [
+    const userViewedRes = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
       message.userViewed,
     ]);
     const userViewed = userViewedRes.rows[0];

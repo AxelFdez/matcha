@@ -206,7 +206,7 @@ export default {
           // Assigner la structure de données à inputs.value.location
           inputs.value.location = location;
         }, function(error) {
-          console.error("Erreur de géolocalisation: " + error.message);
+          // console.error("Erreur de géolocalisation: " + error.message);
           inputs.value.location = null;
         }, {
           maximumAge: 60000,

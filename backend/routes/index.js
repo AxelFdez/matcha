@@ -36,7 +36,7 @@ router.post(
 // OK
 router.post("/resetPassword", require("../utils/resetPassword"), (req, res) => {});
 // OK
-router.post("/reSendEmail", verifyToken, require("../utils/reSendEmail"), (req, res) => {});
+router.post("/reSendEmail", require("../utils/reSendEmail"), (req, res) => {});
 // OK
 router.post("/resetEmail", verifyToken, require("../utils/resetEmail"), (req, res) => {});
 // OK
@@ -97,7 +97,7 @@ router.get(
   (req, res) => {}
 );
 // router.get('/browseUsers', verifyToken, require('../utils/browseUsers'), (req, res) => {});
-// KO
+// OK
 router.get("/browseUsers", verifyToken, require("../utils/browseUsers"), (req, res) => {});
 // OK
 router.get("/getAllTags", verifyToken, require("../utils/getAllTags"), (req, res) => {});

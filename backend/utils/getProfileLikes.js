@@ -1,4 +1,5 @@
 const pool = require("../config/connectBdd");
+const { connect } = require("../routes");
 
 module.exports = async (req, res) => {
   try {
@@ -44,7 +45,8 @@ module.exports = async (req, res) => {
         profilepicture,
         famerating,
         location,
-        lastconnection
+        lastconnection,
+        connected
       FROM users
       WHERE id = ANY($1::int[])
     `;
@@ -93,7 +95,8 @@ module.exports = async (req, res) => {
         country: country,
         latitude: latitude,
         longitude: longitude,
-        likedAt: liker.lastconnection || new Date().toISOString(), // Utiliser lastconnection comme approximation
+        lastconnection: liker.lastconnection,
+        connected: liker.connected || false,
       };
     });
 

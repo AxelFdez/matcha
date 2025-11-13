@@ -4,7 +4,7 @@ const pool = require('../config/connectBdd');
 async function resetEmail(req, res) {
 	try {
 		const { username, email } = req.body;
-		const userResult = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+		const userResult = await pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [username]);
 
 		if (userResult.rows.length === 0) {
 			return res.status(404).json({ alert: { type: "warning", message: "User not match" } });
@@ -15,7 +15,7 @@ async function resetEmail(req, res) {
 			return res.status(400).json({ alert: { type: "warning", message: "Email already exists" } });
 		}
 
-		await pool.query('UPDATE users SET email = $1, verified = $2 WHERE username = $3', [email, false, username]);
+		await pool.query('UPDATE users SET email = $1, verified = $2 WHERE LOWER(username) = LOWER($3)', [email, false, username]);
 		await sendEmail(email, userResult.rows[0].refreshtoken);
 
 		res.status(200).json({ alert: { type: "success", message: "Email sent" } });

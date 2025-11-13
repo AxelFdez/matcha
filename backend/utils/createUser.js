@@ -142,7 +142,7 @@ async function createUser(req, res) {
             throw new Error('Password hashing failed');
         }
         const result = await pool.query(
-            'SELECT * FROM users WHERE email = $1 OR username = $2',
+            'SELECT * FROM users WHERE email = $1 OR LOWER(username) = LOWER($2)',
             [req.body.email, req.body.userName]
         );
 
@@ -150,7 +150,7 @@ async function createUser(req, res) {
             if (result.rows.some(row => row.email === req.body.email)) {
                 throw new DuplicationError('Email already exists');
             }
-            if (result.rows.some(row => row.username === req.body.userName)) {
+            if (result.rows.some(row => row.username.toLowerCase() === req.body.userName.toLowerCase())) {
                 throw new DuplicationError('Username already exists');
             }
         }
@@ -163,9 +163,11 @@ async function createUser(req, res) {
         // Convert location to JSON string for storage
         const locationJson = location ? JSON.stringify(location) : null;
 
+        const capitalizedUserName = req.body.userName.charAt(0).toUpperCase() + req.body.userName.slice(1);
+
         const user = await pool.query(
             'INSERT INTO users (username, email, password, firstname, lastname, refreshToken, location) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-            [req.body.userName, req.body.email, hash, req.body.firstName, req.body.lastName, verificationToken, locationJson]
+            [capitalizedUserName, req.body.email, hash, req.body.firstName, req.body.lastName, verificationToken, locationJson]
         );
         const userId = user.rows[0].id;
 

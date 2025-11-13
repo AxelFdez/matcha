@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
 
     const viewedByResult = await pool.query(viewedByQuery, [userId]);
 
-    console.log("ViewedBy result:", viewedByResult.rows);
+    // console.log("ViewedBy result:", viewedByResult.rows);
 
     if (viewedByResult.rows.length === 0) {
       console.log("User not found with ID:", userId);
@@ -46,7 +46,8 @@ module.exports = async (req, res) => {
         profilepicture,
         famerating,
         location,
-        lastconnection
+        lastconnection,
+        connected
       FROM users
       WHERE id = ANY($1::int[])
     `;
@@ -95,7 +96,8 @@ module.exports = async (req, res) => {
         country: country,
         latitude: latitude,
         longitude: longitude,
-        visitedAt: visitor.lastconnection || new Date().toISOString(), // Utiliser lastconnection comme approximation
+        lastconnection: visitor.lastconnection,
+        connected: visitor.connected || false,
       };
     });
 

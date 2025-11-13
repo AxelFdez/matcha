@@ -28,7 +28,7 @@
             (error) => {
               switch (error.code) {
                 case error.PERMISSION_DENIED:
-                  this.error = "L'utilisateur a refusé la demande de géolocalisation.";
+                  // this.error = "L'utilisateur a refusé la demande de géolocalisation.";
                   break;
                 case error.POSITION_UNAVAILABLE:
                   this.error = "Les informations de localisation ne sont pas disponibles.";

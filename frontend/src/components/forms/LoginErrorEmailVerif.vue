@@ -17,10 +17,6 @@
     <div class="send--email--verif">
 
       <TextButton :class="{ hide: reSendEmailClicked }" :btnName="$t('reSendEmail')" @click="sendEmail()"></TextButton>
-      <br>
-      <router-link class="router--btn" :to="{ name: 'ChangeEmailPage', params: {} }">
-                <TextButton :btnName="$t('changeEmailBtn')"></TextButton>
-            </router-link>
       <div :class="{ spinner: reSendEmailClicked  && !serverResponse}"></div>
 
       <span
@@ -89,14 +85,13 @@ export default {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "authorization": "bearer " + localStorage.getItem('accessToken'),
           },
           body: JSON.stringify(formData),
         });
-        const responseData = await response.json();
-        console.log(responseData);
+        const responseData = response.data;
+        console.log("reSendEmail response:", responseData);
         // reSendEmailClicked.value = true;
-        switch (response.status) {
+        switch (response.response.status) {
           case 200:
             serverResponse.value = 200;
             break;
@@ -109,9 +104,14 @@ export default {
           case 503:
             serverResponse.value = 503;
             break;
+          default:
+            serverResponse.value = 503;
+            console.error("Unexpected status:", response.response.status);
+            break;
         }
       } catch (error) {
         console.error("Error reSendEmail:", error);
+        serverResponse.value = 503;
       }
     }
 

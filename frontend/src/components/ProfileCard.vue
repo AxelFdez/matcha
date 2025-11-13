@@ -193,7 +193,7 @@ const toggleModal = () => {
     console.warn("WebSocket or usernames not available");
     return;
   }
-  console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });
+  // console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });
   ws.send(
     JSON.stringify({
       type: "viewed",

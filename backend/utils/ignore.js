@@ -22,7 +22,7 @@ async function ignoreUser(userId, message) {
     return;
   }
 
-  let user = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+  let user = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [username]);
   user = user["rows"][0];
 
   if (!user) {
@@ -38,7 +38,7 @@ async function ignoreUser(userId, message) {
     return;
   }
 
-  let userIgnored = await pool.query("SELECT * FROM users WHERE username = $1", [userIgnoredM]);
+  let userIgnored = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [userIgnoredM]);
   userIgnored = userIgnored["rows"][0];
 
   if (!userIgnored) {

@@ -25,7 +25,7 @@
             <th>Âge</th>
             <th>Localisation</th>
             <th>Fame Rating</th>
-            <th>Liké le</th>
+            <th>Statut</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -54,7 +54,12 @@
                 {{ liker.fameRating || 0 }}
               </div>
             </td>
-            <td class="date-cell">{{ formatDate(liker.likedAt) }}</td>
+            <td class="status-cell">
+              <div class="connection-status" :class="{ 'online': liker.connected }">
+                <span class="status-dot"></span>
+                <span class="status-text">{{ liker.connected ? 'En ligne' : 'Hors ligne' }}</span>
+              </div>
+            </td>
             <td class="action-cell">
               <button @click="openProfileModal(liker)" class="view-profile-btn">
                 <i class="fa-solid fa-user"></i>
@@ -179,7 +184,7 @@ export default {
       const formattedLiker = {
         ...liker,
         location: {
-          coordinates: [liker.latitude || 48.8566, liker.longitude || 2.3522], // Coordonnées par défaut si non disponibles
+          coordinates: [liker.longitude || 2.3522, liker.latitude || 48.8566], // Format GeoJSON: [longitude, latitude]
           city: liker.city || "Inconnue",
           country: liker.country || "Inconnu",
         },
@@ -199,7 +204,7 @@ export default {
           userId: userId,
           message: {
             user: username,
-            userviewed: liker.username
+            userViewed: liker.username
           },
         };
         ws.send(JSON.stringify(viewedMessage));
@@ -355,9 +360,31 @@ export default {
         }
       }
 
-      .date-cell {
-        color: #6b7280;
-        font-size: 0.875rem;
+      .status-cell {
+        .connection-status {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          color: #6b7280;
+
+          .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #9ca3af;
+          }
+
+          &.online {
+            color: #059669;
+            font-weight: 500;
+
+            .status-dot {
+              background-color: #10b981;
+              box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+            }
+          }
+        }
       }
 
       .action-cell {

@@ -24,7 +24,7 @@ async function blockUser(userId, message) {
     return;
   }
 
-  let user = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+  let user = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [username]);
   user = user.rows[0];
 
   if (!user) {
@@ -38,7 +38,7 @@ async function blockUser(userId, message) {
     return;
   }
 
-  let userBlocked = await pool.query("SELECT * FROM users WHERE username = $1", [userBlockedM]);
+  let userBlocked = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [userBlockedM]);
   userBlocked = userBlocked.rows[0];
 
   if (!userBlocked) {

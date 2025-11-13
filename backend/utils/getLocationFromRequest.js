@@ -1,4 +1,4 @@
-const IPinfoWrapper = require('node-ipinfo');
+const { IPinfoWrapper } = require('node-ipinfo');
 
 /**
  * Get location from request body or IP address
@@ -27,10 +27,23 @@ async function getLocationFromRequest(bodyLocation, req) {
             ipAddress = ipAddress.substring(7);
         }
 
-        // Skip localhost
+        // Use test IP for localhost in development
         if (!ipAddress || ipAddress === '127.0.0.1' || ipAddress === '::1') {
-            console.log('Localhost IP detected, skipping geolocation');
-            return null;
+            if (process.env.DEV_IP_FALLBACK) {
+                ipAddress = process.env.DEV_IP_FALLBACK;
+                // console.log('Localhost detected, using test IP:', ipAddress);
+            } else {
+                // console.log('Localhost IP detected, skipping geolocation');
+                return {
+                    latitude: null,
+                    longitude: null,
+                    city: 'Inconnue',
+                    country: 'Inconnu',
+                    coordinates : [0, 0],
+                    authorization: false,
+                    manualMode: true
+                }
+            }
         }
 
         const ipinfoToken = process.env.IPINFO_TOKEN || null;
@@ -45,7 +58,8 @@ async function getLocationFromRequest(bodyLocation, req) {
                     latitude,
                     longitude,
                     city: ipData.city || 'Inconnue',
-                    country: ipData.country || 'Inconnu'
+                    country: ipData.country || 'Inconnu',
+                    coordinates : [longitude, latitude]
                 };
                 console.log('Location retrieved from IP:', location);
             }

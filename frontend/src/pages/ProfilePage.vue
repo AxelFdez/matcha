@@ -40,6 +40,7 @@ export default {
       profileRequirements: [
         'Âge renseigné',
         'Genre défini',
+        'Biographie',
         'Au moins un centre d\'intérêt',
         'Au moins une photo de profil'
       ]
@@ -47,7 +48,7 @@ export default {
   },
   computed: {
     alert() {
-      console.log('alert', this.$store.getters.getAlertMessage);
+      // console.log('alert', this.$store.getters.getAlertMessage);
       return this.$store.getters.getAlertMessage;
     }
   },

@@ -27,7 +27,7 @@ export const store = createStore({
       country: "France",
       latitude: 48.8566,
       longitude: 2.3522,
-      manualMode: false
+      manualMode: false,
     },
 
     // Website initialize
@@ -244,10 +244,7 @@ export const store = createStore({
 
     initWebSocket({ commit, state }) {
       const userId = localStorage.getItem("userId");
-      commit(
-        "setWebSocket",
-        new WebSocket(process.env.VUE_APP_WS_URL + "?id=" + userId)
-      );
+      commit("setWebSocket", new WebSocket(process.env.VUE_APP_WS_URL + "?id=" + userId));
 
       state.ws.onopen = function () {
         // console.log("Connection is open ...");
@@ -293,10 +290,7 @@ export const store = createStore({
               // console.log("📍 Envoyé newLocation :", message);
             },
             function (error) {
-              console.error(
-                "Erreur lors de la récupération de la position :",
-                error
-              );
+              console.error("Erreur lors de la récupération de la position :", error);
             }
           );
         }
@@ -350,7 +344,6 @@ export const store = createStore({
     },
 
     async submitLoginForm({ commit, dispatch }, formData) {
-
       try {
         const response = await fetchData("/login", {
           method: "POST",
@@ -380,9 +373,9 @@ export const store = createStore({
             if (responseData.message === "Wrong Password") {
               commit("setServerMessage", "wrongPassword");
             }
-            // if (responseData.message === "Email not verified") {
-            //   commit("setServerMessage", "emailNotVerif");
-            // }
+            if (responseData.message === "Email not verified") {
+              commit("setServerMessage", "emailNotVerif");
+            }
             break;
           case 404:
             commit("setServerMessage", "loginFail");
@@ -435,26 +428,27 @@ export const store = createStore({
             commit("setInterests", responseData.user.interests);
             commit("setPhotos", responseData.user.photos);
             if (responseData.user.location) {
-              const locationData = typeof responseData.user.location === 'string'
-                ? JSON.parse(responseData.user.location)
-                : responseData.user.location;
+              const locationData =
+                typeof responseData.user.location === "string"
+                  ? JSON.parse(responseData.user.location)
+                  : responseData.user.location;
               commit("setLocation", locationData);
             }
             commit("setProfilePicture", responseData.user.profilepicture || 0);
             commit("setFameRating", responseData.user.famerating || 0);
             break;
           case 404:
-            console.log("User not found");
+            console.error("User not found");
             break;
           case 500:
           case 502:
           case 503:
           case 504:
-            console.log("Server Error");
+            console.error("Server Error");
             break;
           default:
             if (response.response.status >= 500) {
-              console.log("Server Error");
+              console.error("Server Error");
             }
             break;
         }
@@ -476,7 +470,7 @@ export const store = createStore({
       //   console.log("Interests:", state.interests);
       //   console.log("Photos:", state.photos);
       //   console.groupEnd();
-        // commit("setIsLoading", false);
+      // commit("setIsLoading", false);
       // }
     },
 
@@ -585,12 +579,12 @@ export const store = createStore({
             // Rafraîchir les infos utilisateur depuis la base de données
             await dispatch("getUserInfos", localStorage.getItem("userName"));
             // Si responseData.alert est déjà un objet, l'utiliser tel quel
-            if (responseData.alert && typeof responseData.alert === 'object') {
+            if (responseData.alert && typeof responseData.alert === "object") {
               commit("setAlertMessage", responseData.alert);
             } else {
               commit("setAlertMessage", {
                 type: "success",
-                message: responseData.alert || "Profil mis à jour avec succès!"
+                message: responseData.alert || "Profil mis à jour avec succès!",
               });
             }
             break;
@@ -598,21 +592,21 @@ export const store = createStore({
           case 502:
           case 503:
           case 504:
-            if (responseData.alert && typeof responseData.alert === 'object') {
+            if (responseData.alert && typeof responseData.alert === "object") {
               commit("setAlertMessage", responseData.alert);
             } else {
               commit("setAlertMessage", {
                 type: "warning",
-                message: responseData.alert || "Erreur du serveur."
+                message: responseData.alert || "Erreur du serveur.",
               });
             }
-            console.log("server error");
+            console.error("server error");
             break;
           default:
             if (response.response.status >= 500) {
               commit("setAlertMessage", {
                 type: "warning",
-                message: "Erreur du serveur."
+                message: "Erreur du serveur.",
               });
             }
             break;
@@ -621,7 +615,7 @@ export const store = createStore({
         console.error("Error submitting form:", error);
         commit("setAlertMessage", {
           type: "warning",
-          message: "Une erreur est survenue lors de la soumission du formulaire."
+          message: "Une erreur est survenue lors de la soumission du formulaire.",
         });
       } finally {
         commit("setIsLoading", false);
@@ -694,7 +688,6 @@ export const store = createStore({
       commit("setProfileUnlikes", []);
     }
   },
-
 
   modules: {},
 });

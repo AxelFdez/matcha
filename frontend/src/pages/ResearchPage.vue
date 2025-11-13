@@ -262,6 +262,26 @@ export default {
     const openProfile = (user) => {
       selectedUser.value = user;
       open.value = true;
+
+      // Send "viewed" WebSocket message
+      const ws = store.getters.getWebSocket;
+      const realUsername = store.getters.getUserName;
+      const userId = localStorage.getItem("userId");
+      const viewedUsername = user.username;
+
+      if (!ws || !realUsername || !viewedUsername) {
+        console.warn("WebSocket or usernames not available");
+        return;
+      }
+
+      // console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });
+      ws.send(
+        JSON.stringify({
+          type: "viewed",
+          userId: userId,
+          message: { user: realUsername, userViewed: viewedUsername },
+        })
+      );
     };
 
     const formatPhotoUrl = (photoPath) =>

@@ -54,7 +54,7 @@ async function setupWebSocket(server) {
 
 		ws.on('message', async function incoming(message) {
 			const parsedMessage = JSON.parse(message);
-			// console.log('received: %s', message, "\n");
+			console.log('received: %s', message, "\n");
 			ws.send(JSON.stringify({type: 'receive', userId: userId, message: 'message recieved by server'}));
 			if (parsedMessage.type === 'like') {
 				likeUser(parsedMessage.userId, parsedMessage.message);

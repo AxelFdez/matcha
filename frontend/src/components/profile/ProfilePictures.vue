@@ -212,7 +212,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.log("Erreur lors de la récupération des photos :", error);
+          // console.log("Erreur lors de la récupération des photos :", error);
           // alert('Une erreur est survenue lors de la récupération des photos.');
         });
     },
@@ -250,7 +250,7 @@ export default {
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log(data);
+            // console.log(data);
             if (data.alert.type === "success") {
               if (data.imageIndex) this.getPhoto(data.imageIndex);
               // Rafraîchir les infos utilisateur depuis le store
@@ -282,7 +282,7 @@ export default {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log(data);
+          // console.log(data);
           if (data.alert.type === "success") {
             // Rafraîchir les infos utilisateur depuis le store
             this.$store.dispatch("getUserInfos", localStorage.getItem("userName"));
@@ -336,7 +336,7 @@ export default {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log(data);
+          // console.log(data);
           if (data.alert.type === "success") {
             // Remettre l'image par défaut localement
             this.images[index] = this.defaultImage;

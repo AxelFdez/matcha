@@ -14,7 +14,7 @@ async function loginUser(req, res) {
     // console.log(req.body);
     const { username, password } = req.body;
     // const user = await User.findOne({ username });
-    const user = await pool.query("SELECT * FROM users WHERE username = $1", [
+    const user = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
       username,
     ]);
     if (user.rows.length === 0) {
@@ -40,22 +40,21 @@ async function loginUser(req, res) {
 
     user.rows[0].refreshToken = refreshToken;
 
-    // if (!user.verified) {
-
-    // 	return res.status(401).json({ message: "Email not verified",
-    //         accessToken : accessToken,
-    //         refreshToken: refreshToken,
-    //         user: {
-    //         id: user._id,
-    //         username: user.username,
-    //         email: user.email,
-    //         verified: user.verified
-    //     }
-    //      });
-    // }
+    if (!user.rows[0].verified) {
+    	return res.status(401).json({ message: "Email not verified",
+            accessToken : accessToken,
+            refreshToken: refreshToken,
+            user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            verified: user.verified
+        }
+         });
+    }
 
     // Gérer la localisation en fonction de manualMode
-    let locationData = user.rows[0].location;
+    let locationData = user.rows[0].location || {};
 
     // Parser le JSON si c'est une string
     if (typeof locationData === 'string') {
@@ -77,13 +76,14 @@ async function loginUser(req, res) {
       console.log(`📍 Updating location for user ${username} (manualMode: false)`);
     } else if (!isManualMode) {
       locationData.authorization = false;
+      locationData.manualMode = true;
       console.log(`⚠️  No location provided for user ${username}`);
     } else {
       console.log(`🔒 Skipping location update for user ${username} (manualMode: true)`);
     }
 
     pool.query(
-      "UPDATE users SET refreshToken = $1, location = $2, connected = $3 WHERE username = $4",
+      "UPDATE users SET refreshToken = $1, location = $2, connected = $3 WHERE LOWER(username) = LOWER($4)",
       [refreshToken, JSON.stringify(locationData), true, username]
     );
 

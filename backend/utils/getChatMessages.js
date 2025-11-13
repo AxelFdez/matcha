@@ -8,7 +8,7 @@ async function getChatMessages(req, res) {
         const { limit = 50, offset = 0 } = req.query;
 
         // Get the other user by username
-        const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+        const userResult = await pool.query('SELECT id FROM users WHERE LOWER(username) = LOWER($1)', [username]);
         if (userResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
