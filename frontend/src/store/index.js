@@ -267,8 +267,7 @@ export const store = createStore({
         if (data.type === "notification" && data.message && data.message.title === "viewed") {
           // Incrémenter le fameRating quand quelqu'un voit le profil
           const currentFameRating = state.fameRating || 0;
-          store.commit("setFameRating", currentFameRating + 2);
-          // console.log("👁️ Profil vu ! Fame Rating:", currentFameRating + 2);
+          store.commit("setFameRating", currentFameRating + 1);
         } else if (data.type === "pingLocation") {
           // Vérifier si l'utilisateur a défini sa position manuellement
           const isManualMode = state.location && state.location.manualMode === true;

@@ -59,23 +59,32 @@ export default {
     addIncomingMessage({ commit, state }, messageData) {
       const conversationId = messageData.conversationId;
 
+      // Vérifier si le message existe déjà
+      const existingMessages = state.messages[conversationId] || [];
+      const isDuplicate = existingMessages.some(
+        (msg) => msg.message === messageData.message && msg.date === messageData.date
+      );
+      if (isDuplicate) return;
+
       commit("addMessage", { conversationId, message: messageData });
 
-      const conv = state.conversations.find((c) => c.id === conversationId);
-      if (conv) {
-        // Si la conversation n'est pas ouverte, increment unread
-        commit("incrementUnreadMessage", conversationId);
-        conv.hasUnreadMessages = true;
-      } else {
-        // Sinon ajouter une nouvelle conversation si elle n'existe pas
-        commit("updateConversation", {
-          id: conversationId,
-          otherUser: messageData.senderUser,
-          lastMessage: messageData,
-          unreadCount: 1,
-          hasUnreadMessages: true,
-        });
+      // Incrémenter unread uniquement si le message vient d’un autre utilisateur
+      if (messageData.sender !== localStorage.getItem("userName")) {
+        const conv = state.conversations.find((c) => c.id === conversationId);
+        if (conv) {
+          commit("incrementUnreadMessage", conversationId);
+          conv.hasUnreadMessages = true;
+        } else {
+          commit("updateConversation", {
+            id: conversationId,
+            otherUser: messageData.senderUser,
+            lastMessage: messageData,
+            unreadCount: 1,
+            hasUnreadMessages: true,
+          });
+        }
       }
-    },
+    }
+
   },
 };

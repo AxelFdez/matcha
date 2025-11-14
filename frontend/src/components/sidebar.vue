@@ -460,8 +460,8 @@
 
 <script>
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
-import { fetchData } from "../config/api.js";
 import { useStore } from "vuex";
+import { fetchData } from "../config/api.js";
 import DisconnectBtn from "./header/DisconnectBtn.vue";
 import ProfileBtn from "./header/ProfileBtn.vue";
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
@@ -479,13 +479,10 @@ export default {
     profileInfos,
   },
   emits: ["close"],
-  setup(props, { emit }) {
+  setup(_, { emit }) {
     const store = useStore();
 
-    /** Sidebar */
-    const closeSidebar = () => emit("close");
-
-    /** UI State */
+    /** Sidebar UI state */
     const showNotifications = ref(false);
     const showChat = ref(false);
     const showChatMessages = ref(false);
@@ -517,41 +514,9 @@ export default {
 
     const currentUserId = computed(() => localStorage.getItem("userId"));
 
-    /** Utilities */
-    const getFirstPhoto = (photoData) => {
-      if (!photoData) return null;
-      let photo = Array.isArray(photoData) ? photoData[0] : photoData;
-      if (typeof photo === "string" && photo.includes(",")) photo = photo.split(",")[0];
-      if (!photo) return null;
-      const baseURL = process.env.VUE_APP_API_URL || "http://localhost:3000";
-      return photo.startsWith("http") ? photo : `${baseURL}${photo.replace(/^\/app/, "")}`;
-    };
+    /** Sidebar actions */
+    const closeSidebar = () => emit("close");
 
-    const formatDate = (dateString) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMins = Math.floor((now - date) / 60000);
-      const diffHours = Math.floor((now - date) / 3600000);
-      const diffDays = Math.floor((now - date) / 86400000);
-      if (diffMins < 1) return "À l'instant";
-      if (diffMins < 60) return `Il y a ${diffMins}min`;
-      if (diffHours < 24) return `Il y a ${diffHours}h`;
-      if (diffDays < 7) return `Il y a ${diffDays}j`;
-      return date.toLocaleDateString("fr-FR");
-    };
-
-    const formatMessageTime = (dateString) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffHours = Math.floor((now - date) / 3600000);
-      if (diffHours < 24)
-        return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-      return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
-    };
-
-    /** Navigation */
     const openNotifications = async () => {
       showNotifications.value = true;
       showChat.value = false;
@@ -591,14 +556,14 @@ export default {
       await fetchConversations();
     };
 
-    /** Profile */
+    /** Profile functions */
     const loadUserProfile = async (username) => {
       if (!username) return;
       loadingProfile.value = true;
       try {
-        const response = await fetchData(`/profile/${username}`, { method: "GET" });
-        if (response.response.ok && response.data) {
-          profileUser.value = response.data;
+        const res = await fetchData(`/profile/${username}`, { method: "GET" });
+        if (res.response.ok && res.data) {
+          profileUser.value = res.data;
           showProfileModal.value = true;
         }
       } catch (err) {
@@ -611,11 +576,11 @@ export default {
     const loadUserProfileForChat = async (username) => {
       if (!username || !selectedConversation.value) return;
       try {
-        const response = await fetchData(`/profile/${username}`, { method: "GET" });
-        if (response.response.ok && response.data) {
+        const res = await fetchData(`/profile/${username}`, { method: "GET" });
+        if (res.response.ok && res.data) {
           selectedConversation.value.otherUser = {
             ...selectedConversation.value.otherUser,
-            ...response.data.user,
+            ...res.data.user,
           };
         }
       } catch (err) {
@@ -626,23 +591,7 @@ export default {
     const toggleProfileModal = async () => {
       if (!showProfileModal.value && selectedConversation.value) {
         await loadUserProfile(selectedConversation.value.otherUser.username);
-
-        // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
-        const ws = store.getters.getWebSocket;
-        const userId = localStorage.getItem("userId");
-        const username = store.getters.getUserName;
-
-        if (ws && selectedConversation.value.otherUser.username) {
-          const viewedMessage = {
-            type: "viewed",
-            userId: userId,
-            message: {
-              user: username,
-              userViewed: selectedConversation.value.otherUser.username
-            },
-          };
-          ws.send(JSON.stringify(viewedMessage));
-        }
+        sendViewedMessage(selectedConversation.value.otherUser.username);
       } else {
         showProfileModal.value = false;
         profileUser.value = null;
@@ -652,31 +601,26 @@ export default {
     const openProfileFromNotification = async (notification) => {
       if (!notification.username) return;
       await loadUserProfile(notification.username);
+      sendViewedMessage(notification.username);
+    };
 
-      // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
+    const sendViewedMessage = (username) => {
       const ws = store.getters.getWebSocket;
-      const userId = localStorage.getItem("userId");
-      const username = store.getters.getUserName;
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-      if (ws && notification.username) {
-        const viewedMessage = {
-          type: "viewed",
-          userId: userId,
-          message: {
-            user: username,
-            userViewed: notification.username
-          },
-        };
-        ws.send(JSON.stringify(viewedMessage));
-      }
+      const viewedMessage = {
+        type: "viewed",
+        userId: localStorage.getItem("userId"),
+        message: { user: store.getters.getUserName, userViewed: username },
+      };
+      ws.send(JSON.stringify(viewedMessage));
     };
 
     /** Fetch API */
     const fetchNotifications = async () => {
       try {
         const res = await fetchData("/notifications", { method: "GET" });
-        if (Array.isArray(res.data)) store.commit("notifications/setNotifications", res.data);
-        else store.commit("notifications/setNotifications", []);
+        store.commit("notifications/setNotifications", Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
         store.commit("notifications/setNotifications", []);
@@ -699,7 +643,7 @@ export default {
     };
 
     const fetchMessages = async (conversation) => {
-      if (messagesLoading.value) return;
+      if (!conversation || messagesLoading.value) return;
       messagesLoading.value = true;
       try {
         const res = await fetchData(`/conversations/${conversation.id}/messages`, {
@@ -721,6 +665,7 @@ export default {
       }
     };
 
+    /** Send chat message */
     const sendMessage = async () => {
       if (!newMessage.value.trim() || sendingMessage.value || !selectedConversation.value) return;
 
@@ -769,7 +714,7 @@ export default {
         messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
     };
 
-    /** WebSocket handlers */
+    /** WebSocket centralized handler */
     const handleIncomingNotification = (data) => {
       const notif = data.notification || data;
       store.commit("notifications/addNotification", {
@@ -794,7 +739,7 @@ export default {
       store.dispatch("notifications/addIncomingMessage", msg);
     };
 
-    /** Polling (backup) */
+    /** Polling as backup */
     let pollingInterval = null;
     const startPolling = () => {
       pollingInterval = setInterval(async () => {
@@ -806,23 +751,17 @@ export default {
       if (pollingInterval) clearInterval(pollingInterval);
     };
 
-    /** Notifications permission */
-    const requestNotificationPermission = async () => {
-      if ("Notification" in window && Notification.permission === "default")
-        await Notification.requestPermission();
-    };
-
+    /** Mounted */
     onMounted(async () => {
-      await requestNotificationPermission();
       await fetchNotifications();
       await fetchConversations();
       startPolling();
 
+      // WebSocket: attacher une seule fois
       const ws = store.getters.getWebSocket;
-      if (ws) {
-        const originalOnMessage = ws.onmessage;
+      if (ws && !ws._sidebarListenerAttached) {
+        ws._sidebarListenerAttached = true;
         ws.onmessage = (event) => {
-          if (originalOnMessage) originalOnMessage.call(ws, event);
           try {
             const data = JSON.parse(event.data);
             if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type))
@@ -837,37 +776,74 @@ export default {
 
     onUnmounted(() => stopPolling());
 
+    /** Helpers */
+    const getFirstPhoto = (photoData) => {
+      if (!photoData) return null;
+      let photo = Array.isArray(photoData) ? photoData[0] : photoData;
+      if (typeof photo === "string" && photo.includes(",")) photo = photo.split(",")[0];
+      if (!photo) return null;
+      const baseURL = process.env.VUE_APP_API_URL || "http://localhost:3000";
+      return photo.startsWith("http") ? photo : `${baseURL}${photo.replace(/^\/app/, "")}`;
+    };
+
+    const formatDate = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMins = Math.floor((now - date) / 60000);
+      const diffHours = Math.floor((now - date) / 3600000);
+      const diffDays = Math.floor((now - date) / 86400000);
+      if (diffMins < 1) return "À l'instant";
+      if (diffMins < 60) return `Il y a ${diffMins}min`;
+      if (diffHours < 24) return `Il y a ${diffHours}h`;
+      if (diffDays < 7) return `Il y a ${diffDays}j`;
+      return date.toLocaleDateString("fr-FR");
+    };
+
+    const formatMessageTime = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffHours = Math.floor((now - date) / 3600000);
+      if (diffHours < 24)
+        return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+    };
+
     return {
-      closeSidebar,
+      // state
       showNotifications,
-      notifications,
       showChat,
       showChatMessages,
-      conversations,
       selectedConversation,
-      messages,
       newMessage,
       chatLoading,
       messagesLoading,
       sendingMessage,
       messagesContainer,
+      showProfileModal,
+      profileUser,
+      loadingProfile,
+      // computed
+      notifications,
       notificationCount,
+      conversations,
       unreadMessagesCount,
+      messages,
       currentUserId,
+      // actions
+      closeSidebar,
       openNotifications,
       openChat,
       openChatMessages,
       backToMain,
       backToConversations,
       sendMessage,
+      toggleProfileModal,
+      openProfileFromNotification,
       getFirstPhoto,
       formatDate,
       formatMessageTime,
-      showProfileModal,
-      toggleProfileModal,
-      profileUser,
-      loadingProfile,
-      openProfileFromNotification,
     };
   },
 };
