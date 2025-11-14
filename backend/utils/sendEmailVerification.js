@@ -3,24 +3,17 @@ const twig = require("twig");
 const path = require("path");
 
 const apiInstance = new brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(
-  brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 async function renderHTML(template, data) {
   return new Promise((resolve, reject) => {
-    twig.renderFile(
-      path.join(__dirname, "../templates", template),
-      data,
-      (err, html) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(html);
-        }
+    twig.renderFile(path.join(__dirname, "../templates", template), data, (err, html) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(html);
       }
-    );
+    });
   });
 }
 
@@ -28,7 +21,7 @@ async function sendEmail(to, refreshToken) {
   try {
     let subject = "Matcha : Vérification de votre email";
     let html = await renderHTML("mailVerif.twig", {
-      url: process.env.FRONT_URL + "/VerifyEmailPage",
+      url: process.env.FRONT_URL + "VerifyEmailPage",
       token: refreshToken,
     });
     const sendSmtpEmail = new brevo.SendSmtpEmail();
@@ -50,7 +43,7 @@ async function sendEmailResetPassword(to, refreshToken) {
   try {
     let subject = "Matcha : Réinitialisation de votre mot de passe";
     let html = await renderHTML("passwordForgot.twig", {
-      url: process.env.FRONT_URL + "/ResetPasswordPage",
+      url: process.env.FRONT_URL + "ResetPasswordPage",
       token: refreshToken,
       email: to,
     });
