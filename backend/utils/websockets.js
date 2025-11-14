@@ -22,6 +22,13 @@ async function setupWebSocket(server) {
 		const location = url.parse(req.url, true);
 		const userId = location.query.id;
 
+		// Vérifier que l'ID utilisateur est fourni
+		if (!userId) {
+			console.error('❌ WebSocket connection rejected: no userId provided');
+			ws.close();
+			return;
+		}
+
 		clients.set(userId, ws);
 
 		// Marquer l'utilisateur comme connecté dès la connexion
@@ -32,6 +39,13 @@ async function setupWebSocket(server) {
 
 		const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
 		const user = userResult.rows[0];
+
+		// Vérifier que l'utilisateur existe
+		if (!user) {
+			console.error(`❌ User ${userId} not found in database`);
+			ws.close();
+			return;
+		}
 
 		// Parser le JSON location si nécessaire
 		let locationData = user.location;
