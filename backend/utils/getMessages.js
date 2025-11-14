@@ -1,4 +1,4 @@
-const pool = require('../config/connectBdd');
+const pool = require("../config/connectBdd");
 
 const getMessages = async (req, res) => {
   try {
@@ -7,7 +7,7 @@ const getMessages = async (req, res) => {
 
     if (!userId || !conversationId) {
       return res.status(400).json({
-        message: 'User ID and conversation ID are required'
+        message: "User ID and conversation ID are required",
       });
     }
 
@@ -20,7 +20,7 @@ const getMessages = async (req, res) => {
 
     if (conversationResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Access denied to this conversation'
+        message: "Access denied to this conversation",
       });
     }
 
@@ -51,24 +51,24 @@ const getMessages = async (req, res) => {
 
     const result = await pool.query(messagesQuery, [conversationId]);
 
-    const messages = result.rows.map(row => ({
+    const messages = result.rows.map((row) => ({
+      conversationId: conversationId,
       id: row.id,
       sender: row.sender_id.toString(),
       senderUsername: row.sender_username,
       message: row.message,
       date: row.sent_at,
-      readAt: row.read_at // Optionnel : pour afficher les double checks
+      readAt: row.read_at, // Optionnel : pour afficher les double checks
     }));
 
     res.status(200).json({
-      messages: messages
+      messages: messages,
     });
-
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    console.error("Error fetching messages:", error);
     res.status(500).json({
-      message: 'Error fetching messages',
-      error: error.message
+      message: "Error fetching messages",
+      error: error.message,
     });
   }
 };

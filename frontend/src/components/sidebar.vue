@@ -509,7 +509,11 @@ export default {
 
     const messages = computed(() => {
       if (!selectedConversation.value) return [];
-      return store.getters["notifications/getConversationMessages"](selectedConversation.value.id);
+      const msgs = store.getters["notifications/getConversationMessages"](
+        selectedConversation.value.id
+      );
+      console.log("[COMPUTED MESSAGES] Pour conv", selectedConversation.value.id, msgs);
+      return msgs;
     });
 
     const currentUserId = computed(() => localStorage.getItem("userId"));
@@ -736,7 +740,26 @@ export default {
         message: data.message.message,
         date: new Date(data.message.date),
       };
+
       store.dispatch("notifications/addIncomingMessage", msg);
+      console.log("[HANDLE INCOMING MESSAGE] Avant commit:", msg);
+
+      store.dispatch("notifications/addIncomingMessage", msg);
+
+      console.log("[HANDLE INCOMING MESSAGE] selectedConversation:", selectedConversation.value);
+      // Si je suis dans la conversation, scroll et mettre à jour
+      if (selectedConversation.value && selectedConversation.value.id === msg.conversationId) {
+        // Ajoute directement le message dans la conversation affichée
+        store.commit("notifications/addMessage", {
+          conversationId: msg.conversationId,
+          message: msg,
+        });
+        nextTick(() => {
+          if (messagesContainer.value) {
+            messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+          }
+        });
+      }
     };
 
     /** Polling as backup */
@@ -757,18 +780,28 @@ export default {
       await fetchConversations();
       startPolling();
 
-      // WebSocket: attacher une seule fois
       const ws = store.getters.getWebSocket;
       if (ws && !ws._sidebarListenerAttached) {
         ws._sidebarListenerAttached = true;
+
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type))
+            console.log("[WS MESSAGE RECEIVED]", data);
+
+            // Notifications
+            if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type)) {
+              console.log("[WS NOTIF] Handling notification", data);
               handleIncomingNotification(data);
-            if (data.type === "chat" && data.message) handleIncomingMessage(data);
+            }
+
+            // Chat messages
+            if (data.type === "chat" && data.message) {
+              console.log("[WS CHAT] Handling chat message", data);
+              handleIncomingMessage(data);
+            }
           } catch (err) {
-            console.error(err);
+            console.error("[WS ERROR] parsing message", err);
           }
         };
       }
