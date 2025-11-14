@@ -21,7 +21,7 @@ async function sendEmail(to, refreshToken) {
   try {
     let subject = "Matcha : Vérification de votre email";
     let html = await renderHTML("mailVerif.twig", {
-      url: process.env.FRONT_URL + "VerifyEmailPage",
+      url: process.env.FRONT_URL + "/VerifyEmailPage",
       token: refreshToken,
     });
     const sendSmtpEmail = new brevo.SendSmtpEmail();
@@ -43,7 +43,7 @@ async function sendEmailResetPassword(to, refreshToken) {
   try {
     let subject = "Matcha : Réinitialisation de votre mot de passe";
     let html = await renderHTML("passwordForgot.twig", {
-      url: process.env.FRONT_URL + "ResetPasswordPage",
+      url: process.env.FRONT_URL + "/ResetPasswordPage",
       token: refreshToken,
       email: to,
     });
