@@ -13,7 +13,12 @@
           aria-label="Fermer la sidebar"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -477,95 +482,82 @@ export default {
   setup(props, { emit }) {
     const store = useStore();
 
-    // Close sidebar function
-    const closeSidebar = () => {
-      emit("close");
-    };
+    /** Sidebar */
+    const closeSidebar = () => emit("close");
 
-    // Notifications
+    /** UI State */
     const showNotifications = ref(false);
-    const notifications = ref([]);
-    const loading = ref(false);
-
-    // Chat
     const showChat = ref(false);
     const showChatMessages = ref(false);
-    const conversations = ref([]);
     const selectedConversation = ref(null);
-    const messages = ref([]);
     const newMessage = ref("");
     const chatLoading = ref(false);
     const messagesLoading = ref(false);
     const sendingMessage = ref(false);
     const messagesContainer = ref(null);
 
-    // Profile Modal
+    /** Profile modal */
     const showProfileModal = ref(false);
     const profileUser = ref(null);
     const loadingProfile = ref(false);
 
-    // Polling interval
-    let pollingInterval = null;
-    let newNotificationTimeout = null;
+    /** Computed */
+    const notifications = computed(() => store.state.notifications.notifications);
+    const notificationCount = computed(() => notifications.value.filter((n) => !n.viewed).length);
 
-    // Utility function to get first photo
+    const conversations = computed(() => store.state.notifications.conversations);
+    const unreadMessagesCount = computed(() =>
+      conversations.value.reduce((t, c) => t + (c.unreadCount || 0), 0)
+    );
+
+    const messages = computed(() => {
+      if (!selectedConversation.value) return [];
+      return store.getters["notifications/getConversationMessages"](selectedConversation.value.id);
+    });
+
+    const currentUserId = computed(() => localStorage.getItem("userId"));
+
+    /** Utilities */
     const getFirstPhoto = (photoData) => {
       if (!photoData) return null;
-
-      let photo = null;
-
-      if (Array.isArray(photoData)) {
-        photo = photoData[0];
-      } else if (typeof photoData === "string") {
-        try {
-          const parsed = JSON.parse(photoData);
-          if (Array.isArray(parsed)) {
-            photo = parsed[0];
-          } else {
-            photo = photoData.split(",")[0];
-          }
-        } catch {
-          // Si simple string
-          photo = photoData.includes(",") ? photoData.split(",")[0] : photoData;
-        }
-      }
-
+      let photo = Array.isArray(photoData) ? photoData[0] : photoData;
+      if (typeof photo === "string" && photo.includes(",")) photo = photo.split(",")[0];
       if (!photo) return null;
-
-      // Nettoyage du chemin
-      const cleaned = photo.replace(/^\/app/, "");
-
-      // Base URL (vue-cli)
       const baseURL = process.env.VUE_APP_API_URL || "http://localhost:3000";
-
-      // Si c’est déjà une URL absolue
-      if (photo.startsWith("http")) return photo;
-
-      return `${baseURL}${cleaned}`;
+      return photo.startsWith("http") ? photo : `${baseURL}${photo.replace(/^\/app/, "")}`;
     };
 
-    // Computed properties
-    const notificationCount = computed(() => {
-      return Array.isArray(notifications.value)
-        ? notifications.value.filter((n) => !n.viewed).length
-        : 0;
-    });
+    const formatDate = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMins = Math.floor((now - date) / 60000);
+      const diffHours = Math.floor((now - date) / 3600000);
+      const diffDays = Math.floor((now - date) / 86400000);
+      if (diffMins < 1) return "À l'instant";
+      if (diffMins < 60) return `Il y a ${diffMins}min`;
+      if (diffHours < 24) return `Il y a ${diffHours}h`;
+      if (diffDays < 7) return `Il y a ${diffDays}j`;
+      return date.toLocaleDateString("fr-FR");
+    };
 
-    const unreadMessagesCount = computed(() => {
-      return conversations.value.reduce((count, conv) => count + (conv.unreadCount || 0), 0);
-    });
+    const formatMessageTime = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffHours = Math.floor((now - date) / 3600000);
+      if (diffHours < 24)
+        return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
+    };
 
-    const currentUserId = computed(() => {
-      return localStorage.getItem("userId");
-    });
-
-    // Navigation functions
+    /** Navigation */
     const openNotifications = async () => {
       showNotifications.value = true;
       showChat.value = false;
       showChatMessages.value = false;
       await fetchNotifications();
-      await markNotificationsAsViewed();
+      store.commit("notifications/markNotificationsViewed");
     };
 
     const openChat = async () => {
@@ -579,15 +571,10 @@ export default {
       selectedConversation.value = conversation;
       showChatMessages.value = true;
 
-      // Charger le profil complet pour avoir le statut de connexion à jour
       await loadUserProfileForChat(conversation.otherUser.username);
-
       await fetchMessages(conversation);
 
-      // Marquer les messages comme lus
-      conversation.unreadCount = 0;
-      conversation.hasUnreadMessages = false;
-
+      store.commit("notifications/clearUnreadMessages", conversation.id);
       scrollToBottom();
     };
 
@@ -604,49 +591,40 @@ export default {
       await fetchConversations();
     };
 
+    /** Profile */
     const loadUserProfile = async (username) => {
       if (!username) return;
-
       loadingProfile.value = true;
       try {
-        const response = await fetchData(`/profile/${username}`, {
-          method: "GET",
-        });
-
+        const response = await fetchData(`/profile/${username}`, { method: "GET" });
         if (response.response.ok && response.data) {
           profileUser.value = response.data;
           showProfileModal.value = true;
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement du profil:", error);
+      } catch (err) {
+        console.error(err);
       } finally {
         loadingProfile.value = false;
       }
     };
 
     const loadUserProfileForChat = async (username) => {
-      if (!username) return;
-
+      if (!username || !selectedConversation.value) return;
       try {
-        const response = await fetchData(`/profile/${username}`, {
-          method: "GET",
-        });
-
-        if (response.response.ok && response.data && selectedConversation.value) {
-          // Mettre à jour les données de l'utilisateur dans la conversation avec le statut à jour
+        const response = await fetchData(`/profile/${username}`, { method: "GET" });
+        if (response.response.ok && response.data) {
           selectedConversation.value.otherUser = {
             ...selectedConversation.value.otherUser,
             ...response.data.user,
           };
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement du profil pour le chat:", error);
+      } catch (err) {
+        console.error(err);
       }
     };
 
     const toggleProfileModal = async () => {
       if (!showProfileModal.value && selectedConversation.value) {
-        // Charger le profil complet avant d'ouvrir la modal
         await loadUserProfile(selectedConversation.value.otherUser.username);
 
         // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
@@ -672,11 +650,7 @@ export default {
     };
 
     const openProfileFromNotification = async (notification) => {
-      if (!notification.username) {
-        console.warn("Notification sans username:", notification);
-        return;
-      }
-
+      if (!notification.username) return;
       await loadUserProfile(notification.username);
 
       // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
@@ -697,77 +671,28 @@ export default {
       }
     };
 
+    /** Fetch API */
     const fetchNotifications = async () => {
-      if (loading.value) return;
-
-      loading.value = true;
       try {
-        const response = await fetchData("/notifications", { method: "GET" });
-        const data = response.data;
-
-        if (Array.isArray(data)) {
-          notifications.value = data;
-        } else if (data && Array.isArray(data.notifications)) {
-          notifications.value = data.notifications;
-        } else {
-          notifications.value = [];
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des notifications:", error);
-        notifications.value = [];
-      } finally {
-        loading.value = false;
+        const res = await fetchData("/notifications", { method: "GET" });
+        if (Array.isArray(res.data)) store.commit("notifications/setNotifications", res.data);
+        else store.commit("notifications/setNotifications", []);
+      } catch (err) {
+        console.error(err);
+        store.commit("notifications/setNotifications", []);
       }
     };
 
-    const markNotificationsAsViewed = async () => {
-      try {
-        const ws = store.getters.getWebSocket;
-        const userId = localStorage.getItem("userId");
-
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(
-            JSON.stringify({
-              type: "notification",
-              userId: userId,
-            })
-          );
-
-          // Mettre à jour l'état local
-          notifications.value = notifications.value.map((n) => ({ ...n, viewed: true }));
-        }
-      } catch (error) {
-        console.error("Erreur lors du marquage des notifications:", error);
-      }
-    };
-
-    const deleteNotification = async (notificationId) => {
-      try {
-        await fetchData(`/notifications/${notificationId}`, { method: "DELETE" });
-        notifications.value = notifications.value.filter((n) => n.id !== notificationId);
-      } catch (error) {
-        console.error("Erreur lors de la suppression de la notification:", error);
-      }
-    };
-
-    // Chat functions
     const fetchConversations = async () => {
       if (chatLoading.value) return;
-
       chatLoading.value = true;
       try {
-        const response = await fetchData("/conversations", {
-          method: "GET",
-        });
-
-        if (response.response.ok && response.data && response.data.conversations) {
-          conversations.value = response.data.conversations;
-        } else {
-          conversations.value = [];
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des conversations:", error);
-        conversations.value = [];
+        const res = await fetchData("/conversations", { method: "GET" });
+        if (res.response.ok && res.data?.conversations)
+          store.commit("notifications/setConversations", res.data.conversations);
+      } catch (err) {
+        console.error(err);
+        store.commit("notifications/setConversations", []);
       } finally {
         chatLoading.value = false;
       }
@@ -775,21 +700,22 @@ export default {
 
     const fetchMessages = async (conversation) => {
       if (messagesLoading.value) return;
-
       messagesLoading.value = true;
       try {
-        const response = await fetchData(`/conversations/${conversation.id}/messages`, {
+        const res = await fetchData(`/conversations/${conversation.id}/messages`, {
           method: "GET",
         });
-
-        if (response.response.ok && response.data && response.data.messages) {
-          messages.value = response.data.messages;
-        } else {
-          messages.value = [];
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des messages:", error);
-        messages.value = [];
+        if (res.response.ok && res.data?.messages)
+          store.commit("notifications/setMessages", {
+            conversationId: conversation.id,
+            messages: res.data.messages,
+          });
+      } catch (err) {
+        console.error(err);
+        store.commit("notifications/setMessages", {
+          conversationId: conversation.id,
+          messages: [],
+        });
       } finally {
         messagesLoading.value = false;
       }
@@ -807,38 +733,31 @@ export default {
         temp: true,
       };
 
-      messages.value.push(tempMessage);
+      store.commit("notifications/addMessage", {
+        conversationId: selectedConversation.value.id,
+        message: tempMessage,
+      });
       newMessage.value = "";
       scrollToBottom();
 
       sendingMessage.value = true;
-
       try {
         const ws = store.getters.getWebSocket;
-        const userId = localStorage.getItem("userId");
-
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(
             JSON.stringify({
               type: "chat",
-              userId: userId,
+              userId: currentUserId.value,
               message: {
                 UserRecipient: selectedConversation.value.otherUser.username,
                 message: messageText,
               },
             })
           );
-
-          const messageIndex = messages.value.findIndex((m) => m.id === tempMessage.id);
-          if (messageIndex !== -1) {
-            messages.value[messageIndex].temp = false;
-          }
-        } else {
-          throw new Error("WebSocket connection not available");
+          tempMessage.temp = false;
         }
-      } catch (error) {
-        console.error("Erreur lors de l'envoi du message:", error);
-        messages.value = messages.value.filter((m) => m.id !== tempMessage.id);
+      } catch (err) {
+        console.error(err);
       } finally {
         sendingMessage.value = false;
       }
@@ -846,215 +765,82 @@ export default {
 
     const scrollToBottom = async () => {
       await nextTick();
-      if (messagesContainer.value) {
+      if (messagesContainer.value)
         messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-      }
     };
 
-    const handleIncomingMessage = async (messageData) => {
-      if (messageData.type !== "chat") return;
-
-      const newMsg = {
-        id: messageData.message.id || Date.now().toString(),
-        sender: messageData.message.sender,
-        message: messageData.message.message,
-        date: new Date(messageData.message.date),
-        senderUsername: messageData.message.sender_username,
-      };
-
-      const convActive =
-        selectedConversation.value &&
-        (messageData.message.sender === selectedConversation.value.otherUser.id.toString() ||
-          messageData.message.sender_username === selectedConversation.value.otherUser.username);
-
-      if (convActive) {
-        // Ajouter le message dans l'UI
-        messages.value.push(newMsg);
-        scrollToBottom();
-
-        // Appeler ton endpoint pour marquer comme lu côté serveur
-        try {
-          await fetchData(`/conversations/${selectedConversation.value.id}/messages`, {
-            method: "GET", // GET dans ton code existant déclenche déjà le UPDATE read_at
-          });
-        } catch (error) {
-          console.error("Erreur lors du marquage des messages comme lus :", error);
-        }
-      } else {
-        // Conversation inactive : incrémenter unreadCount
-        const conversationIndex = conversations.value.findIndex(
-          (conv) =>
-            conv.otherUser.id.toString() === messageData.message.sender ||
-            conv.otherUser.username === messageData.message.sender_username
-        );
-
-        if (conversationIndex !== -1) {
-          conversations.value[conversationIndex].lastMessage = {
-            id: newMsg.id,
-            message: newMsg.message,
-            sender: newMsg.sender,
-            date: newMsg.date,
-          };
-          conversations.value[conversationIndex].unreadCount =
-            (conversations.value[conversationIndex].unreadCount || 0) + 1;
-          conversations.value[conversationIndex].hasUnreadMessages = true;
-        }
-
-        // Notification navigateur
-        if (Notification.permission === "granted") {
-          new Notification(`Nouveau message de ${newMsg.senderUsername}`, {
-            body: newMsg.message,
-            icon: "/icon-notification.png",
-          });
-        }
-      }
-    };
-
+    /** WebSocket handlers */
     const handleIncomingNotification = (data) => {
-      let notif;
-
-      if (data.notification) {
-        notif = data.notification;
-      } else {
-        notif = data;
-      }
-
-      // Ajouter la notification avec le type
-      const newNotification = {
+      const notif = data.notification || data;
+      store.commit("notifications/addNotification", {
         id: notif.id || Date.now(),
-        type: notif.type || "default", // like, match, unlike, profile_view, message
+        type: notif.type || "default",
         title: notif.title,
         message: notif.message,
+        username: notif.username || null,
         createdAt: notif.createdAt || new Date().toISOString(),
         viewed: false,
+      });
+    };
+
+    const handleIncomingMessage = (data) => {
+      const msg = {
+        conversationId: data.conversationId,
+        sender: data.message.sender,
+        senderUser: data.message.senderUser,
+        message: data.message.message,
+        date: new Date(data.message.date),
       };
-
-      notifications.value.unshift(newNotification);
-
-      // Afficher une notification navigateur si permission accordée
-      if (Notification.permission === "granted") {
-        new Notification(newNotification.title, {
-          body: newNotification.message,
-          icon: "/icon-notification.png",
-          tag: newNotification.id.toString(),
-        });
-      }
+      store.dispatch("notifications/addIncomingMessage", msg);
     };
 
-    // Polling pour les notifications (backup au cas où WebSocket rate)
+    /** Polling (backup) */
+    let pollingInterval = null;
     const startPolling = () => {
-      // Vérifier les nouvelles notifications toutes les 10 secondes
       pollingInterval = setInterval(async () => {
-        if (!showNotifications.value) {
-          await fetchNotifications();
-        }
-        if (!showChat.value) {
-          await fetchConversations();
-        }
-      }, 10000); // 10 secondes
+        if (!showNotifications.value) await fetchNotifications();
+        if (!showChat.value) await fetchConversations();
+      }, 10000);
     };
-
     const stopPolling = () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-      }
-      if (newNotificationTimeout) {
-        clearTimeout(newNotificationTimeout);
-        newNotificationTimeout = null;
-      }
+      if (pollingInterval) clearInterval(pollingInterval);
     };
 
-    // Demander la permission pour les notifications navigateur
+    /** Notifications permission */
     const requestNotificationPermission = async () => {
-      if ("Notification" in window && Notification.permission === "default") {
+      if ("Notification" in window && Notification.permission === "default")
         await Notification.requestPermission();
-      }
     };
 
     onMounted(async () => {
-      // Demander permission notifications
       await requestNotificationPermission();
-
-      // Fetch initial notifications
       await fetchNotifications();
       await fetchConversations();
-
-      // Démarrer le polling
       startPolling();
 
-      // Setup WebSocket
       const ws = store.getters.getWebSocket;
       if (ws) {
         const originalOnMessage = ws.onmessage;
-        ws.onmessage = function (messageEvent) {
-          if (originalOnMessage) originalOnMessage.call(this, messageEvent);
-
+        ws.onmessage = (event) => {
+          if (originalOnMessage) originalOnMessage.call(ws, event);
           try {
-            const data = JSON.parse(messageEvent.data);
-
-            // Gestion des notifications (like, match, unlike, profile_view)
-            if (
-              data.type === "notification" ||
-              data.type === "like" ||
-              data.type === "match" ||
-              data.type === "unlike" ||
-              data.type === "profile_view"
-            ) {
+            const data = JSON.parse(event.data);
+            if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type))
               handleIncomingNotification(data);
-            }
-
-            // Gestion des messages chat
-            if (data.type === "chat" && data.message) {
-              handleIncomingMessage(data);
-            }
-          } catch (e) {
-            console.error("Error parsing WS message:", e);
+            if (data.type === "chat" && data.message) handleIncomingMessage(data);
+          } catch (err) {
+            console.error(err);
           }
         };
       }
     });
 
-    onUnmounted(() => {
-      stopPolling();
-    });
+    onUnmounted(() => stopPolling());
 
-    // Utility functions
-    const formatDate = (dateString) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-
-      if (diffMins < 1) return "À l'instant";
-      if (diffMins < 60) return `Il y a ${diffMins}min`;
-      if (diffHours < 24) return `Il y a ${diffHours}h`;
-      if (diffDays < 7) return `Il y a ${diffDays}j`;
-      return date.toLocaleDateString("fr-FR");
-    };
-
-    const formatMessageTime = (dateString) => {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffHours = Math.floor((now - date) / 3600000);
-
-      if (diffHours < 24) {
-        return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-      } else {
-        return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
-      }
-    };
-
-    // Return all reactive references and functions
     return {
       closeSidebar,
       showNotifications,
       notifications,
-      loading,
       showChat,
       showChatMessages,
       conversations,
@@ -1073,16 +859,14 @@ export default {
       openChatMessages,
       backToMain,
       backToConversations,
-      deleteNotification,
       sendMessage,
+      getFirstPhoto,
       formatDate,
       formatMessageTime,
-      getFirstPhoto,
       showProfileModal,
       toggleProfileModal,
       profileUser,
       loadingProfile,
-      loadUserProfileForChat,
       openProfileFromNotification,
     };
   },

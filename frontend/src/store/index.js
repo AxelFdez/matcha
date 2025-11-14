@@ -1,7 +1,11 @@
 import { createStore } from "vuex";
 import { fetchData } from "../config/api";
+import notifications from "./notifications";
 
 export const store = createStore({
+  modules: {
+    notifications,
+  },
   state: {
     // User Informations
     user_name: "",
@@ -688,6 +692,4 @@ export const store = createStore({
       commit("setProfileUnlikes", []);
     }
   },
-
-  modules: {},
 });
