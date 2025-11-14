@@ -13,8 +13,15 @@ async function getLocationFromRequest(bodyLocation, req) {
     if (bodyLocation && typeof bodyLocation === 'object') {
         const { latitude, longitude } = bodyLocation;
         if (typeof latitude === 'number' && typeof longitude === 'number') {
-            location = { latitude, longitude };
-            console.log('Location retrieved from request body:', location);
+            // Return in GeoJSON format with coordinates array [longitude, latitude]
+            location = {
+                latitude,
+                longitude,
+                city: 'Inconnue',
+                country: 'Inconnu',
+                coordinates: [longitude, latitude] // GeoJSON format
+            };
+            console.log('Location retrieved from request body (GeoJSON):', location);
             return location;
         }
     }

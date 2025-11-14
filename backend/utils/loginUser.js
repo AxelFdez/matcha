@@ -68,7 +68,7 @@ async function loginUser(req, res) {
     if (!isManualMode && req.body.location) {
       const latitude = parseFloat(req.body.location.latitude);
       const longitude = parseFloat(req.body.location.longitude);
-      locationData.coordinates = [latitude, longitude];
+      locationData.coordinates = [longitude, latitude]; // GeoJSON format: [longitude, latitude]
       locationData.latitude = latitude;
       locationData.longitude = longitude;
       locationData.authorization = true;

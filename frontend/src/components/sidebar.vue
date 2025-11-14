@@ -648,6 +648,23 @@ export default {
       if (!showProfileModal.value && selectedConversation.value) {
         // Charger le profil complet avant d'ouvrir la modal
         await loadUserProfile(selectedConversation.value.otherUser.username);
+
+        // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
+        const ws = store.getters.getWebSocket;
+        const userId = localStorage.getItem("userId");
+        const username = store.getters.getUserName;
+
+        if (ws && selectedConversation.value.otherUser.username) {
+          const viewedMessage = {
+            type: "viewed",
+            userId: userId,
+            message: {
+              user: username,
+              userViewed: selectedConversation.value.otherUser.username
+            },
+          };
+          ws.send(JSON.stringify(viewedMessage));
+        }
       } else {
         showProfileModal.value = false;
         profileUser.value = null;
@@ -661,6 +678,23 @@ export default {
       }
 
       await loadUserProfile(notification.username);
+
+      // Envoyer un message WebSocket "viewed" quand la modal s'ouvre
+      const ws = store.getters.getWebSocket;
+      const userId = localStorage.getItem("userId");
+      const username = store.getters.getUserName;
+
+      if (ws && notification.username) {
+        const viewedMessage = {
+          type: "viewed",
+          userId: userId,
+          message: {
+            user: username,
+            userViewed: notification.username
+          },
+        };
+        ws.send(JSON.stringify(viewedMessage));
+      }
     };
 
     const fetchNotifications = async () => {
