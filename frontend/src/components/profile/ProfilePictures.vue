@@ -242,22 +242,60 @@ export default {
           .then((response) => response.json())
           .then((data) => {
             // console.log(data);
-            if (data.alert.type === "success") {
-              if (data.imageIndex) this.getPhoto(data.imageIndex);
+            if (data.alert && data.alert.type === "success") {
+              if (data.imageIndex !== undefined) this.getPhoto(data.imageIndex);
               // Rafraîchir les infos utilisateur depuis le store
               this.$store.dispatch("getUserInfos", localStorage.getItem("userName"));
+              this.$store.commit("setAlertMessage", {
+                type: "success",
+                message: "Photo téléchargée avec succès"
+              });
             } else {
-              alert(
-                "Erreur lors du téléchargement de l'image, reessayer plus tard"
-              );
+              // Remettre l'image par défaut en cas d'erreur
+              this.images[index] = this.defaultImage;
+              // Réinitialiser l'input file
+              if (index === 0) {
+                this.$refs["fileInput" + index].value = "";
+              } else {
+                this.$refs["fileInput" + index][0].value = "";
+              }
+              // Afficher le message d'erreur spécifique du serveur
+              this.$store.commit("setAlertMessage", {
+                type: "warning",
+                message: data.alert?.message || "Erreur lors du téléchargement de l'image"
+              });
             }
+            // Effacer le message après 5 secondes
+            setTimeout(() => {
+              this.$store.commit("clearAlertMessage");
+            }, 5000);
           })
           .catch((error) => {
             // console.error("Erreur lors du téléchargement de l'image :", error);
-            alert("Une erreur est survenue lors du téléchargement de l'image.");
+            // Remettre l'image par défaut en cas d'erreur
+            this.images[index] = this.defaultImage;
+            // Réinitialiser l'input file
+            if (index === 0) {
+              this.$refs["fileInput" + index].value = "";
+            } else {
+              this.$refs["fileInput" + index][0].value = "";
+            }
+            this.$store.commit("setAlertMessage", {
+              type: "warning",
+              message: "Erreur de connexion au serveur"
+            });
+            setTimeout(() => {
+              this.$store.commit("clearAlertMessage");
+            }, 5000);
           });
       } else {
-        alert("Veuillez sélectionner un fichier image.");
+        this.$store.commit("setAlertMessage", {
+          type: "warning",
+          message: "Veuillez sélectionner un fichier image valide (JPEG, PNG, WebP)"
+        });
+        setTimeout(() => {
+          this.$store.commit("clearAlertMessage");
+        }, 5000);
       }
     },
 
