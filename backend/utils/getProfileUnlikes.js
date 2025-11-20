@@ -28,7 +28,8 @@ module.exports = async (req, res) => {
     // Récupérer les infos des personnes qui ont unliked
     const usersQuery = `
       SELECT id, username, firstname, lastname, age, gender, sexualpreferences,
-             biography, interests, photos, profilepicture, famerating, location, lastconnection
+             biography, interests, photos, profilepicture, famerating, location, lastconnection,
+             likedby, matcha
       FROM users
       WHERE id = ANY($1::int[])
     `;
@@ -70,6 +71,8 @@ module.exports = async (req, res) => {
         latitude,
         longitude,
         unlikedAt: user.lastconnection || new Date().toISOString(),
+        likedby: user.likedby || [],
+        matcha: user.matcha || [],
       };
     });
 

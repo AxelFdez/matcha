@@ -80,7 +80,25 @@ module.exports = async function browseUsers(req, res) {
 
     // Construction requête principale
     let queryBase = `
-      SELECT *,
+      SELECT
+        id,
+        username,
+        firstname,
+        lastname,
+        connected,
+        lastconnection,
+        gender,
+        sexualpreferences,
+        biography,
+        age,
+        interests,
+        photos,
+        profilepicture,
+        famerating,
+        reported,
+        location,
+        createdat,
+        updatedat,
         array_length(
           array(
             SELECT unnest(interests)

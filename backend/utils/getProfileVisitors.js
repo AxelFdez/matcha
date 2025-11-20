@@ -47,7 +47,9 @@ module.exports = async (req, res) => {
         famerating,
         location,
         lastconnection,
-        connected
+        connected,
+        likedby,
+        matcha
       FROM users
       WHERE id = ANY($1::int[])
     `;
@@ -97,6 +99,8 @@ module.exports = async (req, res) => {
         longitude: longitude,
         lastconnection: visitor.lastconnection,
         connected: visitor.connected || false,
+        likedby: visitor.likedby || [],
+        matcha: visitor.matcha || [],
       };
     });
 
