@@ -1,39 +1,36 @@
 require("dotenv").config({ path: "../.env" });
 
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
 const cors = require("cors");
 const session = require("express-session");
 const helmet = require("helmet");
 
-var indexRouter = require("./routes/index");
+const indexRouter = require("./routes/index");
 
-var app = express();
+const app = express();
 
-// Configuration CORS
+/* -----------------------------
+   CONFIG CORS
+----------------------------- */
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  "http://frontend:8080",
+  "http://localhost:8082",
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Permettre les requêtes sans origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-
-    const allowedOrigins = [
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-      "http://frontend:8080",
-      "http://localhost:8082",
-    ];
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
   },
-  credentials: true, // Permet l'envoi et la réception des cookies
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
     "Origin",
     "X-Requested-With",
@@ -45,24 +42,41 @@ const corsOptions = {
     "refreshtoken",
   ],
   exposedHeaders: ["set-cookie"],
-  maxAge: 86400, // Cache preflight pendant 24h
+  maxAge: 86400,
 };
 
 app.use(cors(corsOptions));
 
+/* -----------------------------
+   STATIC FILES
+----------------------------- */
 app.use("/photos", express.static(path.join(__dirname, "photos")));
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// view engine setup
+/* -----------------------------
+   VIEW ENGINE
+----------------------------- */
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "twig");
 
-// Limiter les requêtes JSON et URL-encoded à 1 Mo
+/* -----------------------------
+   PARSERS (une seule fois)
+----------------------------- */
 app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Sécurisation des en-têtes HTTP
-app.use(helmet());
+/* -----------------------------
+   SECURITY
+----------------------------- */
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 
+/* -----------------------------
+   SESSIONS
+----------------------------- */
 app.use(
   session({
     secret: "axelfernandez",
@@ -72,34 +86,33 @@ app.use(
   })
 );
 
+/* -----------------------------
+   MIDDLEWARES
+----------------------------- */
 app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
 
-// //middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-
+/* -----------------------------
+   ROUTES
+----------------------------- */
 app.use("/", indexRouter);
 
-// catch 404 and forward to error handler
+/* -----------------------------
+   404 HANDLER
+----------------------------- */
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
+/* -----------------------------
+   ERROR HANDLER
+----------------------------- */
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
   res.render("error");
 });
-
-app.use(express.static("../frontend/dist"));
 
 module.exports = app;
