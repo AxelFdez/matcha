@@ -4,6 +4,7 @@ const WebSocket = require("ws");
 async function chatUser(userId, message) {
   const { clients } = require("./websockets");
   let ws = clients.get(userId);
+
   if (!ws) {
     return;
   }

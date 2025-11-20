@@ -521,16 +521,13 @@ export default {
     const closeSidebar = () => emit("close");
 
     const openNotifications = async () => {
-      console.log("🔔 openNotifications called");
       showNotifications.value = true;
       showChat.value = false;
       showChatMessages.value = false;
 
       try {
         // 1️⃣ Récupérer les notifications depuis le serveur
-        console.log("📡 Fetching notifications from server...");
         const res = await fetchData("/notifications", { method: "GET" });
-        console.log("📥 Notifications fetched:", res);
 
         if (Array.isArray(res.data)) {
           const data = res.data.map((n) => ({
@@ -538,22 +535,17 @@ export default {
             id: n.id || Date.now().toString(),
             viewed: n.viewed || false,
           }));
-          console.log("📝 Formatted notifications:", data);
 
           store.commit("notifications/setNotifications", data);
-          console.log("✅ Notifications stored in Vuex");
 
           // 2️⃣ Marquer vues côté serveur
-          console.log("📡 Marking notifications as viewed on server...");
           const markRes = await fetchData("/notifications/markViewed", {
             method: "POST",
             body: JSON.stringify({}),
           });
-          console.log("📥 Server response for markViewed:", markRes);
 
           // 3️⃣ Mettre à jour le store local pour refléter les vues
           store.commit("notifications/markNotificationsViewed");
-          console.log("✅ Vuex notifications updated as viewed");
         } else {
           console.warn("⚠️ res.data is not an array:", res.data);
         }
@@ -589,6 +581,7 @@ export default {
     };
 
     const backToConversations = async () => {
+      
       showChatMessages.value = false;
       selectedConversation.value = null;
       await fetchConversations();
@@ -720,16 +713,18 @@ export default {
       const messageText = newMessage.value.trim();
       const tempMessage = {
         id: Date.now().toString(),
-        sender: currentUserName.value,
+        sender: currentUserId.value,
+        senderUser: currentUserName.value,
         message: messageText,
         date: new Date(),
-        temp: true,
+        temp: true, // marque temporaire
       };
 
       store.commit("notifications/addMessage", {
         conversationId: selectedConversation.value.id,
         message: tempMessage,
       });
+
       newMessage.value = "";
       nextTick(scrollToBottom);
 
@@ -747,7 +742,6 @@ export default {
               },
             })
           );
-          tempMessage.temp = false;
         }
       } finally {
         sendingMessage.value = false;
@@ -786,14 +780,30 @@ export default {
         senderUser: data.message.senderUser,
         message: data.message.message,
         date: new Date(data.message.date),
+        temp: false,
       };
 
-      store.dispatch("notifications/addIncomingMessage", msg);
+      // Vérifier si un message temporaire avec le même texte existe
+      const existingMessages =
+        store.getters["notifications/getConversationMessages"](msg.conversationId) || [];
+      const duplicate = existingMessages.some(
+        (m) => m.temp && m.message === msg.message && m.sender === msg.sender
+      );
 
-      if (selectedConversation.value && selectedConversation.value.id === msg.conversationId) {
+      if (!duplicate) {
         store.commit("notifications/addMessage", {
           conversationId: msg.conversationId,
           message: msg,
+        });
+        nextTick(scrollToBottom);
+      } else {
+        // Remplacer le message temporaire par le message serveur
+        const updatedMessages = existingMessages.map((m) =>
+          m.temp && m.message === msg.message && m.sender === msg.sender ? { ...msg } : m
+        );
+        store.commit("notifications/setMessages", {
+          conversationId: msg.conversationId,
+          messages: updatedMessages,
         });
         nextTick(scrollToBottom);
       }
