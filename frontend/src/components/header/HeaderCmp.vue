@@ -130,8 +130,10 @@ export default {
     };
 
     onMounted(async () => {
-      // fetch unique pour pré-remplir
-      await fetchInitialData();
+      // fetch unique pour pré-remplir uniquement si connecté
+      if (isConnected.value) {
+        await fetchInitialData();
+      }
 
       // WebSocket
       if (ws) {
