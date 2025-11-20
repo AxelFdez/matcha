@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <div class="register--container" v-if="!$store.getters.getIsRegisterFormSent">
       <h3>{{ $t("registerTitle") }}</h3>
       <h3 id="sub--title">{{ $t("registerSubTitle") }}</h3>
@@ -59,8 +58,9 @@
             type="button"
             class="password-toggle-btn"
             @click="inputs.showPassword = !inputs.showPassword"
-            v-if="inputs.password.length > 0">
-            {{ inputs.showPassword ? '👁️' : '👁️' }}
+            v-if="inputs.password.length > 0"
+          >
+            {{ inputs.showPassword ? "👁️" : "👁️" }}
           </button>
         </div>
 
@@ -68,9 +68,7 @@
         <div v-if="inputs.password.length > 0" class="password-strength-tooltip">
           <div class="strength-header">
             <span class="strength-label">Force du mot de passe :</span>
-            <span
-              class="strength-value"
-              :class="passwordStrength.class">
+            <span class="strength-value" :class="passwordStrength.class">
               {{ passwordStrength.label }}
             </span>
           </div>
@@ -84,9 +82,7 @@
             <div class="criterion" :class="{ valid: passwordCriteria.hasLowercase }">
               Une lettre minuscule
             </div>
-            <div class="criterion" :class="{ valid: passwordCriteria.hasDigit }">
-              Un chiffre
-            </div>
+            <div class="criterion" :class="{ valid: passwordCriteria.hasDigit }">Un chiffre</div>
             <div class="criterion" :class="{ valid: passwordCriteria.hasSpecial }">
               Un caractère spécial (@$!%*?&)
             </div>
@@ -97,11 +93,11 @@
         </div>
 
         <button
-
           class="send--registration--btn"
           type="submit"
-          :class="{'disabled--btn': !isFormValid}"
-          :disabled="!isFormValid">
+          :class="{ 'disabled--btn': !isFormValid }"
+          :disabled="!isFormValid"
+        >
           {{ $t("send") }}
         </button>
       </form>
@@ -109,14 +105,12 @@
 
     <RegisterSuccess v-if="$store.getters.getServerMessage === 'registerSuccess'" />
     <RegisterErrorUserName v-if="$store.getters.getServerMessage === 'userExist'" />
-    <RegisterErrorEmail v-if="$store.getters.getServerMessage === 'emailExist'"/>
+    <RegisterErrorEmail v-if="$store.getters.getServerMessage === 'emailExist'" />
     <RegisterErrorServer v-if="$store.getters.getServerMessage === 'serverError'" />
-
   </div>
 </template>
 
 <script>
-
 import { ref, watch } from "vue";
 import { validateEmail } from "@/libft/libft.js";
 import { useStore } from "vuex";
@@ -146,20 +140,74 @@ export default {
 
     // List of common English words that should not be used in passwords
     const COMMON_WORDS = [
-      'password', 'welcome', 'monkey', 'dragon', 'master', 'sunshine', 'princess',
-      'qwerty', 'football', 'baseball', 'basketball', 'letmein', 'trustno',
-      'superman', 'batman', 'michael', 'shadow', 'mustang', 'summer', 'love',
-      'hello', 'admin', 'user', 'test', 'login', 'access', 'secret', 'computer',
-      'internet', 'service', 'flower', 'purple', 'orange', 'starwars', 'killer',
-      'freedom', 'whatever', 'cookie', 'thomas', 'pepper', 'hunter', 'ranger',
-      'jordan', 'jennifer', 'london', 'matthew', 'yankees', 'thunder', 'ginger',
-      'buster', 'dakota', 'cowboy', 'silver', 'viking', 'falcon', 'warrior',
-      'phoenix', 'champion', 'panther', 'knight', 'diamond', 'golden', 'pepper'
+      "password",
+      "welcome",
+      "monkey",
+      "dragon",
+      "master",
+      "sunshine",
+      "princess",
+      "qwerty",
+      "football",
+      "baseball",
+      "basketball",
+      "letmein",
+      "trustno",
+      "superman",
+      "batman",
+      "michael",
+      "shadow",
+      "mustang",
+      "summer",
+      "love",
+      "hello",
+      "admin",
+      "user",
+      "test",
+      "login",
+      "access",
+      "secret",
+      "computer",
+      "internet",
+      "service",
+      "flower",
+      "purple",
+      "orange",
+      "starwars",
+      "killer",
+      "freedom",
+      "whatever",
+      "cookie",
+      "thomas",
+      "pepper",
+      "hunter",
+      "ranger",
+      "jordan",
+      "jennifer",
+      "london",
+      "matthew",
+      "yankees",
+      "thunder",
+      "ginger",
+      "buster",
+      "dakota",
+      "cowboy",
+      "silver",
+      "viking",
+      "falcon",
+      "warrior",
+      "phoenix",
+      "champion",
+      "panther",
+      "knight",
+      "diamond",
+      "golden",
+      "pepper",
     ];
 
     // Validate name (firstname or lastname)
     const validateName = (name) => {
-      if (!name || typeof name !== 'string') return false;
+      if (!name || typeof name !== "string") return false;
       const trimmedName = name.trim();
       if (trimmedName.length < 2 || trimmedName.length > 50) return false;
       const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
@@ -168,7 +216,7 @@ export default {
 
     // Validate password complexity
     const validatePassword = (password) => {
-      if (!password || typeof password !== 'string') return false;
+      if (!password || typeof password !== "string") return false;
       if (password.length < 8) return false;
 
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -199,22 +247,29 @@ export default {
 
     // Get user location on component mount
     async function getLocation() {
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          // Créer la structure de données avec latitude et longitude
-          const location = { latitude: position.coords.latitude, longitude: position.coords.longitude };
-          // Assigner la structure de données à inputs.value.location
-          inputs.value.location = location;
-        }, function(error) {
-          // console.error("Erreur de géolocalisation: " + error.message);
-          inputs.value.location = null;
-        }, {
-          maximumAge: 60000,
-          timeout: 5000,
-          enableHighAccuracy: true
-        });
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            // Créer la structure de données avec latitude et longitude
+            const location = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            };
+            // Assigner la structure de données à inputs.value.location
+            inputs.value.location = location;
+          },
+          function (error) {
+            // // console.error("Erreur de géolocalisation: " + error.message);
+            inputs.value.location = null;
+          },
+          {
+            maximumAge: 60000,
+            timeout: 5000,
+            enableHighAccuracy: true,
+          }
+        );
       } else {
-        console.error("Géolocalisation n'est pas prise en charge par ce navigateur.");
+        // console.error("Géolocalisation n'est pas prise en charge par ce navigateur.");
         inputs.value.location = null;
       }
     }
@@ -260,18 +315,18 @@ export default {
         lastName: event.target.lastname.value,
         email: event.target.email.value,
         password: event.target.password.value,
-        location: inputs.value.location
+        location: inputs.value.location,
       };
 
-      store.commit('setIsLoading', true);
+      store.commit("setIsLoading", true);
       setTimeout(() => {
-        store.dispatch('submitRegisterForm', formData);
+        store.dispatch("submitRegisterForm", formData);
 
         // Réinitialiser le formulaire en gardant la localisation
-        Object.keys(inputs.value).forEach(key => {
-          if (key !== 'location' && typeof inputs.value[key] === 'string') {
+        Object.keys(inputs.value).forEach((key) => {
+          if (key !== "location" && typeof inputs.value[key] === "string") {
             inputs.value[key] = ""; // Réinitialiser à une chaîne vide
-          } else if (key !== 'location' && typeof inputs.value[key] === 'boolean') {
+          } else if (key !== "location" && typeof inputs.value[key] === "boolean") {
             inputs.value[key] = false; // Réinitialiser les booléens
           }
         });
@@ -285,79 +340,133 @@ export default {
       validateName,
       validatePassword,
       submitForm,
-      getLocation
+      getLocation,
     };
   },
   computed: {
-  isFormValid() {
-    const {
-      emailValid,
-      firstNameValid,
-      lastNameValid,
-      passwordValid,
-      userName,
-      firstName,
-      lastName
-    } = this.inputs;
-    return (
-      emailValid &&
-      firstNameValid &&
-      lastNameValid &&
-      passwordValid &&
-      userName &&
-      firstName &&
-      lastName
-    );
-  },
+    isFormValid() {
+      const {
+        emailValid,
+        firstNameValid,
+        lastNameValid,
+        passwordValid,
+        userName,
+        firstName,
+        lastName,
+      } = this.inputs;
+      return (
+        emailValid &&
+        firstNameValid &&
+        lastNameValid &&
+        passwordValid &&
+        userName &&
+        firstName &&
+        lastName
+      );
+    },
 
-  passwordCriteria() {
-    const password = this.inputs.password;
-    const passwordLower = password.toLowerCase();
+    passwordCriteria() {
+      const password = this.inputs.password;
+      const passwordLower = password.toLowerCase();
 
-    // Check for common words
-    const COMMON_WORDS = [
-      'password', 'welcome', 'monkey', 'dragon', 'master', 'sunshine', 'princess',
-      'qwerty', 'football', 'baseball', 'basketball', 'letmein', 'trustno',
-      'superman', 'batman', 'michael', 'shadow', 'mustang', 'summer', 'love',
-      'hello', 'admin', 'user', 'test', 'login', 'access', 'secret', 'computer',
-      'internet', 'service', 'flower', 'purple', 'orange', 'starwars', 'killer',
-      'freedom', 'whatever', 'cookie', 'thomas', 'pepper', 'hunter', 'ranger',
-      'jordan', 'jennifer', 'london', 'matthew', 'yankees', 'thunder', 'ginger',
-      'buster', 'dakota', 'cowboy', 'silver', 'viking', 'falcon', 'warrior',
-      'phoenix', 'champion', 'panther', 'knight', 'diamond', 'golden', 'pepper'
-    ];
+      // Check for common words
+      const COMMON_WORDS = [
+        "password",
+        "welcome",
+        "monkey",
+        "dragon",
+        "master",
+        "sunshine",
+        "princess",
+        "qwerty",
+        "football",
+        "baseball",
+        "basketball",
+        "letmein",
+        "trustno",
+        "superman",
+        "batman",
+        "michael",
+        "shadow",
+        "mustang",
+        "summer",
+        "love",
+        "hello",
+        "admin",
+        "user",
+        "test",
+        "login",
+        "access",
+        "secret",
+        "computer",
+        "internet",
+        "service",
+        "flower",
+        "purple",
+        "orange",
+        "starwars",
+        "killer",
+        "freedom",
+        "whatever",
+        "cookie",
+        "thomas",
+        "pepper",
+        "hunter",
+        "ranger",
+        "jordan",
+        "jennifer",
+        "london",
+        "matthew",
+        "yankees",
+        "thunder",
+        "ginger",
+        "buster",
+        "dakota",
+        "cowboy",
+        "silver",
+        "viking",
+        "falcon",
+        "warrior",
+        "phoenix",
+        "champion",
+        "panther",
+        "knight",
+        "diamond",
+        "golden",
+        "pepper",
+      ];
 
-    let hasCommonWord = false;
-    for (const word of COMMON_WORDS) {
-      if (passwordLower.includes(word)) {
-        hasCommonWord = true;
-        break;
+      let hasCommonWord = false;
+      for (const word of COMMON_WORDS) {
+        if (passwordLower.includes(word)) {
+          hasCommonWord = true;
+          break;
+        }
       }
-    }
 
-    return {
-      minLength: password.length >= 8,
-      hasUppercase: /[A-Z]/.test(password),
-      hasLowercase: /[a-z]/.test(password),
-      hasDigit: /\d/.test(password),
-      hasSpecial: /[@$!%*?&]/.test(password),
-      noCommonWords: !hasCommonWord
-    };
+      return {
+        minLength: password.length >= 8,
+        hasUppercase: /[A-Z]/.test(password),
+        hasLowercase: /[a-z]/.test(password),
+        hasDigit: /\d/.test(password),
+        hasSpecial: /[@$!%*?&]/.test(password),
+        noCommonWords: !hasCommonWord,
+      };
+    },
+
+    passwordStrength() {
+      const criteria = this.passwordCriteria;
+      const validCount = Object.values(criteria).filter((v) => v).length;
+
+      if (validCount === 6) {
+        return { label: "Fort", class: "strength-strong" };
+      } else if (validCount >= 4) {
+        return { label: "Moyen", class: "strength-medium" };
+      } else {
+        return { label: "Faible", class: "strength-weak" };
+      }
+    },
   },
-
-  passwordStrength() {
-    const criteria = this.passwordCriteria;
-    const validCount = Object.values(criteria).filter(v => v).length;
-
-    if (validCount === 6) {
-      return { label: 'Fort', class: 'strength-strong' };
-    } else if (validCount >= 4) {
-      return { label: 'Moyen', class: 'strength-medium' };
-    } else {
-      return { label: 'Faible', class: 'strength-weak' };
-    }
-  }
-},
 };
 </script>
 
@@ -368,7 +477,7 @@ export default {
 
   .password-toggle-btn {
     position: absolute;
-    top : 0px;
+    top: 0px;
     right: 10px;
     background: none;
     border: none;
@@ -519,13 +628,12 @@ export default {
       width: 100%;
       margin: 0;
       padding: 0;
-      margin-top : 10px;
+      margin-top: 10px;
 
       input {
         width: 100%;
         margin: 0;
       }
-
     }
 
     .send--registration--btn {

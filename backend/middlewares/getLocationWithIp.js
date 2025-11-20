@@ -13,7 +13,7 @@ const getLocationWithIp = async (req, res, next) => {
 			user.location.coordinates = [response.latitude, response.longitude];
 			user.save();
 		}).catch((error) => {
-			console.log("Error in getLocationWithIp", error);
+			// console.log("Error in getLocationWithIp", error);
 		});
 	}
 	next();

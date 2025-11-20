@@ -50,12 +50,7 @@ router.post(
   (req, res) => {}
 );
 // Delete photo
-router.post(
-  "/deletePhoto",
-  verifyToken,
-  require("../utils/deletePhoto"),
-  (req, res) => {}
-);
+router.post("/deletePhoto", verifyToken, require("../utils/deletePhoto"), (req, res) => {});
 // Get profile visitors
 router.get(
   "/profile/visitors",
@@ -137,7 +132,7 @@ router.post("/admin/create-missing-conversations", async (req, res) => {
       details: result,
     });
   } catch (error) {
-    console.error("Error creating missing conversations:", error);
+    // console.error("Error creating missing conversations:", error);
     res.status(500).json({ message: "Error creating missing conversations" });
   }
 });

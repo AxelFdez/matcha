@@ -67,9 +67,9 @@ export default {
       const params = new URLSearchParams();
 
       if (filters.ageGap && (filters.ageGap.min || filters.ageGap.max)) {
-        console.log('ageGap before stringify:', filters.ageGap, 'types:', typeof filters.ageGap.min, typeof filters.ageGap.max);
+        // console.log('ageGap before stringify:', filters.ageGap, 'types:', typeof filters.ageGap.min, typeof filters.ageGap.max);
         const stringified = JSON.stringify(filters.ageGap);
-        console.log('ageGap after stringify:', stringified);
+        // console.log('ageGap after stringify:', stringified);
         params.append('ageGap', stringified);
       }
 
@@ -83,6 +83,10 @@ export default {
 
       if (filters.sortBy) {
         params.append('sortBy', filters.sortBy);
+      }
+
+      if (filters.distanceRange) {
+        params.append('distanceRange', filters.distanceRange);
       }
 
       if (filters.sexPref) {

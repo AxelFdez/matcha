@@ -16,7 +16,7 @@ async function resetPasswordSendEmail(req, res) {
 		await sendEmailResetPassword(email, newToken);
 		res.status(200).json({ message: "Email sent" });
 	} catch (error) {
-		console.log("Error in resetPasswordSendEmail", error);
+		// console.log("Error in resetPasswordSendEmail", error);
 		res.status(503).json({ message: error.message });
 	}
 }
@@ -42,7 +42,7 @@ module.exports = resetPasswordSendEmail;
 // 		await sendEmailResetPassword(email, newToken);
 // 		res.status(200).json({ message: "Email sent" });
 // 	} catch (error) {
-// 		console.log("Error in resetPasswordSendEmail", error);
+// 		// console.log("Error in resetPasswordSendEmail", error);
 // 		res.status(503).json({ message: error.message });
 // 	}
 // }

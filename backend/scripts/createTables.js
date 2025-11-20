@@ -1,47 +1,47 @@
-const { Client } = require('pg');
-require('dotenv').config();
+const { Client } = require("pg");
+require("dotenv").config();
 
 // Fonction pour attendre que PostgreSQL soit prêt
 const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            const client = new Client({
-                host: process.env.PGHOST,
-                user: process.env.PGUSER,
-                password: process.env.PGPASSWORD,
-                database: process.env.PGDATABASE,
-                connectionTimeoutMillis: 5000,
-            });
-
-            await client.connect();
-            await client.query('SELECT 1');
-            await client.end();
-            console.log('PostgreSQL is ready!');
-            return true;
-        } catch (err) {
-            console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for PostgreSQL... (${err.message})`);
-            if (i < maxRetries - 1) {
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-    throw new Error('PostgreSQL is not ready after maximum retries');
-};
-
-// Fonction pour créer la table users
-const createUsersTable = async () => {
-    const client = new Client({
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const client = new Client({
         host: process.env.PGHOST,
         user: process.env.PGUSER,
         password: process.env.PGPASSWORD,
         database: process.env.PGDATABASE,
-    });
+        connectionTimeoutMillis: 5000,
+      });
 
-    try {
-        await client.connect();
-        console.log("Connexion à la base de données réussie.");
+      await client.connect();
+      await client.query("SELECT 1");
+      await client.end();
+      console.log("PostgreSQL is ready!");
+      return true;
+    } catch (err) {
+      console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for PostgreSQL... (${err.message})`);
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw new Error("PostgreSQL is not ready after maximum retries");
+};
 
-        const createTableQuery = `
+// Fonction pour créer la table users
+const createUsersTable = async () => {
+  const client = new Client({
+    host: process.env.PGHOST,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+  });
+
+  try {
+    await client.connect();
+    console.log("Connexion à la base de données réussie.");
+
+    const createTableQuery = `
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
@@ -56,7 +56,7 @@ const createUsersTable = async () => {
                 lastConnection TIMESTAMP DEFAULT NULL,
                 gender VARCHAR(50) DEFAULT 'None',
                 sexualPreferences VARCHAR(50) DEFAULT 'None',
-                biography TEXT DEFAULT 'bio here',
+                biography TEXT DEFAULT NULL,
                 age INTEGER DEFAULT NULL,
                 interests TEXT[] DEFAULT '{}',
                 photos TEXT[] DEFAULT '{}',
@@ -74,42 +74,41 @@ const createUsersTable = async () => {
                 updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `;
-        await client.query(createTableQuery);
-        console.log("Table 'users' créée ou déjà existante.");
+    await client.query(createTableQuery);
+    console.log("Table 'users' créée ou déjà existante.");
 
-        // Création de l'index pour les requêtes géographiques
-        const createIndexQuery = `CREATE INDEX IF NOT EXISTS location_idx ON users USING GIN (location);`;
-        await client.query(createIndexQuery);
-        console.log("Index pour 'location' créé.");
+    // Création de l'index pour les requêtes géographiques
+    const createIndexQuery = `CREATE INDEX IF NOT EXISTS location_idx ON users USING GIN (location);`;
+    await client.query(createIndexQuery);
+    console.log("Index pour 'location' créé.");
 
-        // Création de l'index pour les recherches insensibles à la casse sur username
-        const createUsernameLowerIndexQuery = `CREATE INDEX IF NOT EXISTS username_lower_idx ON users (LOWER(username));`;
-        await client.query(createUsernameLowerIndexQuery);
-        console.log("Index pour 'LOWER(username)' créé pour les recherches insensibles à la casse.");
-
-    } catch (err) {
-        console.error("Erreur lors de la configuration de la base de données :", err);
-    } finally {
-        await client.end();
-        console.log("Connexion fermée.");
-    }
+    // Création de l'index pour les recherches insensibles à la casse sur username
+    const createUsernameLowerIndexQuery = `CREATE INDEX IF NOT EXISTS username_lower_idx ON users (LOWER(username));`;
+    await client.query(createUsernameLowerIndexQuery);
+    console.log("Index pour 'LOWER(username)' créé pour les recherches insensibles à la casse.");
+  } catch (err) {
+    // console.error("Erreur lors de la configuration de la base de données :", err);
+  } finally {
+    await client.end();
+    console.log("Connexion fermée.");
+  }
 };
 
 // Fonction pour créer les tables de chat
 const createChatTables = async () => {
-    const client = new Client({
-        host: process.env.PGHOST,
-        user: process.env.PGUSER,
-        password: process.env.PGPASSWORD,
-        database: process.env.PGDATABASE,
-    });
+  const client = new Client({
+    host: process.env.PGHOST,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE,
+  });
 
-    try {
-        await client.connect();
-        console.log("Connexion à la base de données réussie pour les tables de chat.");
+  try {
+    await client.connect();
+    console.log("Connexion à la base de données réussie pour les tables de chat.");
 
-        // Table pour les conversations
-        const createConversationsTableQuery = `
+    // Table pour les conversations
+    const createConversationsTableQuery = `
             CREATE TABLE IF NOT EXISTS chat_conversations (
                 id SERIAL PRIMARY KEY,
                 user1_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -120,11 +119,11 @@ const createChatTables = async () => {
                 CHECK (user1_id < user2_id)
             );
         `;
-        await client.query(createConversationsTableQuery);
-        console.log("Table 'chat_conversations' créée ou déjà existante.");
+    await client.query(createConversationsTableQuery);
+    console.log("Table 'chat_conversations' créée ou déjà existante.");
 
-        // Table pour les messages avec support des messages non lus
-        const createMessagesTableQuery = `
+    // Table pour les messages avec support des messages non lus
+    const createMessagesTableQuery = `
             CREATE TABLE IF NOT EXISTS chat_messages (
                 id SERIAL PRIMARY KEY,
                 conversation_id INTEGER NOT NULL REFERENCES chat_conversations(id) ON DELETE CASCADE,
@@ -134,11 +133,11 @@ const createChatTables = async () => {
                 read_at TIMESTAMP DEFAULT NULL
             );
         `;
-        await client.query(createMessagesTableQuery);
-        console.log("Table 'chat_messages' créée ou déjà existante.");
+    await client.query(createMessagesTableQuery);
+    console.log("Table 'chat_messages' créée ou déjà existante.");
 
-        // Ajouter la colonne read_at si elle n'existe pas déjà (pour les bases existantes)
-        const addReadAtColumnQuery = `
+    // Ajouter la colonne read_at si elle n'existe pas déjà (pour les bases existantes)
+    const addReadAtColumnQuery = `
             DO $$
             BEGIN
                 IF NOT EXISTS (
@@ -150,55 +149,54 @@ const createChatTables = async () => {
                 END IF;
             END $$;
         `;
-        await client.query(addReadAtColumnQuery);
-        console.log("Colonne 'read_at' vérifiée/ajoutée.");
+    await client.query(addReadAtColumnQuery);
+    console.log("Colonne 'read_at' vérifiée/ajoutée.");
 
-        // Index pour optimiser les requêtes de conversation
-        const createConversationIndexQuery = `
+    // Index pour optimiser les requêtes de conversation
+    const createConversationIndexQuery = `
             CREATE INDEX IF NOT EXISTS idx_conversations_users
             ON chat_conversations(user1_id, user2_id);
         `;
-        await client.query(createConversationIndexQuery);
-        console.log("Index pour les conversations créé.");
+    await client.query(createConversationIndexQuery);
+    console.log("Index pour les conversations créé.");
 
-        // Index pour optimiser les requêtes de messages
-        const createMessagesIndexQuery = `
+    // Index pour optimiser les requêtes de messages
+    const createMessagesIndexQuery = `
             CREATE INDEX IF NOT EXISTS idx_messages_conversation_sent
             ON chat_messages(conversation_id, sent_at DESC);
         `;
-        await client.query(createMessagesIndexQuery);
-        console.log("Index pour les messages créé.");
+    await client.query(createMessagesIndexQuery);
+    console.log("Index pour les messages créé.");
 
-        // Index pour optimiser les requêtes de messages non lus
-        const createUnreadMessagesIndexQuery = `
+    // Index pour optimiser les requêtes de messages non lus
+    const createUnreadMessagesIndexQuery = `
             CREATE INDEX IF NOT EXISTS idx_messages_unread
             ON chat_messages(conversation_id, read_at)
             WHERE read_at IS NULL;
         `;
-        await client.query(createUnreadMessagesIndexQuery);
-        console.log("Index pour les messages non lus créé.");
-
-    } catch (err) {
-        console.error("Erreur lors de la création des tables de chat :", err);
-    } finally {
-        await client.end();
-        console.log("Connexion fermée pour les tables de chat.");
-    }
+    await client.query(createUnreadMessagesIndexQuery);
+    console.log("Index pour les messages non lus créé.");
+  } catch (err) {
+    // console.error("Erreur lors de la création des tables de chat :", err);
+  } finally {
+    await client.end();
+    console.log("Connexion fermée pour les tables de chat.");
+  }
 };
 
 // Exécuter les fonctions
 (async () => {
-    try {
-        console.log('Waiting for PostgreSQL to be ready...');
-        await waitForPostgres();
+  try {
+    console.log("Waiting for PostgreSQL to be ready...");
+    await waitForPostgres();
 
-        console.log('Creating database tables...');
-        await createUsersTable();
-        await createChatTables();
+    console.log("Creating database tables...");
+    await createUsersTable();
+    await createChatTables();
 
-        console.log('Database initialization completed successfully!');
-    } catch (err) {
-        console.error('Database initialization failed:', err);
-        process.exit(1);
-    }
+    console.log("Database initialization completed successfully!");
+  } catch (err) {
+    // console.error('Database initialization failed:', err);
+    process.exit(1);
+  }
 })();

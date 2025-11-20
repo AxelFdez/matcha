@@ -24,7 +24,7 @@
         // Vérifier si l'utilisateur est déjà connecté
         const accessToken = localStorage.getItem('accessToken');
         if (isConnected.value || accessToken) {
-          console.log('User already logged in, redirecting to HomePage...');
+          // console.log('User already logged in, redirecting to HomePage...');
           router.push({ name: 'HomePage' });
         }
       });

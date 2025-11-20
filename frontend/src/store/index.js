@@ -17,7 +17,7 @@ export const store = createStore({
     age: "",
     gender: "",
     sex_pref: "",
-    bio: "",
+    biography: "",
     interests: [""],
     photos: [],
     profilePicture: 0,
@@ -76,8 +76,8 @@ export const store = createStore({
     getSexPref(state) {
       return state.sex_pref;
     },
-    getBio(state) {
-      return state.bio;
+    getBiography(state) {
+      return state.biography;
     },
     getInterests(state) {
       return state.interests;
@@ -173,8 +173,8 @@ export const store = createStore({
     setSexPref(state, value) {
       state.sex_pref = value;
     },
-    setBio(state, value) {
-      state.bio = value;
+    setBiography(state, value) {
+      state.biography = value;
     },
     setInterests(state, value) {
       state.interests = value;
@@ -293,13 +293,13 @@ export const store = createStore({
               // console.log("📍 Envoyé newLocation :", message);
             },
             function (error) {
-              console.error("Erreur lors de la récupération de la position :", error);
+              // // console.error("Erreur lors de la récupération de la position :", error);
             }
           );
         }
       };
       state.ws.onclose = function () {
-        console.log("Connection is closed.");
+        // console.log("Connection is closed.");
       };
     },
 
@@ -338,7 +338,7 @@ export const store = createStore({
             break;
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // // console.error("Error submitting form:", error);
         commit("setServerMessage", "serverError");
       } finally {
         commit("setIsRegisterFormSent", true);
@@ -396,7 +396,7 @@ export const store = createStore({
             break;
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // // console.error("Error submitting form:", error);
         commit("setServerMessage", "serverError");
       } finally {
         commit("setIsLoginFormSent", true);
@@ -427,7 +427,7 @@ export const store = createStore({
             commit("setAge", responseData.user.age);
             commit("setGender", responseData.user.gender);
             commit("setSexPref", responseData.user.sexualpreferences);
-            commit("setBio", responseData.user.biography);
+            commit("setBiography", responseData.user.biography);
             commit("setInterests", responseData.user.interests);
             commit("setPhotos", responseData.user.photos);
             if (responseData.user.location) {
@@ -441,22 +441,22 @@ export const store = createStore({
             commit("setFameRating", responseData.user.famerating || 0);
             break;
           case 404:
-            console.error("User not found");
+            // // console.error("User not found");
             break;
           case 500:
           case 502:
           case 503:
           case 504:
-            console.error("Server Error");
+            // // console.error("Server Error");
             break;
           default:
             if (response.response.status >= 500) {
-              console.error("Server Error");
+              // // console.error("Server Error");
             }
             break;
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // // console.error("Error submitting form:", error);
       }
       // finally {
       //   console.groupCollapsed("User Infos fetched");
@@ -510,7 +510,7 @@ export const store = createStore({
             break;
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // // console.error("Error submitting form:", error);
         commit("setServerMessage", "serverError");
       } finally {
         commit("setIsForgotFormSent", true);
@@ -556,7 +556,7 @@ export const store = createStore({
             break;
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // // console.error("Error submitting form:", error);
         commit("setServerMessage", "serverError");
       } finally {
         commit("setIsFormSent", true);
@@ -603,7 +603,7 @@ export const store = createStore({
                 message: responseData.alert || "Erreur du serveur.",
               });
             }
-            console.error("server error");
+            // // console.error("server error");
             break;
           default:
             if (response.response.status >= 500) {
@@ -615,7 +615,7 @@ export const store = createStore({
             break;
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
+        // // console.error("Error submitting form:", error);
         commit("setAlertMessage", {
           type: "warning",
           message: "Une erreur est survenue lors de la soumission du formulaire.",
@@ -640,11 +640,11 @@ export const store = createStore({
         if (response.response.status === 200) {
           commit("setProfileVisitors", response.data.visitors || []);
         } else {
-          console.error("Error fetching profile visitors:", response.data.message);
+          // // console.error("Error fetching profile visitors:", response.data.message);
           commit("setProfileVisitors", []);
         }
       } catch (error) {
-        console.error("Error in fetchProfileVisitors:", error);
+        // // console.error("Error in fetchProfileVisitors:", error);
         commit("setProfileVisitors", []);
       }
     },
@@ -661,11 +661,11 @@ export const store = createStore({
         if (response.response.status === 200) {
           commit("setProfileLikes", response.data.likes || []);
         } else {
-          console.error("Error fetching profile likes:", response.data.message);
+          // // console.error("Error fetching profile likes:", response.data.message);
           commit("setProfileLikes", []);
         }
       } catch (error) {
-        console.error("Error in fetchProfileLikes:", error);
+        // // console.error("Error in fetchProfileLikes:", error);
         commit("setProfileLikes", []);
       }
     },
@@ -683,11 +683,11 @@ export const store = createStore({
       if (response.response.status === 200) {
         commit("setProfileUnlikes", response.data.unlikes || []);
       } else {
-        console.error("Error fetching profile unlikes:", response.data.message);
+        // // console.error("Error fetching profile unlikes:", response.data.message);
         commit("setProfileUnlikes", []);
       }
     } catch (error) {
-      console.error("Error in fetchProfileUnlikes:", error);
+      // // console.error("Error in fetchProfileUnlikes:", error);
       commit("setProfileUnlikes", []);
     }
   },

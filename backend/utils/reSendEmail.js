@@ -19,7 +19,7 @@ async function reSendEmail(req, res) {
 		await sendEmail(user.email, user.refreshtoken);
 		res.status(200).json({ message: "Email sent" });
 	} catch (error) {
-		console.log("Error in reSendEmail", error);
+		// console.log("Error in reSendEmail", error);
 		res.status(503).json({ message: error.message });
 	}
 }
@@ -47,7 +47,7 @@ module.exports = reSendEmail;
 // 		await sendEmail(user.email, user.refreshtoken);
 // 		res.status(200).json({ message: "Email sent" });
 // 	} catch (error) {
-// 		console.log("Error in reSendEmail", error);
+// 		// console.log("Error in reSendEmail", error);
 // 		res.status(503).json({ message: error.message });
 // 	}
 // }

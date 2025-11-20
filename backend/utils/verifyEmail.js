@@ -4,7 +4,7 @@ async function verifyEmail(req, res) {
 
 	const tokenEmail = req.body.token;
 	if (!tokenEmail) {
-		console.log('!tokenEmail');
+		// console.log('!tokenEmail');
 		return res.status(400).json({ message: "Token de vérification manquant." });
 	}
 

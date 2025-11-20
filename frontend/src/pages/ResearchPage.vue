@@ -85,9 +85,7 @@
 
     <!-- 🧾 Résultats -->
     <div v-if="!loading && !error" class="mt-10 text-white">
-      <p class="mb-4 text-sm text-gray-300">
-        {{ filteredUsers.length }} utilisateur(s) trouvé(s)
-      </p>
+      <p class="mb-4 text-sm text-gray-300">{{ filteredUsers.length }} utilisateur(s) trouvé(s)</p>
 
       <!-- Desktop -->
       <table class="users-table desktop-view" v-if="filteredUsers.length">
@@ -102,7 +100,8 @@
             <th>Dernière connexion</th>
             <th>Intérêts</th>
             <th>Distance (km)</th>
-            <th>Actions</th> <!-- ✅ nouvelle colonne -->
+            <th>Actions</th>
+            <!-- ✅ nouvelle colonne -->
           </tr>
         </thead>
         <tbody>
@@ -112,9 +111,9 @@
                 {{ user.photos[0] }}
               </pre> -->
               <img
-                :src="formatPhotoUrl((user.photos[user.profilepicture]))"
+                :src="formatPhotoUrl(user.photos[user.profilepicture])"
                 class="small-photo"
-                @error="e => e.target.style.display='none'"
+                @error="(e) => (e.target.style.display = 'none')"
               />
             </td>
             <td>{{ user.username }}</td>
@@ -150,11 +149,11 @@
           <div class="user-card-body">
             <div class="user-photos">
               <img
-                v-for="(photo, i) in user.photos.filter(p => p)"
+                v-for="(photo, i) in user.photos.filter((p) => p)"
                 :key="i"
                 :src="formatPhotoUrl(photo)"
                 class="mobile-photo"
-                @error="e => e.target.style.display='none'"
+                @error="(e) => (e.target.style.display = 'none')"
               />
             </div>
             <div class="user-info">
@@ -239,7 +238,15 @@ import "vue-multiselect/dist/vue-multiselect.min.css";
 
 export default {
   name: "ResearchPage",
-  components: { RangeSlider, Multiselect, Dialog, DialogPanel, TransitionChild, TransitionRoot, ProfileInfos },
+  components: {
+    RangeSlider,
+    Multiselect,
+    Dialog,
+    DialogPanel,
+    TransitionChild,
+    TransitionRoot,
+    ProfileInfos,
+  },
   setup() {
     const store = useStore();
     const users = ref([]);
@@ -270,7 +277,7 @@ export default {
       const viewedUsername = user.username;
 
       if (!ws || !realUsername || !viewedUsername) {
-        console.warn("WebSocket or usernames not available");
+        // console.warn("WebSocket or usernames not available");
         return;
       }
 
@@ -305,12 +312,14 @@ export default {
       if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
 
       const R = 6371; // Rayon de la Terre en km
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
@@ -340,20 +349,15 @@ export default {
 
     const filteredUsers = computed(() => {
       let filtered = users.value.filter((user) => {
-        const matchesSearch = user.username
-          .toLowerCase()
-          .includes(searchQuery.value.toLowerCase());
+        const matchesSearch = user.username.toLowerCase().includes(searchQuery.value.toLowerCase());
         const withinAge = user.age >= ageMin.value && user.age <= ageMax.value;
-        const withinFame =
-          user.famerating >= fameMin.value && user.famerating <= fameMax.value;
+        const withinFame = user.famerating >= fameMin.value && user.famerating <= fameMax.value;
         const distance = calculateDistance(user.location);
         const withinDistance = distance <= maxDistance.value;
         const tagList = selectedTags.value.map((t) => t.toLowerCase());
         const hasTags =
           tagList.length === 0 ||
-          tagList.every((tag) =>
-            user.interests.some((i) => i.toLowerCase().includes(tag))
-          );
+          tagList.every((tag) => user.interests.some((i) => i.toLowerCase().includes(tag)));
         return matchesSearch && withinAge && withinFame && withinDistance && hasTags;
       });
 
@@ -416,7 +420,6 @@ export default {
 };
 </script>
 
-
 <style scoped>
 /* --- Général --- */
 .research-page {
@@ -433,7 +436,6 @@ h1 {
 .filters {
   margin-bottom: 1.5rem;
   margin-top: 5rem;
-
 }
 
 /* --- Input recherche --- */

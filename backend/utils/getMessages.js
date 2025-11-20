@@ -65,7 +65,7 @@ const getMessages = async (req, res) => {
       messages: messages,
     });
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    // console.error("Error fetching messages:", error);
     res.status(500).json({
       message: "Error fetching messages",
       error: error.message,

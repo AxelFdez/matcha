@@ -20,7 +20,7 @@ async function resetEmail(req, res) {
 
 		res.status(200).json({ alert: { type: "success", message: "Email sent" } });
 	} catch (error) {
-		console.log("Error in resetEmail", error);
+		// console.log("Error in resetEmail", error);
 		res.status(503).json({ message: error.message });
 	}
 }

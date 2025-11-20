@@ -25,7 +25,7 @@ async function getUserPhoto(req, res) {
 
 		res.sendFile(fullPath);
 	} catch (error) {
-		console.log("Error in getUserPhoto:", error);
+		// console.log("Error in getUserPhoto:", error);
 		return res.status(500).json({ message: "Internal server error" });
 	}
 }

@@ -30,6 +30,18 @@
         />
       </div>
 
+      <!-- Distance Range -->
+      <div class="filter-group">
+        <label class="filter-label">Distance</label>
+        <select v-model="filters.distanceRange" @change="applyFilters" class="filter-select">
+          <option value="">Toutes distances</option>
+          <option value="0-5">0-5 km</option>
+          <option value="5-50">5-50 km</option>
+          <option value="50-500">50-500 km</option>
+          <option value="500+">+500 km</option>
+        </select>
+      </div>
+
       <!-- Sort By -->
       <div class="filter-group">
         <label class="filter-label">Trier par</label>
@@ -79,19 +91,19 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted, computed } from 'vue';
-import Multiselect from 'vue-multiselect';
-import RangeSlider from './RangeSlider.vue';
-import { fetchData } from '../config/api';
+import { reactive, ref, onMounted, computed } from "vue";
+import Multiselect from "vue-multiselect";
+import RangeSlider from "./RangeSlider.vue";
+import { fetchData } from "../config/api";
 import { useStore } from "vuex";
 
 export default {
-  name: 'FilterBar',
+  name: "FilterBar",
   components: {
     Multiselect,
-    RangeSlider
+    RangeSlider,
   },
-  emits: ['apply-filters', 'reset-filters'],
+  emits: ["apply-filters", "reset-filters"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -104,14 +116,15 @@ export default {
     const filters = reactive({
       ageGap: {
         min: 18,
-        max: 99
+        max: 99,
       },
       fameRatingGap: {
         min: 0,
-        max: 1000
+        max: 1000,
       },
+      distanceRange: "",
       tags: [],
-      sortBy: '',
+      sortBy: "",
     });
 
     const addTag = (newTag) => {
@@ -129,7 +142,7 @@ export default {
       if (filters.ageGap.min !== 18 || filters.ageGap.max !== 99) {
         appliedFilters.ageGap = {
           min: Number(filters.ageGap.min),
-          max: Number(filters.ageGap.max)
+          max: Number(filters.ageGap.max),
         };
       }
 
@@ -137,8 +150,13 @@ export default {
       if (filters.fameRatingGap.min !== 0 || filters.fameRatingGap.max !== 1000) {
         appliedFilters.fameRatingGap = {
           min: Number(filters.fameRatingGap.min),
-          max: Number(filters.fameRatingGap.max)
+          max: Number(filters.fameRatingGap.max),
         };
+      }
+
+      // Distance range
+      if (filters.distanceRange) {
+        appliedFilters.distanceRange = filters.distanceRange;
       }
 
       // Tags
@@ -154,7 +172,7 @@ export default {
       appliedFilters.sexPref = currentUserSexPref.value;
       appliedFilters.gender = currentUserGender.value;
 
-      emit('apply-filters', appliedFilters);
+      emit("apply-filters", appliedFilters);
     };
 
     const resetFilters = () => {
@@ -162,23 +180,24 @@ export default {
       filters.ageGap.max = 99;
       filters.fameRatingGap.min = 0;
       filters.fameRatingGap.max = 1000;
+      filters.distanceRange = "";
       filters.tags = [];
-      filters.sortBy = '';
+      filters.sortBy = "";
 
-      emit('reset-filters');
+      emit("reset-filters");
     };
 
     const loadAvailableTags = async () => {
       try {
-        const response = await fetchData('/getAllTags', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetchData("/getAllTags", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
         });
         if (response && response.data && response.data.tags) {
           availableTags.value = response.data.tags;
         }
       } catch (error) {
-        console.error('Error loading tags:', error);
+        // // console.error('Error loading tags:', error);
       }
     };
 
@@ -193,12 +212,11 @@ export default {
       applyFilters,
       resetFilters,
       currentUserGender,
-      currentUserSexPref
+      currentUserSexPref,
     };
-  }
+  },
 };
 </script>
-
 
 <style scoped>
 .filter-bar {

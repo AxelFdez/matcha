@@ -92,7 +92,7 @@ const getConversations = async (req, res) => {
       conversations: conversations,
     });
   } catch (error) {
-    console.error("Error fetching conversations:", error);
+    // console.error("Error fetching conversations:", error);
     res.status(500).json({
       message: "Error fetching conversations",
       error: error.message,

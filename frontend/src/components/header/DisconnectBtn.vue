@@ -17,7 +17,7 @@ export default {
 
     const logout = () => {
       store.commit("setIsLoading", true);
-      console.log("logout function");
+      // console.log("logout function");
 
       setTimeout( async () => {
         await fetchData("/logout", {

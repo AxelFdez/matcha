@@ -1,44 +1,39 @@
 <template>
   <div class="login--error--email--container fade-In">
-
     <div class="text">
       <h3>{{ $t("errorTitle") }}</h3>
-      <p
-        id="sub--title"
-        v-html="replace_newLine_to_br_tags($t('emailNotVerifiedText'))"
-      ></p>
+      <p id="sub--title" v-html="replace_newLine_to_br_tags($t('emailNotVerifiedText'))"></p>
     </div>
     <div class="return--btn">
-      <span
-        @click="goToLoginPage"
-        ><i class="fa-solid fa-circle-arrow-left"></i
-      ></span>
+      <span @click="goToLoginPage"><i class="fa-solid fa-circle-arrow-left"></i></span>
     </div>
     <div class="send--email--verif">
+      <TextButton
+        :class="{ hide: reSendEmailClicked }"
+        :btnName="$t('reSendEmail')"
+        @click="sendEmail()"
+      ></TextButton>
+      <div :class="{ spinner: reSendEmailClicked && !serverResponse }"></div>
 
-      <TextButton :class="{ hide: reSendEmailClicked }" :btnName="$t('reSendEmail')" @click="sendEmail()"></TextButton>
-      <div :class="{ spinner: reSendEmailClicked  && !serverResponse}"></div>
-
-      <span
-        :class="{ hide: !reSendEmailClicked }"
-        class="fade-In"
-        id="serverResponse"
-        >
-        <p v-if="serverResponse === 200" style="color: darkgreen">{{ $t("reSendEmail_emailSent") }}</p>
-        <p v-if="serverResponse === 400" style="color: darkgreen">{{ $t("reSendEmail_alreadyVerified") }}</p>
+      <span :class="{ hide: !reSendEmailClicked }" class="fade-In" id="serverResponse">
+        <p v-if="serverResponse === 200" style="color: darkgreen">
+          {{ $t("reSendEmail_emailSent") }}
+        </p>
+        <p v-if="serverResponse === 400" style="color: darkgreen">
+          {{ $t("reSendEmail_alreadyVerified") }}
+        </p>
         <p v-if="serverResponse === 404">{{ $t("reSendEmail_userNotMatch") }}</p>
         <p v-if="serverResponse === 503">{{ $t("reSendEmail_serverError") }}</p>
-        </span
-      >
+      </span>
     </div>
   </div>
 </template>
 
-  <script>
+<script>
 // import { useI18n } from "vue-i18n";
 import { replace_newLine_to_br_tags } from "@/libft/libft.js";
 import { ref } from "vue";
-import TextButton from '@/components/TextButton.vue';
+import TextButton from "@/components/TextButton.vue";
 import { fetchData } from "../../config/api";
 
 export default {
@@ -54,9 +49,9 @@ export default {
 
   methods: {
     goToLoginPage() {
-      this.$store.commit('setIsLoginFormSent', false);
-      this.$store.commit('setServerMessage', '');
-      this.$router.push({ name: 'LoginPage' });
+      this.$store.commit("setIsLoginFormSent", false);
+      this.$store.commit("setServerMessage", "");
+      this.$router.push({ name: "LoginPage" });
     },
     showChangeEmailForm() {
       this.reSendEmailClicked = true;
@@ -65,7 +60,6 @@ export default {
   },
 
   setup(props) {
-
     const reSendEmailClicked = ref(false);
     const serverResponse = ref(null);
 
@@ -73,9 +67,8 @@ export default {
       email: "",
     });
 
-
     async function sendEmail() {
-      console.log("reSendEmail function ", props.username);
+      // console.log("reSendEmail function ", props.username);
       reSendEmailClicked.value = true;
       const formData = {
         username: props.username,
@@ -89,7 +82,7 @@ export default {
           body: JSON.stringify(formData),
         });
         const responseData = response.data;
-        console.log("reSendEmail response:", responseData);
+        // console.log("reSendEmail response:", responseData);
         // reSendEmailClicked.value = true;
         switch (response.response.status) {
           case 200:
@@ -106,11 +99,11 @@ export default {
             break;
           default:
             serverResponse.value = 503;
-            console.error("Unexpected status:", response.response.status);
+            // console.error("Unexpected status:", response.response.status);
             break;
         }
       } catch (error) {
-        console.error("Error reSendEmail:", error);
+        // console.error("Error reSendEmail:", error);
         serverResponse.value = 503;
       }
     }
@@ -126,33 +119,32 @@ export default {
 };
 </script>
 
-  <style lang=scss>
-
+<style lang="scss">
 .register--form {
-    display: grid;
-    justify-items: center;
+  display: grid;
+  justify-items: center;
 
-    input {
-      padding: 6px;
-      margin: 10px;
-      width: 100%;
-      border: none;
-      outline: none;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 600;
-      // font-size: 1.2rem;
-      background-color: var(--purple-placeholder-bg);
-      color: var(--purple);
-    }
-
-    input::placeholder {
-      color: white;
-      font-weight: 400;
-
-      /* Couleur du placeholder */
-    }
+  input {
+    padding: 6px;
+    margin: 10px;
+    width: 100%;
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    // font-size: 1.2rem;
+    background-color: var(--purple-placeholder-bg);
+    color: var(--purple);
   }
+
+  input::placeholder {
+    color: white;
+    font-weight: 400;
+
+    /* Couleur du placeholder */
+  }
+}
 
 .login--error--email--container {
   position: relative;
@@ -215,8 +207,8 @@ export default {
 
   .send--email--verif {
     // margin: 0 auto 15px auto;
-      display: grid;
-      justify-content: center;
+    display: grid;
+    justify-content: center;
     // #btn {
     //   p {
     //     width: fit-content;

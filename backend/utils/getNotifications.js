@@ -4,7 +4,7 @@ const pool = require("../config/connectBdd");
 async function getNotifications(req, res) {
   try {
     const userId = req.user.id;
-    console.log("Fetching notifications for userId:", userId);
+    // console.log("Fetching notifications for userId:", userId);
 
     const result = await pool.query("SELECT notifications FROM users WHERE id = $1", [userId]);
 
@@ -13,8 +13,8 @@ async function getNotifications(req, res) {
     }
 
     const notifications = result.rows[0].notifications || [];
-    console.log(`Found ${notifications.length} notifications for userId ${userId}`);
-    console.log("Notifications:", notifications);
+    // console.log(`Found ${notifications.length} notifications for userId ${userId}`);
+    // console.log("Notifications:", notifications);
 
     // format notifications
     const formattedNotifications = notifications.map((notification, index) => ({
@@ -22,7 +22,8 @@ async function getNotifications(req, res) {
       type: notification.title || notification.type || "Notification",
       title: notification.title || notification.type || "Notification",
       message: notification.body,
-      username: notification.username || (notification.body ? notification.body.split(' ')[0] : null),
+      username:
+        notification.username || (notification.body ? notification.body.split(" ")[0] : null),
       viewed: notification.viewed || false,
       createdAt: notification.createdAt || notification.date || new Date().toISOString(),
     }));
@@ -32,9 +33,9 @@ async function getNotifications(req, res) {
 
     res.status(200).json(formattedNotifications);
 
-    console.log(`Notifications sent for userId ${userId}`, formattedNotifications);
+    // console.log(`Notifications sent for userId ${userId}`, formattedNotifications);
   } catch (error) {
-    console.error("Erreur lors de la récupération des notifications:", error);
+    // console.error("Erreur lors de la récupération des notifications:", error);
     res
       .status(500)
       .json({ message: "Erreur du serveur lors de la récupération des notifications" });

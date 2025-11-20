@@ -14,7 +14,11 @@
         @swiper="onSwiper"
       >
         <swiper-slide v-for="(photo, index) in photos" :key="index">
-          <img :src="photo" :alt="`Photo ${index + 1}`" class="h-full w-full rounded-lg object-cover" />
+          <img
+            :src="photo"
+            :alt="`Photo ${index + 1}`"
+            class="h-full w-full rounded-lg object-cover"
+          />
         </swiper-slide>
       </swiper>
 
@@ -148,7 +152,11 @@ const parsePhotos = () => {
   });
 
   // 🎯 Mettre la photo de profil en premier si l'index existe
-  if (profilePictureIndex !== undefined && profilePictureIndex !== null && list[profilePictureIndex]) {
+  if (
+    profilePictureIndex !== undefined &&
+    profilePictureIndex !== null &&
+    list[profilePictureIndex]
+  ) {
     const profilePhoto = list[profilePictureIndex];
     // Retirer la photo de profil de sa position actuelle
     list.splice(profilePictureIndex, 1);
@@ -189,7 +197,7 @@ const toggleModal = () => {
   const realUsername = store.getters.getUserName;
   const viewedUsername = props.user.username;
   if (!ws || !realUsername || !viewedUsername) {
-    console.warn("WebSocket or usernames not available");
+    // console.warn("WebSocket or usernames not available");
     return;
   }
   // console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });

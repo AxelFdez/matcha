@@ -125,7 +125,7 @@ export default {
           store.commit("notifications/setConversations", resConv.data.conversations);
         }
       } catch (err) {
-        console.error("Erreur fetch initial header:", err);
+        // console.error("Erreur fetch initial header:", err);
       }
     };
 
@@ -144,7 +144,7 @@ export default {
               handleIncomingNotification(data);
             if (data.type === "chat" && data.message) handleIncomingMessage(data);
           } catch (err) {
-            console.error(err);
+            // console.error(err);
           }
         };
       }

@@ -13,13 +13,15 @@
           :class="{
             'text-red': inputs.newPassword.length > 0 && !inputs.passwordValid,
             'text-green': inputs.passwordValid,
-          }" />
+          }"
+        />
         <button
           type="button"
           class="password-toggle-btn"
           @click="inputs.showPassword = !inputs.showPassword"
-          v-if="inputs.newPassword.length > 0">
-          {{ inputs.showPassword ? '👁️' : '👁️' }}
+          v-if="inputs.newPassword.length > 0"
+        >
+          {{ inputs.showPassword ? "👁️" : "👁️" }}
         </button>
       </div>
 
@@ -27,9 +29,7 @@
       <div v-if="inputs.newPassword.length > 0" class="password-strength-tooltip">
         <div class="strength-header">
           <span class="strength-label">Force du mot de passe :</span>
-          <span
-            class="strength-value"
-            :class="passwordStrength.class">
+          <span class="strength-value" :class="passwordStrength.class">
             {{ passwordStrength.label }}
           </span>
         </div>
@@ -43,9 +43,7 @@
           <div class="criterion" :class="{ valid: passwordCriteria.hasLowercase }">
             Une lettre minuscule
           </div>
-          <div class="criterion" :class="{ valid: passwordCriteria.hasDigit }">
-            Un chiffre
-          </div>
+          <div class="criterion" :class="{ valid: passwordCriteria.hasDigit }">Un chiffre</div>
           <div class="criterion" :class="{ valid: passwordCriteria.hasSpecial }">
             Un caractère spécial (@$!%*?&)
           </div>
@@ -55,21 +53,32 @@
         </div>
       </div>
 
-      <input name="confirmPassword" type="password" :placeholder="$t('passwordConfirm')"
-        v-model="inputs.confirmPassword" required :maxlength="maxLength"
+      <input
+        name="confirmPassword"
+        type="password"
+        :placeholder="$t('passwordConfirm')"
+        v-model="inputs.confirmPassword"
+        required
+        :maxlength="maxLength"
         :class="{
           'text-red': inputs.confirmPassword.length > 0 && !inputs.passwordMatch,
           'text-green': inputs.passwordMatch,
-        }" />
-      <button :class="{ 'disabled--btn': !isFormValid }" :disabled="!isFormValid" class="submit--btn" type="submit">
+        }"
+      />
+      <button
+        :class="{ 'disabled--btn': !isFormValid }"
+        :disabled="!isFormValid"
+        class="submit--btn"
+        type="submit"
+      >
         {{ $t("resetPassword") }}
       </button>
     </form>
     <div v-if="passwordResetAction.type === 'success'" class="password--reset--msg--success">
-      <p>{{passwordResetAction.message}}</p>
+      <p>{{ passwordResetAction.message }}</p>
     </div>
     <div v-if="passwordResetAction.type === 'warning'" class="password--reset--msg--error">
-      <p>{{passwordResetAction.message}}</p>
+      <p>{{ passwordResetAction.message }}</p>
     </div>
   </div>
 </template>
@@ -79,8 +88,7 @@ import { ref, computed, watch } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { fetchData } from "@/config/api";
-import { useRoute } from 'vue-router';
-
+import { useRoute } from "vue-router";
 
 export default {
   name: "ResetPassword",
@@ -96,20 +104,74 @@ export default {
 
     // List of common English words that should not be used in passwords
     const COMMON_WORDS = [
-      'password', 'welcome', 'monkey', 'dragon', 'master', 'sunshine', 'princess',
-      'qwerty', 'football', 'baseball', 'basketball', 'letmein', 'trustno',
-      'superman', 'batman', 'michael', 'shadow', 'mustang', 'summer', 'love',
-      'hello', 'admin', 'user', 'test', 'login', 'access', 'secret', 'computer',
-      'internet', 'service', 'flower', 'purple', 'orange', 'starwars', 'killer',
-      'freedom', 'whatever', 'cookie', 'thomas', 'pepper', 'hunter', 'ranger',
-      'jordan', 'jennifer', 'london', 'matthew', 'yankees', 'thunder', 'ginger',
-      'buster', 'dakota', 'cowboy', 'silver', 'viking', 'falcon', 'warrior',
-      'phoenix', 'champion', 'panther', 'knight', 'diamond', 'golden', 'pepper'
+      "password",
+      "welcome",
+      "monkey",
+      "dragon",
+      "master",
+      "sunshine",
+      "princess",
+      "qwerty",
+      "football",
+      "baseball",
+      "basketball",
+      "letmein",
+      "trustno",
+      "superman",
+      "batman",
+      "michael",
+      "shadow",
+      "mustang",
+      "summer",
+      "love",
+      "hello",
+      "admin",
+      "user",
+      "test",
+      "login",
+      "access",
+      "secret",
+      "computer",
+      "internet",
+      "service",
+      "flower",
+      "purple",
+      "orange",
+      "starwars",
+      "killer",
+      "freedom",
+      "whatever",
+      "cookie",
+      "thomas",
+      "pepper",
+      "hunter",
+      "ranger",
+      "jordan",
+      "jennifer",
+      "london",
+      "matthew",
+      "yankees",
+      "thunder",
+      "ginger",
+      "buster",
+      "dakota",
+      "cowboy",
+      "silver",
+      "viking",
+      "falcon",
+      "warrior",
+      "phoenix",
+      "champion",
+      "panther",
+      "knight",
+      "diamond",
+      "golden",
+      "pepper",
     ];
 
     // Validate password complexity
     const validatePassword = (password) => {
-      if (!password || typeof password !== 'string') return false;
+      if (!password || typeof password !== "string") return false;
       if (password.length < 8) return false;
 
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -134,7 +196,7 @@ export default {
 
     // Password criteria computed
     const passwordCriteria = computed(() => {
-      const password = inputs.value.newPassword || '';
+      const password = inputs.value.newPassword || "";
 
       if (!password) {
         return {
@@ -143,7 +205,7 @@ export default {
           hasLowercase: false,
           hasDigit: false,
           hasSpecial: false,
-          noCommonWords: false
+          noCommonWords: false,
         };
       }
 
@@ -163,29 +225,30 @@ export default {
         hasLowercase: /[a-z]/.test(password),
         hasDigit: /\d/.test(password),
         hasSpecial: /[@$!%*?&]/.test(password),
-        noCommonWords: !hasCommonWord
+        noCommonWords: !hasCommonWord,
       };
     });
 
     // Password strength computed
     const passwordStrength = computed(() => {
       const criteria = passwordCriteria.value;
-      const validCount = Object.values(criteria).filter(v => v).length;
+      const validCount = Object.values(criteria).filter((v) => v).length;
 
       if (validCount === 6) {
-        return { label: 'Fort', class: 'strength-strong' };
+        return { label: "Fort", class: "strength-strong" };
       } else if (validCount >= 4) {
-        return { label: 'Moyen', class: 'strength-medium' };
+        return { label: "Moyen", class: "strength-medium" };
       } else {
-        return { label: 'Faible', class: 'strength-weak' };
+        return { label: "Faible", class: "strength-weak" };
       }
     });
 
     // Update validation flags
     const updateValidation = () => {
       inputs.value.passwordValid = validatePassword(inputs.value.newPassword);
-      inputs.value.passwordMatch = inputs.value.newPassword === inputs.value.confirmPassword &&
-                                     inputs.value.newPassword.length > 0;
+      inputs.value.passwordMatch =
+        inputs.value.newPassword === inputs.value.confirmPassword &&
+        inputs.value.newPassword.length > 0;
     };
 
     // Watch inputs for validation
@@ -208,48 +271,48 @@ export default {
     });
 
     // Propriété pour afficher un message de succès
-    const passwordResetAction = ref({ type: null, message: '' });
+    const passwordResetAction = ref({ type: null, message: "" });
 
     // Méthode asynchrone pour soumettre le formulaire
     async function submitForm(event) {
       event.preventDefault();
-      store.commit('setIsLoading', true);
+      store.commit("setIsLoading", true);
       const token = route.query.token;
       const email = route.query.email;
       const data = {
         password: inputs.value.newPassword,
         confirmPassword: inputs.value.confirmPassword,
         token: token,
-        email: email
+        email: email,
       };
       try {
-        const {response, data: responseData} = await fetchData("/resetPassword", {
+        const { response, data: responseData } = await fetchData("/resetPassword", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
         });
-        console.log("Réponse du serveur:", responseData);
+        // console.log("Réponse du serveur:", responseData);
 
         // Afficher un message de succès ou d'erreur
         if (responseData && responseData.alert) {
           passwordResetAction.value = responseData.alert;
         } else {
-          passwordResetAction.value = { type: 'warning', message: 'Une erreur est survenue' };
+          passwordResetAction.value = { type: "warning", message: "Une erreur est survenue" };
         }
 
         // Rediriger vers la page de connexion après 3 secondes en cas de succès
-        if (response.ok && responseData.alert.type === 'success') {
+        if (response.ok && responseData.alert.type === "success") {
           setTimeout(() => {
             router.push({ name: "LoginPage" });
           }, 3000);
         }
       } catch (error) {
-        console.error("Erreur lors de la soumission du formulaire:", error);
-        passwordResetAction.value = { type: 'warning', message: 'Erreur de connexion au serveur' };
+        // console.error("Erreur lors de la soumission du formulaire:", error);
+        passwordResetAction.value = { type: "warning", message: "Erreur de connexion au serveur" };
       } finally {
-        store.commit('setIsLoading', false);
+        store.commit("setIsLoading", false);
       }
     }
 
@@ -262,8 +325,8 @@ export default {
       passwordCriteria,
       passwordStrength,
     };
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -438,7 +501,6 @@ export default {
       margin: 0;
     }
   }
-
 }
 
 .submit--btn {
@@ -485,5 +547,4 @@ export default {
   color: red;
   text-align: center;
 }
-
 </style>

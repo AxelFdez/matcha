@@ -132,11 +132,13 @@ async function updateUser(req, res) {
         userUpdated.gender &&
         userUpdated.gender != "None" &&
         userUpdated.biography &&
+        userUpdated.biography.trim() !== "" &&
+        userUpdated.biography !== "bio here" &&
         userUpdated.sexualpreferences &&
         userUpdated.interests.length > 0 &&
         userUpdated.photos[0]
       ) {
-        console.log("User is now ready");
+        // console.log("User is now ready");
         updates.ready = true;
         const readyQuery = "UPDATE users SET ready = $1 WHERE id = $2";
         const readyValues = [true, user.id];
@@ -149,7 +151,7 @@ async function updateUser(req, res) {
       alert: { type: "success", message: "User updated" },
     });
   } catch (error) {
-    console.log("Error in updateUser", error);
+    // console.log("Error in updateUser", error);
     res.status(503).json({ alert: { type: "warning", message: "Error updating user" } });
   }
 }

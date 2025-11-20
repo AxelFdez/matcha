@@ -11,7 +11,7 @@ const REFRESH_TOKEN_EXPIRES_IN = "7d";
 
 async function loginUser(req, res) {
   try {
-    // console.log(req.body);
+    // // console.log(req.body);
     const { username, password } = req.body;
     // const user = await User.findOne({ username });
     const user = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
@@ -32,32 +32,31 @@ async function loginUser(req, res) {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
-    const refreshToken = jwt.sign(
-      { userId: user.rows[0]._id },
-      REFRESH_TOKEN_SECRET,
-      { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
-    );
+    const refreshToken = jwt.sign({ userId: user.rows[0]._id }, REFRESH_TOKEN_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    });
 
     user.rows[0].refreshToken = refreshToken;
 
     if (!user.rows[0].verified) {
-    	return res.status(401).json({ message: "Email not verified",
-            accessToken : accessToken,
-            refreshToken: refreshToken,
-            user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            verified: user.verified
-        }
-         });
+      return res.status(401).json({
+        message: "Email not verified",
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          verified: user.verified,
+        },
+      });
     }
 
     // Gérer la localisation en fonction de manualMode
     let locationData = user.rows[0].location || {};
 
     // Parser le JSON si c'est une string
-    if (typeof locationData === 'string') {
+    if (typeof locationData === "string") {
       locationData = JSON.parse(locationData);
     }
 
@@ -73,13 +72,13 @@ async function loginUser(req, res) {
       locationData.longitude = longitude;
       locationData.authorization = true;
 
-      console.log(`📍 Updating location for user ${username} (manualMode: false)`);
+      // console.log(`📍 Updating location for user ${username} (manualMode: false)`);
     } else if (!isManualMode) {
       locationData.authorization = false;
       locationData.manualMode = true;
-      console.log(`⚠️  No location provided for user ${username}`);
+      // console.log(`⚠️  No location provided for user ${username}`);
     } else {
-      console.log(`🔒 Skipping location update for user ${username} (manualMode: true)`);
+      // console.log(`🔒 Skipping location update for user ${username} (manualMode: true)`);
     }
 
     pool.query(
@@ -107,10 +106,8 @@ async function loginUser(req, res) {
       },
     });
   } catch (error) {
-    console.error("Erreur de connexion:", error);
-    res
-      .status(500)
-      .json({ message: "Erreur du serveur lors de la tentative de connexion" });
+    // console.error("Erreur de connexion:", error);
+    res.status(500).json({ message: "Erreur du serveur lors de la tentative de connexion" });
   }
 }
 

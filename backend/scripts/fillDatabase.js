@@ -1,36 +1,36 @@
-const { Pool } = require('pg');
-const { faker } = require('@faker-js/faker');
-const fs = require('fs').promises;
-const path = require('path');
-const cities = require('all-the-cities');
-require('dotenv').config();
+const { Pool } = require("pg");
+const { faker } = require("@faker-js/faker");
+const fs = require("fs").promises;
+const path = require("path");
+const cities = require("all-the-cities");
+require("dotenv").config();
 
-const USERS_PHOTOS_DIR = 'photos/users_photos';
+const USERS_PHOTOS_DIR = "photos/users_photos";
 
 // Fonction pour attendre que PostgreSQL soit prêt
 const waitForPostgres = async (maxRetries = 30, delay = 2000) => {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            const pool = new Pool({
-                host: process.env.PGHOST,
-                user: process.env.PGUSER,
-                password: process.env.PGPASSWORD,
-                database: process.env.PGDATABASE,
-                connectionTimeoutMillis: 5000,
-            });
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const pool = new Pool({
+        host: process.env.PGHOST,
+        user: process.env.PGUSER,
+        password: process.env.PGPASSWORD,
+        database: process.env.PGDATABASE,
+        connectionTimeoutMillis: 5000,
+      });
 
-            await pool.query('SELECT 1');
-            await pool.end();
-            console.log('PostgreSQL is ready for seeding!');
-            return true;
-        } catch (err) {
-            console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for PostgreSQL... (${err.message})`);
-            if (i < maxRetries - 1) {
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
+      await pool.query("SELECT 1");
+      await pool.end();
+      console.log("PostgreSQL is ready for seeding!");
+      return true;
+    } catch (err) {
+      console.log(`Attempt ${i + 1}/${maxRetries}: Waiting for PostgreSQL... (${err.message})`);
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
-    throw new Error('PostgreSQL is not ready after maximum retries');
+  }
+  throw new Error("PostgreSQL is not ready after maximum retries");
 };
 
 // Configuration de la base de données
@@ -42,7 +42,7 @@ const pool = new Pool({
 });
 
 // Filtrer les villes pour ne garder que celles de taille moyenne/grande (> 50k habitants)
-const largeCities = cities.filter(city => city.population > 50000);
+const largeCities = cities.filter((city) => city.population > 50000);
 
 // Fonction pour obtenir une ville aléatoire
 function getRandomCity() {
@@ -50,19 +50,19 @@ function getRandomCity() {
   return {
     name: city.name,
     country: city.country,
-    coordinates: [city.loc.coordinates[0], city.loc.coordinates[1]] // [longitude, latitude]
+    coordinates: [city.loc.coordinates[0], city.loc.coordinates[1]], // [longitude, latitude]
   };
 }
 
 // Fonction pour lire les métadonnées
 async function readMetadata(userFolder) {
   try {
-    const metadataPath = path.join(userFolder, 'metadata.txt');
-    const content = await fs.readFile(metadataPath, 'utf-8');
+    const metadataPath = path.join(userFolder, "metadata.txt");
+    const content = await fs.readFile(metadataPath, "utf-8");
 
     const metadata = {};
-    content.split('\n').forEach(line => {
-      const [key, value] = line.split(':').map(s => s.trim());
+    content.split("\n").forEach((line) => {
+      const [key, value] = line.split(":").map((s) => s.trim());
       if (key && value) {
         metadata[key] = value;
       }
@@ -76,12 +76,12 @@ async function readMetadata(userFolder) {
 
 // Fonction pour convertir age_category en âge numérique
 function getAgeFromCategory(category) {
-  switch(category) {
-    case 'young':
+  switch (category) {
+    case "young":
       return faker.number.int({ min: 18, max: 30 });
-    case 'adult':
+    case "adult":
       return faker.number.int({ min: 31, max: 55 });
-    case 'old':
+    case "old":
       return faker.number.int({ min: 56, max: 75 });
     default:
       return faker.number.int({ min: 18, max: 75 });
@@ -94,18 +94,17 @@ function generateFakeUser(metadata, userFolder) {
   const age = getAgeFromCategory(metadata.age_category);
 
   // Générer un prénom et nom cohérent avec le genre
-  const firstname = gender === 'male'
-    ? faker.person.firstName('male')
-    : faker.person.firstName('female');
+  const firstname =
+    gender === "male" ? faker.person.firstName("male") : faker.person.firstName("female");
   const lastname = faker.person.lastName();
 
   // Construire les chemins des photos
   const photos = [
-    path.join(userFolder, 'base.jpg'),
-    path.join(userFolder, 'variant_1.jpg'),
-    path.join(userFolder, 'variant_2.jpg'),
-    path.join(userFolder, 'variant_3.jpg'),
-    path.join(userFolder, 'variant_4.jpg')
+    path.join(userFolder, "base.jpg"),
+    path.join(userFolder, "variant_1.jpg"),
+    path.join(userFolder, "variant_2.jpg"),
+    path.join(userFolder, "variant_3.jpg"),
+    path.join(userFolder, "variant_4.jpg"),
   ];
 
   // Obtenir une ville aléatoire
@@ -130,11 +129,11 @@ function generateFakeUser(metadata, userFolder) {
     location: {
       authorization: faker.datatype.boolean(),
       manualMode: false,
-      type: 'Point',
+      type: "Point",
       coordinates: city.coordinates,
     },
     verified: true,
-    ready: true
+    ready: true,
   };
 }
 
@@ -153,14 +152,28 @@ async function insertUser(user) {
       RETURNING id;
     `;
     const values = [
-      user.username, user.password, user.firstname, user.lastname, user.email, user.gender,
-      user.sexualPreferences, user.biography, user.lastconnection, user.age, user.interests, user.photos,
-      user.profilePicture, user.fameRating, user.reported, JSON.stringify(user.location),
-      user.verified, user.ready
+      user.username,
+      user.password,
+      user.firstname,
+      user.lastname,
+      user.email,
+      user.gender,
+      user.sexualPreferences,
+      user.biography,
+      user.lastconnection,
+      user.age,
+      user.interests,
+      user.photos,
+      user.profilePicture,
+      user.fameRating,
+      user.reported,
+      JSON.stringify(user.location),
+      user.verified,
+      user.ready,
     ];
     const result = await pool.query(query, values);
     if (!result.rows.length) {
-      throw new Error('Insertion échouée');
+      throw new Error("Insertion échouée");
     }
     return result.rows[0].id;
   } catch (err) {
@@ -173,8 +186,8 @@ async function getUserFolders() {
   try {
     const entries = await fs.readdir(USERS_PHOTOS_DIR, { withFileTypes: true });
     return entries
-      .filter(entry => entry.isDirectory() && entry.name.startsWith('user_'))
-      .map(entry => path.join(USERS_PHOTOS_DIR, entry.name))
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith("user_"))
+      .map((entry) => path.join(USERS_PHOTOS_DIR, entry.name))
       .sort(); // Trier pour avoir user_000, user_001, etc.
   } catch (err) {
     throw new Error(`Erreur lecture dossier: ${err.message}`);
@@ -184,15 +197,15 @@ async function getUserFolders() {
 // Fonction principale
 (async function () {
   try {
-    console.log('Waiting for PostgreSQL to be ready for seeding...');
+    console.log("Waiting for PostgreSQL to be ready for seeding...");
     await waitForPostgres();
 
-    console.log('\n🔍 Recherche des utilisateurs avec photos...');
+    console.log("\n🔍 Recherche des utilisateurs avec photos...");
     const userFolders = await getUserFolders();
     console.log(`✅ ${userFolders.length} utilisateurs trouvés`);
     console.log(`🌍 Base de données: ${largeCities.length} villes disponibles\n`);
 
-    console.log('📝 Insertion des utilisateurs...\n');
+    console.log("📝 Insertion des utilisateurs...\n");
 
     let successCount = 0;
     let errorCount = 0;
@@ -210,23 +223,23 @@ async function getUserFolders() {
 
         successCount++;
         const folderName = path.basename(userFolder);
-        console.log(`✅ [${successCount}/${userFolders.length}] ${folderName} - ${user.firstname} ${user.lastname} (${user.gender}, ${user.age} ans) - ID: ${userId}`);
-
+        console.log(
+          `✅ [${successCount}/${userFolders.length}] ${folderName} - ${user.firstname} ${user.lastname} (${user.gender}, ${user.age} ans) - ID: ${userId}`
+        );
       } catch (err) {
         errorCount++;
-        console.error(`❌ Erreur pour ${path.basename(userFolder)}: ${err.message}`);
+        // console.error(`❌ Erreur pour ${path.basename(userFolder)}: ${err.message}`);
       }
     }
 
-    console.log('\n' + '='.repeat(60));
-    console.log('📊 RÉSULTAT FINAL');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("📊 RÉSULTAT FINAL");
+    console.log("=".repeat(60));
     console.log(`✅ Succès: ${successCount} utilisateurs`);
     console.log(`❌ Erreurs: ${errorCount} utilisateurs`);
-    console.log('='.repeat(60));
-
+    console.log("=".repeat(60));
   } catch (err) {
-    console.error('❌ Erreur critique:', err.message);
+    // console.error('❌ Erreur critique:', err.message);
     process.exit(1);
   } finally {
     await pool.end();

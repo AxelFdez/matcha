@@ -4,7 +4,7 @@ module.exports = async (req, res) => {
   try {
     const userId = req.user.id; // ID de l'utilisateur connecté
 
-    console.log("Fetching profile unlikes for user ID:", userId);
+    // console.log("Fetching profile unlikes for user ID:", userId);
 
     // Récupérer les IDs des personnes qui ont unliked le profil
     const unlikedByQuery = `
@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
     }
 
     const unlikedByIds = result.rows[0].ignoredby || [];
-    console.log("UnlikedBy IDs:", unlikedByIds);
+    // console.log("UnlikedBy IDs:", unlikedByIds);
 
     if (unlikedByIds.length === 0) {
       return res.status(200).json({ unlikes: [] });
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
           latitude = loc.latitude || loc.coordinates?.[0] || null;
           longitude = loc.longitude || loc.coordinates?.[1] || null;
         } catch (e) {
-          console.error("Error parsing location for user", user.id, e);
+          // console.error("Error parsing location for user", user.id, e);
         }
       }
 
@@ -78,7 +78,7 @@ module.exports = async (req, res) => {
 
     res.status(200).json({ unlikes });
   } catch (error) {
-    console.error("Error in getProfileUnlikes:", error);
+    // console.error("Error in getProfileUnlikes:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

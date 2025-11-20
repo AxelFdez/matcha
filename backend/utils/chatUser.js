@@ -141,37 +141,36 @@ async function chatUser(userId, message) {
     );
 
     // Format message for WebSocket response
-	const messageResponse = {
-		id: newMessage.id,
-		sender: user.id.toString(),
-		senderUser: user.username,
-		message: message.message,
-		date: newMessage.sent_at,
-	  };
+    const messageResponse = {
+      id: newMessage.id,
+      sender: user.id.toString(),
+      senderUser: user.username,
+      message: message.message,
+      date: newMessage.sent_at,
+    };
 
     // Send message to recipient if they're connected
-	const ws2 = clients.get(userRecipient.id.toString());
-	if (ws2 && ws2.readyState === WebSocket.OPEN) {
-	  ws2.send(
-		JSON.stringify({
-		  type: "chat",
-		  conversationId,
-		  message: messageResponse,
-		})
-	  );
-	}
+    const ws2 = clients.get(userRecipient.id.toString());
+    if (ws2 && ws2.readyState === WebSocket.OPEN) {
+      ws2.send(
+        JSON.stringify({
+          type: "chat",
+          conversationId,
+          message: messageResponse,
+        })
+      );
+    }
 
-	// Envoi au sender aussi (pour confirmation / affichage immédiat)
-	ws.send(
-	  JSON.stringify({
-		type: "chat",
-		conversationId,
-		message: messageResponse,
-	  })
-	);
-
+    // Envoi au sender aussi (pour confirmation / affichage immédiat)
+    ws.send(
+      JSON.stringify({
+        type: "chat",
+        conversationId,
+        message: messageResponse,
+      })
+    );
   } catch (error) {
-    console.error("Error in chatUser:", error);
+    // console.error("Error in chatUser:", error);
     ws.send(
       JSON.stringify({
         type: "error",

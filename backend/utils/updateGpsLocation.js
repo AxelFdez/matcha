@@ -5,8 +5,8 @@ module.exports = async (req, res) => {
     const userId = req.user.id; // ID de l'utilisateur connecté depuis le token JWT
     const { latitude, longitude, city, country } = req.body;
 
-    console.log("Updating GPS location for user ID:", userId);
-    console.log("New location:", { latitude, longitude, city, country });
+    // console.log("Updating GPS location for user ID:", userId);
+    // console.log("New location:", { latitude, longitude, city, country });
 
     // Validation des données
     if (!latitude || !longitude) {
@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
       country: country || "Inconnu",
       latitude: latitude,
       longitude: longitude,
-      manualMode: true // L'utilisateur a modifié manuellement sa position
+      manualMode: true, // L'utilisateur a modifié manuellement sa position
     };
 
     // Mettre à jour la localisation dans la base de données
@@ -37,23 +37,20 @@ module.exports = async (req, res) => {
       RETURNING id, location
     `;
 
-    const result = await pool.query(updateQuery, [
-      JSON.stringify(locationData),
-      userId
-    ]);
+    const result = await pool.query(updateQuery, [JSON.stringify(locationData), userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
-    console.log("GPS location updated successfully for user", userId);
+    // console.log("GPS location updated successfully for user", userId);
 
     res.status(200).json({
       message: "Localisation GPS mise à jour avec succès",
-      location: locationData
+      location: locationData,
     });
   } catch (error) {
-    console.error("Error in updateGpsLocation:", error);
+    // console.error("Error in updateGpsLocation:", error);
     res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };

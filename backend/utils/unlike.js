@@ -2,7 +2,7 @@ const WebSocket = require("ws");
 const pool = require("../config/connectBdd");
 
 async function unlike(userId, message) {
-  console.log("unlikeUser");
+  // console.log("unlikeUser");
   const { clients } = require("./websockets");
   const username = message.user;
   const userUnlikedM = message.userUnliked;
@@ -37,7 +37,9 @@ async function unlike(userId, message) {
     return;
   }
 
-  let userUnliked = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [userUnlikedM]);
+  let userUnliked = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
+    userUnlikedM,
+  ]);
   userUnliked = userUnliked.rows[0];
 
   if (!userUnliked) {
@@ -83,10 +85,7 @@ async function unlike(userId, message) {
   // Ajouter notification d'unlike
   await pool.query(
     "UPDATE users SET notifications = array_append(notifications, $1) WHERE id = $2",
-    [
-      { title: "unlike", body: `${user.username} unliked you` },
-      userUnliked.id,
-    ]
+    [{ title: "unlike", body: `${user.username} unliked you` }, userUnliked.id]
   );
 
   // Envoyer notification via WebSocket
@@ -124,14 +123,14 @@ async function unlike(userId, message) {
     // Supprimer la conversation associée au match
     try {
       const sortedParticipants = [user.id, userUnliked.id].sort((a, b) => a - b);
-      console.log(`Deleting conversation between ${user.username} and ${userUnliked.username}`);
+      // console.log(`Deleting conversation between ${user.username} and ${userUnliked.username}`);
       await pool.query(
         "DELETE FROM chat_conversations WHERE (user1_id = $1 AND user2_id = $2) OR (user1_id = $2 AND user2_id = $1)",
         [sortedParticipants[0], sortedParticipants[1]]
       );
-      console.log(`Conversation deleted between ${user.username} and ${userUnliked.username}`);
+      // console.log(`Conversation deleted between ${user.username} and ${userUnliked.username}`);
     } catch (error) {
-      console.error("Error deleting conversation:", error);
+      // console.error("Error deleting conversation:", error);
     }
 
     // Envoyer notifications unmatch via WebSocket
@@ -153,7 +152,7 @@ async function unlike(userId, message) {
       );
     }
 
-    console.log(`Unmatch detected! ${user.username} and ${userUnliked.username} are no longer matched`);
+    // console.log(`Unmatch detected! ${user.username} and ${userUnliked.username} are no longer matched`);
   }
 
   // Envoyer succès

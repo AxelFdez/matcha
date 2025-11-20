@@ -7,8 +7,11 @@
           <span
             v-if="isPhotoSet(0)"
             @click="setProfilePicture(0)"
-            :class="['star-icon', { 'active': profilePicture === 0 }]"
-            :title="profilePicture === 0 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
+            :class="['star-icon', { active: profilePicture === 0 }]"
+            :title="
+              profilePicture === 0 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'
+            "
+          >
             &#9733;
           </span>
           <img :src="images[0]" alt="" />
@@ -27,38 +30,32 @@
       </div>
       <!-- Deuxième rangée d'images -->
       <div class="row--pictures">
-        <div
-          class="picture"
-          v-for="(image, index) in images.slice(1, 3)"
-          :key="index + 1"
-        >
+        <div class="picture" v-for="(image, index) in images.slice(1, 3)" :key="index + 1">
           <span
             v-if="isPhotoSet(index + 1)"
             @click="setProfilePicture(index + 1)"
-            :class="['star-icon', { 'active': profilePicture === index + 1 }]"
-            :title="profilePicture === index + 1 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
+            :class="['star-icon', { active: profilePicture === index + 1 }]"
+            :title="
+              profilePicture === index + 1
+                ? 'Photo de profil actuelle'
+                : 'Définir comme photo de profil'
+            "
+          >
             &#9733;
           </span>
           <span
             v-if="isPhotoSet(index + 1)"
             @click="deletePhoto(index + 1)"
             class="delete-icon"
-            title="Supprimer cette photo">
+            title="Supprimer cette photo"
+          >
             <i class="fi fi-br-trash"></i>
           </span>
           <img :src="image" alt="" />
-          <span
-            v-if="canAddPhoto(index + 1)"
-            @click="triggerFileInput(index + 1)"
-            class="add-icon"
-          >
+          <span v-if="canAddPhoto(index + 1)" @click="triggerFileInput(index + 1)" class="add-icon">
             <i class="fi fi-br-add"></i>
           </span>
-          <span
-            v-else
-            class="add-icon disabled"
-            title="Ajoutez d'abord la photo précédente"
-          >
+          <span v-else class="add-icon disabled" title="Ajoutez d'abord la photo précédente">
             <i class="fi fi-br-lock"></i>
           </span>
           <input
@@ -72,38 +69,32 @@
       </div>
       <!-- Troisième rangée d'images -->
       <div class="row--pictures">
-        <div
-          class="picture"
-          v-for="(image, index) in images.slice(3, 5)"
-          :key="index + 3"
-        >
+        <div class="picture" v-for="(image, index) in images.slice(3, 5)" :key="index + 3">
           <span
             v-if="isPhotoSet(index + 3)"
             @click="setProfilePicture(index + 3)"
-            :class="['star-icon', { 'active': profilePicture === index + 3 }]"
-            :title="profilePicture === index + 3 ? 'Photo de profil actuelle' : 'Définir comme photo de profil'">
+            :class="['star-icon', { active: profilePicture === index + 3 }]"
+            :title="
+              profilePicture === index + 3
+                ? 'Photo de profil actuelle'
+                : 'Définir comme photo de profil'
+            "
+          >
             &#9733;
           </span>
           <span
             v-if="isPhotoSet(index + 3)"
             @click="deletePhoto(index + 3)"
             class="delete-icon"
-            title="Supprimer cette photo">
+            title="Supprimer cette photo"
+          >
             <i class="fi fi-br-trash"></i>
           </span>
           <img :src="image" alt="" />
-          <span
-            v-if="canAddPhoto(index + 3)"
-            @click="triggerFileInput(index + 3)"
-            class="add-icon"
-          >
+          <span v-if="canAddPhoto(index + 3)" @click="triggerFileInput(index + 3)" class="add-icon">
             <i class="fi fi-br-add"></i>
           </span>
-          <span
-            v-else
-            class="add-icon disabled"
-            title="Ajoutez d'abord la photo précédente"
-          >
+          <span v-else class="add-icon disabled" title="Ajoutez d'abord la photo précédente">
             <i class="fi fi-br-lock"></i>
           </span>
           <input
@@ -262,7 +253,7 @@ export default {
             }
           })
           .catch((error) => {
-            console.error("Erreur lors du téléchargement de l'image :", error);
+            // console.error("Erreur lors du téléchargement de l'image :", error);
             alert("Une erreur est survenue lors du téléchargement de l'image.");
           });
       } else {
@@ -305,10 +296,10 @@ export default {
           }
         })
         .catch((error) => {
-          console.error(
-            "Erreur lors de la mise à jour de la photo de profil :",
-            error
-          );
+          // console.error(
+            // "Erreur lors de la mise à jour de la photo de profil :",
+            // error
+          // );
           this.$store.commit("setAlertMessage", {
             type: "warning",
             message: "Erreur de connexion au serveur",
@@ -362,7 +353,7 @@ export default {
           }
         })
         .catch((error) => {
-          console.error("Erreur lors de la suppression de la photo :", error);
+          // console.error("Erreur lors de la suppression de la photo :", error);
           this.$store.commit("setAlertMessage", {
             type: "warning",
             message: "Erreur de connexion au serveur",

@@ -183,7 +183,7 @@ async function createUser(req, res) {
 
         res.status(201).json({ message: "User created" });
     } catch (error) {
-        console.log("Error in createUser", error);
+        // console.log("Error in createUser", error);
 
         if (error instanceof ValidationError) {
             res.status(400).json({ message: error.message });

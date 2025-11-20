@@ -1,13 +1,14 @@
 const pool = require("../config/connectBdd");
 
 module.exports = async function browseUsers(req, res) {
-  let { location, tags, ageGap, fameRatingGap, filterBy, sortBy } = req.query;
+  let { location, tags, ageGap, fameRatingGap, distanceRange, filterBy, sortBy } = req.query;
 
   // console.log("BrowseUsers called with:", {
   //   location,
   //   tags,
   //   ageGap,
   //   fameRatingGap,
+  //   distanceRange,
   //   filterBy,
   //   sortBy,
   // });
@@ -25,6 +26,7 @@ module.exports = async function browseUsers(req, res) {
   }
   if (typeof tags === "string") tags = JSON.parse(tags);
   if (typeof filterBy === "string") filterBy = JSON.parse(filterBy);
+  if (typeof distanceRange === "string") distanceRange = distanceRange.trim();
 
   try {
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -90,7 +92,14 @@ module.exports = async function browseUsers(req, res) {
         AND (sexualpreferences = 'both' OR sexualpreferences = $3)
     `;
 
-    const queryParams = [userId, genderFilterArray, user.gender, user.interests, userLocation[1], userLocation[0]];
+    const queryParams = [
+      userId,
+      genderFilterArray,
+      user.gender,
+      user.interests,
+      userLocation[1],
+      userLocation[0],
+    ];
     let paramIndex = 7; // déjà 6 params utilisés
 
     // Filtres supplémentaires
@@ -157,32 +166,51 @@ module.exports = async function browseUsers(req, res) {
       }
     }
 
+    // Distance range filter - sera appliqué avec un subquery
+    let distanceFilter = "";
+    if (distanceRange) {
+      switch (distanceRange) {
+        case "0-5":
+          distanceFilter = " AND distance <= 5";
+          break;
+        case "5-50":
+          distanceFilter = " AND distance > 5 AND distance <= 50";
+          break;
+        case "50-500":
+          distanceFilter = " AND distance > 50 AND distance <= 500";
+          break;
+        case "500+":
+          distanceFilter = " AND distance > 500";
+          break;
+      }
+    }
+
     // Sorting avec tris secondaires pour améliorer la pertinence
     let orderBy = "";
     switch (sortBy) {
       case "ageIncreasing":
-        orderBy = "age ASC, distance ASC";  // Tri secondaire par proximité
+        orderBy = "age ASC, distance ASC"; // Tri secondaire par proximité
         break;
       case "ageDecreasing":
-        orderBy = "age DESC, distance ASC";  // Tri secondaire par proximité
+        orderBy = "age DESC, distance ASC"; // Tri secondaire par proximité
         break;
       case "fameRatingIncreasing":
-        orderBy = "famerating ASC, distance ASC";  // Tri secondaire par proximité
+        orderBy = "famerating ASC, distance ASC"; // Tri secondaire par proximité
         break;
       case "fameRatingDecreasing":
-        orderBy = "famerating DESC, distance ASC";  // Tri secondaire par proximité
+        orderBy = "famerating DESC, distance ASC"; // Tri secondaire par proximité
         break;
       case "locationIncreasing":
-        orderBy = "distance ASC, shared_tags_count DESC NULLS LAST, famerating DESC";  // Tris secondaires par tags puis fame
+        orderBy = "distance ASC, shared_tags_count DESC NULLS LAST, famerating DESC"; // Tris secondaires par tags puis fame
         break;
       case "locationDecreasing":
-        orderBy = "distance DESC, shared_tags_count DESC NULLS LAST, famerating DESC";  // Tris secondaires par tags puis fame
+        orderBy = "distance DESC, shared_tags_count DESC NULLS LAST, famerating DESC"; // Tris secondaires par tags puis fame
         break;
       case "tagsDecreasing":
-        orderBy = "shared_tags_count DESC NULLS LAST, distance ASC";  // Tri secondaire par proximité
+        orderBy = "shared_tags_count DESC NULLS LAST, distance ASC"; // Tri secondaire par proximité
         break;
       case "tagsIncreasing":
-        orderBy = "shared_tags_count ASC NULLS FIRST, distance ASC";  // Tri secondaire par proximité
+        orderBy = "shared_tags_count ASC NULLS FIRST, distance ASC"; // Tri secondaire par proximité
         break;
       default:
         // Score intelligent combinant les 3 critères :
@@ -209,6 +237,11 @@ module.exports = async function browseUsers(req, res) {
             sin(radians((location->'coordinates'->1)::text::float))
           )) / 5)
         ) DESC`;
+    }
+
+    // Si on a un filtre de distance, on enveloppe la requête dans un subquery
+    if (distanceFilter) {
+      query = `SELECT * FROM (${query}) AS users_with_distance WHERE 1=1${distanceFilter}`;
     }
 
     query += ` ORDER BY ${orderBy}`;
@@ -243,7 +276,7 @@ module.exports = async function browseUsers(req, res) {
     if (!users.length) return res.status(404).json({ message: "No users found" });
     return res.status(200).json({ users });
   } catch (error) {
-    console.error("Error in browseUsers:", error);
+    // // console.error("Error in browseUsers:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

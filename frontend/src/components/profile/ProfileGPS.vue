@@ -38,32 +38,32 @@
         </button>
       </div>
       <div class="map-container">
-      <div class="map-wrapper">
-        <l-map
-          ref="map"
-          v-model:zoom="zoom"
-          :center="[currentLatitude, currentLongitude]"
-          :use-global-leaflet="false"
-          style="height: 500px; border-radius: 12px"
-        >
-          <l-tile-layer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            layer-type="base"
-            name="OpenStreetMap"
-          ></l-tile-layer>
-          <l-marker
-            :lat-lng="[markerLatitude, markerLongitude]"
-            :draggable="true"
-            @update:lat-lng="onMarkerDrag"
+        <div class="map-wrapper">
+          <l-map
+            ref="map"
+            v-model:zoom="zoom"
+            :center="[currentLatitude, currentLongitude]"
+            :use-global-leaflet="false"
+            style="height: 500px; border-radius: 12px"
           >
-            <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]">
-              <div class="custom-marker">
-                <i class="fa-solid fa-location-dot"></i>
-              </div>
-            </l-icon>
-          </l-marker>
-        </l-map>
-      </div>
+            <l-tile-layer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              layer-type="base"
+              name="OpenStreetMap"
+            ></l-tile-layer>
+            <l-marker
+              :lat-lng="[markerLatitude, markerLongitude]"
+              :draggable="true"
+              @update:lat-lng="onMarkerDrag"
+            >
+              <l-icon :icon-size="[32, 32]" :icon-anchor="[16, 32]">
+                <div class="custom-marker">
+                  <i class="fa-solid fa-location-dot"></i>
+                </div>
+              </l-icon>
+            </l-marker>
+          </l-map>
+        </div>
       </div>
 
       <div v-if="hasChanges" class="new-location">
@@ -175,7 +175,7 @@ export default {
           newCountry.value = data.address.country || "Inconnu";
         }
       } catch (error) {
-        console.error("Error fetching location name:", error);
+        // console.error("Error fetching location name:", error);
         newCity.value = "Inconnue";
         newCountry.value = "Inconnu";
       }
@@ -238,7 +238,7 @@ export default {
           // Afficher le message de succès
           const alertMsg = {
             type: "success",
-            message: "Localisation mise à jour avec succès!"
+            message: "Localisation mise à jour avec succès!",
           };
           store.commit("setAlertMessage", alertMsg);
           setTimeout(() => {
@@ -251,18 +251,18 @@ export default {
           isSaving.value = false;
           store.commit("setAlertMessage", {
             type: "warning",
-            message: response.data.message || "Erreur lors de la mise à jour"
+            message: response.data.message || "Erreur lors de la mise à jour",
           });
           setTimeout(() => {
             store.commit("clearAlertMessage");
           }, 3000);
         }
       } catch (error) {
-        console.error("Error saving location:", error);
+        // console.error("Error saving location:", error);
         isSaving.value = false;
         store.commit("setAlertMessage", {
           type: "warning",
-          message: "Erreur lors de la sauvegarde de la localisation"
+          message: "Erreur lors de la sauvegarde de la localisation",
         });
         setTimeout(() => {
           store.commit("clearAlertMessage");
@@ -280,7 +280,7 @@ export default {
         if (!navigator.geolocation) {
           store.commit("setAlertMessage", {
             type: "warning",
-            message: "La géolocalisation n'est pas supportée par votre navigateur"
+            message: "La géolocalisation n'est pas supportée par votre navigateur",
           });
           setTimeout(() => {
             store.commit("clearAlertMessage");
@@ -328,7 +328,8 @@ export default {
                 // Afficher le message de succès
                 store.commit("setAlertMessage", {
                   type: "success",
-                  message: "Mode automatique activé! Votre localisation sera mise à jour automatiquement."
+                  message:
+                    "Mode automatique activé! Votre localisation sera mise à jour automatiquement.",
                 });
                 setTimeout(() => {
                   store.commit("clearAlertMessage");
@@ -340,18 +341,18 @@ export default {
                 isResetting.value = false;
                 store.commit("setAlertMessage", {
                   type: "warning",
-                  message: response.data.message || "Erreur lors de la réinitialisation"
+                  message: response.data.message || "Erreur lors de la réinitialisation",
                 });
                 setTimeout(() => {
                   store.commit("clearAlertMessage");
                 }, 3000);
               }
             } catch (error) {
-              console.error("Error resetting to automatic location:", error);
+              // console.error("Error resetting to automatic location:", error);
               isResetting.value = false;
               store.commit("setAlertMessage", {
                 type: "warning",
-                message: "Erreur lors de la réinitialisation de la localisation"
+                message: "Erreur lors de la réinitialisation de la localisation",
               });
               setTimeout(() => {
                 store.commit("clearAlertMessage");
@@ -359,10 +360,11 @@ export default {
             }
           },
           (error) => {
-            console.error("Geolocation error:", error);
+            // console.error("Geolocation error:", error);
             store.commit("setAlertMessage", {
               type: "warning",
-              message: "Impossible d'obtenir votre position. Veuillez autoriser la géolocalisation."
+              message:
+                "Impossible d'obtenir votre position. Veuillez autoriser la géolocalisation.",
             });
             setTimeout(() => {
               store.commit("clearAlertMessage");
@@ -371,10 +373,10 @@ export default {
           }
         );
       } catch (error) {
-        console.error("Error in resetToAutomaticMode:", error);
+        // console.error("Error in resetToAutomaticMode:", error);
         store.commit("setAlertMessage", {
           type: "warning",
-          message: "Erreur lors de la réinitialisation"
+          message: "Erreur lors de la réinitialisation",
         });
         setTimeout(() => {
           store.commit("clearAlertMessage");
@@ -653,7 +655,7 @@ export default {
   }
 }
 
-.map-container{
+.map-container {
   display: flex;
   justify-content: center;
 }

@@ -512,7 +512,7 @@ export default {
       const msgs = store.getters["notifications/getConversationMessages"](
         selectedConversation.value.id
       );
-      console.log("[COMPUTED MESSAGES] Pour conv", selectedConversation.value.id, msgs);
+      // console.log("[COMPUTED MESSAGES] Pour conv", selectedConversation.value.id, msgs);
       return msgs;
     });
 
@@ -571,7 +571,7 @@ export default {
           showProfileModal.value = true;
         }
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       } finally {
         loadingProfile.value = false;
       }
@@ -588,7 +588,7 @@ export default {
           };
         }
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       }
     };
 
@@ -626,7 +626,7 @@ export default {
         const res = await fetchData("/notifications", { method: "GET" });
         store.commit("notifications/setNotifications", Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         store.commit("notifications/setNotifications", []);
       }
     };
@@ -639,7 +639,7 @@ export default {
         if (res.response.ok && res.data?.conversations)
           store.commit("notifications/setConversations", res.data.conversations);
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         store.commit("notifications/setConversations", []);
       } finally {
         chatLoading.value = false;
@@ -659,7 +659,7 @@ export default {
             messages: res.data.messages,
           });
       } catch (err) {
-        console.error(err);
+        // console.error(err);
         store.commit("notifications/setMessages", {
           conversationId: conversation.id,
           messages: [],
@@ -706,7 +706,7 @@ export default {
           tempMessage.temp = false;
         }
       } catch (err) {
-        console.error(err);
+        // console.error(err);
       } finally {
         sendingMessage.value = false;
       }
@@ -742,11 +742,11 @@ export default {
       };
 
       store.dispatch("notifications/addIncomingMessage", msg);
-      console.log("[HANDLE INCOMING MESSAGE] Avant commit:", msg);
+      // console.log("[HANDLE INCOMING MESSAGE] Avant commit:", msg);
 
       store.dispatch("notifications/addIncomingMessage", msg);
 
-      console.log("[HANDLE INCOMING MESSAGE] selectedConversation:", selectedConversation.value);
+      // console.log("[HANDLE INCOMING MESSAGE] selectedConversation:", selectedConversation.value);
       // Si je suis dans la conversation, scroll et mettre à jour
       if (selectedConversation.value && selectedConversation.value.id === msg.conversationId) {
         // Ajoute directement le message dans la conversation affichée
@@ -787,21 +787,21 @@ export default {
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log("[WS MESSAGE RECEIVED]", data);
+            // // console.log("[WS MESSAGE RECEIVED]", data);
 
             // Notifications
             if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type)) {
-              console.log("[WS NOTIF] Handling notification", data);
+              // console.log("[WS NOTIF] Handling notification", data);
               handleIncomingNotification(data);
             }
 
             // Chat messages
             if (data.type === "chat" && data.message) {
-              console.log("[WS CHAT] Handling chat message", data);
+              // console.log("[WS CHAT] Handling chat message", data);
               handleIncomingMessage(data);
             }
           } catch (err) {
-            console.error("[WS ERROR] parsing message", err);
+            // console.error("[WS ERROR] parsing message", err);
           }
         };
       }

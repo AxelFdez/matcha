@@ -10,9 +10,7 @@
         <div class="icon success-icon">✓</div>
         <h2>Email vérifié avec succès !</h2>
         <p>Votre adresse email a été confirmée. Vous pouvez maintenant vous connecter.</p>
-        <router-link class="btn-primary" :to="{ name: 'LoginPage' }">
-          Se connecter
-        </router-link>
+        <router-link class="btn-primary" :to="{ name: 'LoginPage' }"> Se connecter </router-link>
       </div>
 
       <div v-else class="error-state">
@@ -28,18 +26,18 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { fetchData } from '@/config/api';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { fetchData } from "@/config/api";
 
 export default {
-  name: 'VerifyEmailPage',
+  name: "VerifyEmailPage",
 
   setup() {
     const route = useRoute();
     const isLoading = ref(true);
     const isSuccess = ref(false);
-    const errorMessage = ref('');
+    const errorMessage = ref("");
 
     const verifyEmail = async () => {
       const token = route.query.token;
@@ -47,29 +45,30 @@ export default {
       if (!token) {
         isLoading.value = false;
         isSuccess.value = false;
-        errorMessage.value = 'Token de vérification manquant.';
+        errorMessage.value = "Token de vérification manquant.";
         return;
       }
 
       try {
-        const response = await fetchData('/verifyEmail', {
-          method: 'POST',
+        const response = await fetchData("/verifyEmail", {
+          method: "POST",
           body: JSON.stringify({ token }),
           headers: {
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         });
 
         if (response.response.status === 200) {
           isSuccess.value = true;
         } else {
           isSuccess.value = false;
-          errorMessage.value = response.data.message || 'Une erreur est survenue lors de la vérification.';
+          errorMessage.value =
+            response.data.message || "Une erreur est survenue lors de la vérification.";
         }
       } catch (error) {
         isSuccess.value = false;
-        errorMessage.value = 'Erreur de connexion au serveur. Veuillez réessayer plus tard.';
-        console.error('Erreur lors de la vérification de l\'email:', error);
+        errorMessage.value = "Erreur de connexion au serveur. Veuillez réessayer plus tard.";
+        // console.error('Erreur lors de la vérification de l\'email:', error);
       } finally {
         isLoading.value = false;
       }
@@ -82,9 +81,9 @@ export default {
     return {
       isLoading,
       isSuccess,
-      errorMessage
+      errorMessage,
     };
-  }
+  },
 };
 </script>
 

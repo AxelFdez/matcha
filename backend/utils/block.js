@@ -2,7 +2,7 @@ const WebSocket = require("ws");
 const pool = require("../config/connectBdd");
 
 async function blockUser(userId, message) {
-  console.log("blockUser");
+  // console.log("blockUser");
   const { clients } = require("./websockets");
   const username = message.user;
   const userBlockedM = message.userBlocked;
@@ -71,7 +71,7 @@ async function blockUser(userId, message) {
       user.id,
     ]);
 
-    console.log(`User ${user.username} blocked ${userBlocked.username}`);
+    // console.log(`User ${user.username} blocked ${userBlocked.username}`);
 
     // Envoyer succès
     ws.send(
@@ -102,7 +102,7 @@ async function blockUser(userId, message) {
       user.id,
     ]);
 
-    console.log(`User ${user.username} unblocked ${userBlocked.username}`);
+    // console.log(`User ${user.username} unblocked ${userBlocked.username}`);
 
     // Envoyer succès
     ws.send(

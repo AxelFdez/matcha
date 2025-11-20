@@ -48,12 +48,11 @@ export default {
     });
 
     async function checkAccessToken() {
-
       try {
         const response = await fetchData("/verifyToken", {
           method: "GET",
         });
-        // console.log(response.response);
+        // // console.log(response.response);
         const responseData = response.data;
         if (response.response.status === 200) {
           if (responseData.accessToken) {
@@ -66,17 +65,17 @@ export default {
             store.commit("setIsReady", true);
             store.commit("setIsConnected", true);
           } else {
-            console.log("not verified");
+            // console.log("not verified");
             store.commit("setIsReady", true);
             store.commit("setIsConnected", false);
           }
         } else if (response.response.status >= 400) {
-          localStorage.clear()
+          localStorage.clear();
           store.commit("setIsReady", true);
           store.commit("setIsConnected", false);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération du profil :", error);
+        // console.error("Erreur lors de la récupération du profil :", error);
         store.commit("setIsReady", true);
         store.commit("setIsConnected", false);
       }

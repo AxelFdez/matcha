@@ -31,10 +31,10 @@ async function sendEmail(to, refreshToken) {
     sendSmtpEmail.htmlContent = html;
 
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    // console.log("Verification email sent successfully:", data);
+    // // console.log("Verification email sent successfully:", data);
     return data;
   } catch (error) {
-    console.error("Error sending verification email:", error);
+    // console.error("Error sending verification email:", error);
     throw new Error("Error sending email");
   }
 }
@@ -47,7 +47,7 @@ async function sendEmailResetPassword(to, refreshToken) {
       token: refreshToken,
       email: to,
     });
-    console.log("Sending password reset email to:", to);
+    // console.log("Sending password reset email to:", to);
 
     const sendSmtpEmail = new brevo.SendSmtpEmail();
     sendSmtpEmail.sender = { name: "Matcha", email: "axesnake06@gmail.com" };
@@ -56,10 +56,10 @@ async function sendEmailResetPassword(to, refreshToken) {
     sendSmtpEmail.htmlContent = html;
 
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log("Password reset email sent successfully:", data.messageId);
+    // console.log("Password reset email sent successfully:", data.messageId);
     return data;
   } catch (error) {
-    console.error("Error sending password reset email:", error);
+    // console.error("Error sending password reset email:", error);
     throw new Error("Error sending email");
   }
 }

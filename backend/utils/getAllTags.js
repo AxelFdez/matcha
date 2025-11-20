@@ -8,11 +8,11 @@ module.exports = async function getAllTags(req, res) {
     );
 
     // Extraire les tags du résultat
-    const tags = result.rows.map(row => "#" + row.tag);
+    const tags = result.rows.map((row) => "#" + row.tag);
 
     res.status(200).json({ tags });
   } catch (error) {
-    console.error("Error in getAllTags:", error);
+    // console.error("Error in getAllTags:", error);
     res.status(500).json({ message: "Failed to fetch tags" });
   }
 };

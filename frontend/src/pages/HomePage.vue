@@ -38,52 +38,12 @@ export default {
     // Utilisation de la fonction de traduction
     const accountCreate_btn = t("accountCreate_btn");
 
-    // Initialisation de WebSocket
-    // function initWebSocket() {
-    //       const userId = localStorage.getItem('userId');
-    //       let ws = new WebSocket('ws://192.148.1.12:8081/?id=' + userId);
-
-    //       ws.onopen = function() {
-    //         console.log('Connection is open ...');
-    //         let message = JSON.stringify({type: 'test', userId: userId , message: 'Hello Server!'});
-    //         ws.send(message);
-    //       };
-
-    //       ws.onmessage = function(messageEvent) {
-    //           console.log('Server says: ' + messageEvent.data);
-    //           // if (messageEvent.data.type === 'pingLocation') {
-    //               console.log('I PASSED HERE');
-    //               ws.send(JSON.stringify({type: 'newLocation', userId: userId, location: GeoLocation}));
-    //           // }
-    //       };
-
-    //       ws.onclose = function() {
-    //           console.log('Connection is closed.');
-    //       };
-
-    //       ws.onerror = function(error) {
-    //           console.log('Error detected: ' + error);
-    //       };
-    // }
-
-    // // Nettoyer et fermer la connexion WebSocket lors du démontage du composant
-    // function cleanupWebSocket(ws) {
-    //   if (ws) {
-    //     ws.close();
-    //   }
-    // }
-
-    // function submitTest(ws) {
-    //   let message = JSON.stringify({type: 'like', userId:'66406489327b4f1c5543f281' , message: {user: 'Axesnake', userLiked: 'Axou'}});
-    //   ws.send(message);
-    // }
-
     function handleFileUpload(event, selectedFiles) {
       selectedFiles.value = event.target.files;
     }
 
     async function submitPhotos(selectedFiles) {
-  console.log("selectedFiles = ", selectedFiles.value);
+  // console.log("selectedFiles = ", selectedFiles.value);
   if (!selectedFiles.value) {
     alert("Please select files first.");
     return;
@@ -96,27 +56,10 @@ export default {
 
   // Vérification de ce qui est ajouté à formData
   formData.forEach((value, key) => {
-    console.log(`${key}: ${value.name}`); // Assumant que 'value' est un fichier
+    // console.log(`${key}: ${value.name}`); // Assumant que 'value' est un fichier
   });
 
-  // try {
-  //   const response = await fetch('/updateUser', {
-  //     method: 'POST',
-  //     body: formData,
-  //     // En-tête Content-Type doit être omis pour permettre au navigateur de le définir
-  //     headers: {
-  //       'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NjQxYmUwYmMyNjczNjYwN2NhZDg4NTciLCJlbWFpbCI6ImF4ZXNuYWtlQGhvdG1haWwuZnIiLCJpYXQiOjE3MTU1OTY4MTgsImV4cCI6MTcxNTU5NzcxOH0.F-yk4q2UVD5kiyu45t6GGnYHI4ooU4xcm7juW521LB0',
-  //     },
-  //   });
-  //   const result = await response.json();
-  //   console.log(result);
-  // } catch (error) {
-  //   console.error('Error uploading files:', error);
-  // }
 }
-
-    // onMounted(initWebSocket);
-    // onUnmounted(cleanupWebSocket);
 
     return { handleFileUpload, submitPhotos, accountCreate_btn};
   },

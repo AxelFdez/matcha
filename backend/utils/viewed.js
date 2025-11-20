@@ -5,24 +5,27 @@ async function viewedUser(userId, message) {
   const { clients } = require("./websockets");
   const ws = clients.get(userId.toString());
 
-  console.log("viewedUser called with userId:", userId, "message:", message);
+  // console.log("viewedUser called with userId:", userId, "message:", message);
 
   try {
     // 🔹 Récupérer l'utilisateur qui regarde
-    const userRes = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [message.user]);
+    const userRes = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
+      message.user,
+    ]);
     const user = userRes.rows[0];
     if (!user) {
-      console.warn("Viewer not found in DB:", message.user);
+      // console.warn("Viewer not found in DB:", message.user);
       return;
     }
 
     // 🔹 Récupérer l'utilisateur regardé
-    const userViewedRes = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1)", [
-      message.userViewed,
-    ]);
+    const userViewedRes = await pool.query(
+      "SELECT * FROM users WHERE LOWER(username) = LOWER($1)",
+      [message.userViewed]
+    );
     const userViewed = userViewedRes.rows[0];
     if (!userViewed) {
-      console.warn("Viewed user not found in DB:", message.userviewed);
+      // console.warn("Viewed user not found in DB:", message.userviewed);
       return;
     }
 
@@ -30,8 +33,11 @@ async function viewedUser(userId, message) {
     const userBlacklist = user.blacklist || [];
     const userViewedBlacklist = userViewed.blacklist || [];
 
-    if (userBlacklist.includes(userViewed.id.toString()) || userViewedBlacklist.includes(user.id.toString())) {
-      console.log(`View notification blocked: ${user.username} or ${userViewed.username} has blocked the other`);
+    if (
+      userBlacklist.includes(userViewed.id.toString()) ||
+      userViewedBlacklist.includes(user.id.toString())
+    ) {
+      // console.log(`View notification blocked: ${user.username} or ${userViewed.username} has blocked the other`);
       return; // Don't generate notification or update viewedby for blocked users
     }
 
@@ -48,9 +54,9 @@ async function viewedUser(userId, message) {
     );
 
     if (updateViewedRes.rows.length === 0) {
-      console.log(`${user.username} already viewed ${userViewed.username}`);
+      // console.log(`${user.username} already viewed ${userViewed.username}`);
     } else {
-      console.log("Updated viewedby:", updateViewedRes.rows[0].viewedby);
+      // console.log("Updated viewedby:", updateViewedRes.rows[0].viewedby);
 
       // 🔹 Mettre à jour fameRating
       const newFameRating = (userViewed.famerating || 0) + 2;
@@ -79,7 +85,7 @@ async function viewedUser(userId, message) {
     // 🔹 Confirmer au viewer
     // ws.send(JSON.stringify({ type: "success", userId, message: { title: "viewed" } }));
   } catch (error) {
-    console.error("Error in viewedUser:", error);
+    // console.error("Error in viewedUser:", error);
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(
         JSON.stringify({

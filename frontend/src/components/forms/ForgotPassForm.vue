@@ -86,13 +86,13 @@ export default {
     function submitForm(event) {
       //   store.commit("isForgotFormSent", true);
       event.preventDefault();
-      console.log(event.target.email.value);
+      // console.log(event.target.email.value);
       store.commit("setIsLoading", true);
       // Récupérer les données du formulaire
       const formData = {
         email: event.target.email.value,
       };
-      console.log("submitFormForgot");
+      // console.log("submitFormForgot");
       setTimeout(() => {
         store.dispatch("forgotPasswordForm", formData);
       }, 1000);

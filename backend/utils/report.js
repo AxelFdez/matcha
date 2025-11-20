@@ -2,7 +2,7 @@ const WebSocket = require("ws");
 const pool = require("../config/connectBdd");
 
 async function reportUser(userId, message) {
-  console.log("reportUser");
+  // console.log("reportUser");
   const { clients } = require("./websockets");
   const username = message.user;
   const userReportedM = message.userReported;
@@ -55,7 +55,7 @@ async function reportUser(userId, message) {
   const newReportedCount = (userReported.reported || 0) + 1;
   await pool.query("UPDATE users SET reported = $1 WHERE id = $2", [newReportedCount, userReported.id]);
 
-  console.log(`User ${userReported.username} reported by ${user.username}. Total reports: ${newReportedCount}`);
+  // console.log(`User ${userReported.username} reported by ${user.username}. Total reports: ${newReportedCount}`);
 
   // Ajouter notification au user reporté
   await pool.query("UPDATE users SET notifications = array_append(notifications, $1) WHERE id = $2", [

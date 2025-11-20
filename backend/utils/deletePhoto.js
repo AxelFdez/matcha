@@ -34,10 +34,10 @@ async function deletePhoto(req, res) {
       const fullPath = path.join(__dirname, "..", photoPath);
       if (fs.existsSync(fullPath)) {
         fs.unlinkSync(fullPath);
-        console.log(`Photo deleted: ${fullPath}`);
+        // console.log(`Photo deleted: ${fullPath}`);
       }
     } catch (fileError) {
-      console.error("Error deleting file:", fileError);
+      // console.error("Error deleting file:", fileError);
       // On continue même si la suppression du fichier échoue
     }
 
@@ -74,7 +74,7 @@ async function deletePhoto(req, res) {
     await pool.query(updateQuery, updateValues);
 
     // Vérifier si l'utilisateur a encore au moins une photo
-    const hasPhotos = updatedPhotos.some(photo => photo !== null);
+    const hasPhotos = updatedPhotos.some((photo) => photo !== null);
 
     // Si l'utilisateur n'a plus de photos et était ready, le marquer comme not ready
     if (!hasPhotos && user.ready) {
@@ -85,7 +85,7 @@ async function deletePhoto(req, res) {
       alert: { type: "success", message: "Photo deleted successfully" },
     });
   } catch (error) {
-    console.log("Error in deletePhoto", error);
+    // console.log("Error in deletePhoto", error);
     res.status(503).json({
       alert: { type: "warning", message: "Error deleting photo" },
     });

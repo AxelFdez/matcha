@@ -45,7 +45,7 @@ const loadImages = async (username) => {
     // Filtrer les photos null/undefined avant de charger
     const validPhotos = props.user.photos
       .map((photo, index) => (photo !== null && photo !== undefined ? index : null))
-      .filter(index => index !== null);
+      .filter((index) => index !== null);
 
     if (validPhotos.length === 0) {
       photos.value = [imgPlaceholder];
@@ -68,19 +68,21 @@ const loadImages = async (username) => {
       const blob = await response.blob();
       return {
         url: URL.createObjectURL(blob),
-        originalIndex: index
+        originalIndex: index,
       };
     });
 
     let loadedPhotos = await Promise.all(imagePromises);
 
     // Filtrer les photos qui n'ont pas pu être chargées
-    loadedPhotos = loadedPhotos.filter(photo => photo !== null);
+    loadedPhotos = loadedPhotos.filter((photo) => photo !== null);
 
     // 🎯 Mettre la photo de profil en premier si l'index existe
     const profilePictureIndex = props.user?.profilepicture;
     if (profilePictureIndex !== undefined && profilePictureIndex !== null) {
-      const profilePhotoIndex = loadedPhotos.findIndex(photo => photo.originalIndex === profilePictureIndex);
+      const profilePhotoIndex = loadedPhotos.findIndex(
+        (photo) => photo.originalIndex === profilePictureIndex
+      );
       if (profilePhotoIndex !== -1) {
         const profilePhoto = loadedPhotos[profilePhotoIndex];
         // Retirer la photo de profil de sa position actuelle
@@ -91,11 +93,10 @@ const loadImages = async (username) => {
     }
 
     // Extraire seulement les URLs
-    photos.value = loadedPhotos.length > 0
-      ? loadedPhotos.map(photo => photo.url)
-      : [imgPlaceholder];
+    photos.value =
+      loadedPhotos.length > 0 ? loadedPhotos.map((photo) => photo.url) : [imgPlaceholder];
   } catch (err) {
-    console.error("Erreur chargement images:", err);
+    // // console.error("Erreur chargement images:", err);
     photos.value = [imgPlaceholder];
   }
 };
@@ -124,12 +125,14 @@ const lastConnectionTime = computed(() => {
 /* 📏 Calcul de la distance entre deux users */
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Rayon de la Terre en km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // Distance en km
 };
@@ -138,9 +141,8 @@ const userDistance = computed(() => {
   const currentUserLocation = store.getters.getLocation;
   const otherUserLocation = props.user?.location;
 
-
   if (!currentUserLocation || !otherUserLocation) {
-    console.log('❌ Missing location data');
+    // console.log('❌ Missing location data');
     return null;
   }
 
@@ -150,16 +152,13 @@ const userDistance = computed(() => {
   const lat2 = otherUserLocation.coordinates?.[1];
   const lon2 = otherUserLocation.coordinates?.[0];
 
-
   if (!lat1 || !lon1 || !lat2 || !lon2) {
-    console.log('❌ Invalid coordinates');
+    // console.log('❌ Invalid coordinates');
     return null;
   }
 
   const distance = calculateDistance(lat1, lon1, lat2, lon2);
-  const formatted = distance < 1
-    ? `${Math.round(distance * 1000)} m`
-    : `${distance.toFixed(1)} km`;
+  const formatted = distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`;
 
   return formatted;
 });
@@ -178,7 +177,7 @@ const hasReported = ref(false); // A déjà reporté cet utilisateur pendant la 
 // Action button handlers with WebSocket integration
 const toggleLike = () => {
   if (!ws) {
-    console.warn("WebSocket not available");
+    // console.warn("WebSocket not available");
     return;
   }
 
@@ -217,7 +216,7 @@ const toggleLike = () => {
 
 const reportUser = () => {
   if (!ws) {
-    console.warn("WebSocket not available");
+    // console.warn("WebSocket not available");
     return;
   }
 
@@ -239,13 +238,15 @@ const reportUser = () => {
   // Marquer comme reporté pour cette session
   hasReported.value = true;
 
-  console.log(`Reported user as fake: ${props.user.username}`);
-  alert(`You have reported ${props.user.username} as a fake account. Our team will review this report.`);
+  // console.log(`Reported user as fake: ${props.user.username}`);
+  alert(
+    `You have reported ${props.user.username} as a fake account. Our team will review this report.`
+  );
 };
 
 const blockUser = () => {
   if (!ws) {
-    console.warn("WebSocket not available");
+    // console.warn("WebSocket not available");
     return;
   }
 
@@ -263,7 +264,7 @@ const blockUser = () => {
   // Toggle l'état local
   isBlocked.value = !isBlocked.value;
 
-  console.log(`${isBlocked.value ? "Blocked" : "Unblocked"} user: ${props.user.username}`);
+  // console.log(`${isBlocked.value ? "Blocked" : "Unblocked"} user: ${props.user.username}`);
 };
 
 const onSwiper = (_swiper) => {
@@ -285,8 +286,8 @@ const checkRelationshipStatus = async () => {
     if (response.response.status === 200) {
       const currentUserData = response.data.user;
       const viewedUserId = String(props.user.id);
-      console.log("Checking relationship status with user ID:", viewedUserId, props.user);
-      console.log("Current user data:", currentUserData);
+      // console.log("Checking relationship status with user ID:", viewedUserId, props.user);
+      // console.log("Current user data:", currentUserData);
 
       // Reset all states
       isMatched.value = false;
@@ -302,7 +303,7 @@ const checkRelationshipStatus = async () => {
         currentUserData.blacklist.some((id) => String(id) === viewedUserId)
       ) {
         isBlocked.value = true;
-        console.log(`User ${props.user.username} is blocked`);
+        // console.log(`User ${props.user.username} is blocked`);
       }
 
       // Priority 1: Check if it's a match (matcha) - mutual like
@@ -347,7 +348,7 @@ const checkRelationshipStatus = async () => {
       }
     }
   } catch (error) {
-    console.error("Error checking relationship status:", error);
+    // // console.error("Error checking relationship status:", error);
   }
 };
 
@@ -362,7 +363,9 @@ onMounted(() => {
 <template>
   <div class="card-container p-2 sm:p-4">
     <!-- Section principale avec photo et infos -->
-    <div class="profile-header flex flex-col lg:flex-row lg:justify-around items-center gap-4 lg:gap-2">
+    <div
+      class="profile-header flex flex-col lg:flex-row lg:justify-around items-center gap-4 lg:gap-2"
+    >
       <!-- Photo (Swiper) -->
       <div class="profile-photo-section w-full lg:w-auto flex justify-center">
         <swiper
@@ -394,9 +397,7 @@ onMounted(() => {
         </h2>
         <h3 class="mt-1 text-sm sm:text-base text-gray-700">{{ user.username }}</h3>
         <h3 class="mt-1 text-lg sm:text-2xl text-gray-900">{{ user.age }} yo</h3>
-        <p v-if="userDistance" class="mt-1 text-sm text-gray-600">
-          📍 {{ userDistance }}
-        </p>
+        <p v-if="userDistance" class="mt-1 text-sm text-gray-600">📍 {{ userDistance }}</p>
 
         <!-- Status Badges -->
         <div class="mt-2 flex flex-wrap gap-2 justify-center lg:justify-start">
@@ -434,7 +435,9 @@ onMounted(() => {
       </div>
 
       <!-- Fame Rating et Statut -->
-      <div class="profile-stats-section flex lg:flex-col items-center lg:items-center gap-4 lg:gap-2 lg:self-center">
+      <div
+        class="profile-stats-section flex lg:flex-col items-center lg:items-center gap-4 lg:gap-2 lg:self-center"
+      >
         <div class="text-center">
           <img
             v-if="user.gender == 'female'"
@@ -451,7 +454,9 @@ onMounted(() => {
         </div>
         <div class="text-center">
           <p class="text-xs sm:text-sm font-medium">Famerating</p>
-          <p class="text-sm sm:text-base font-bold">{{ user.fameRating || user.famerating || 0 }}</p>
+          <p class="text-sm sm:text-base font-bold">
+            {{ user.fameRating || user.famerating || 0 }}
+          </p>
         </div>
         <div class="flex items-center gap-2">
           <div
