@@ -1,3 +1,5 @@
+import { fetchData } from "../config/api.js";
+
 export default {
   namespaced: true,
   state: {
@@ -28,6 +30,10 @@ export default {
       }));
     },
 
+    removeNotification(state, notificationId) {
+      state.notifications = state.notifications.filter((n) => n.id !== notificationId);
+    },
+
     // Conversations
     setConversations(state, list) {
       state.conversations = list;
@@ -56,6 +62,14 @@ export default {
     },
   },
   actions: {
+    async deleteNotification({ commit }, notificationId) {
+      try {
+        await fetchData(`/notifications/${notificationId}`, { method: "DELETE" });
+        commit("removeNotification", notificationId);
+      } catch (err) {
+        console.error("Erreur lors de la suppression de la notification", err);
+      }
+    },
     addIncomingMessage({ commit, state }, messageData) {
       const conversationId = messageData.conversationId;
 
@@ -84,7 +98,6 @@ export default {
           });
         }
       }
-    }
-
+    },
   },
 };

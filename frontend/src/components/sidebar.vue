@@ -560,6 +560,10 @@ export default {
       await fetchConversations();
     };
 
+    const deleteNotification = async (notificationId) => {
+      await store.dispatch("notifications/deleteNotification", notificationId);
+    };
+
     /** Profile functions */
     const loadUserProfile = async (username) => {
       if (!username) return;
@@ -877,6 +881,7 @@ export default {
       getFirstPhoto,
       formatDate,
       formatMessageTime,
+      deleteNotification,
     };
   },
 };
