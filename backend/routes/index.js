@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 const multer = require("multer");
+const path = require("path");
 
 // Configuration du stockage
 const storage = multer.diskStorage({
@@ -8,12 +9,34 @@ const storage = multer.diskStorage({
     cb(null, "photos/tmp/"); // Dossier où les fichiers seront enregistrés
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname);
+    // Générer un nom de fichier sécurisé avec timestamp pour éviter les collisions
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, 'upload-' + uniqueSuffix + ext);
   },
 });
 
-// Initialiser Multer avec le stockage configuré
-const upload = multer({ storage: storage });
+// Validation du type de fichier
+const fileFilter = (req, file, cb) => {
+  // Whitelist des MIME types autorisés
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Type de fichier non autorisé. Seuls les formats JPEG, PNG et WebP sont acceptés.'), false);
+  }
+};
+
+// Initialiser Multer avec le stockage configuré et les validations
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // Limite à 10MB
+    files: 5 // Maximum 5 fichiers
+  }
+});
 
 const verifyToken = require("../middlewares/jwt");
 const getLocationWithIp = require("../middlewares/getLocationWithIp");
@@ -45,7 +68,32 @@ router.post("/verifyEmail", require("../utils/verifyEmail"), (req, res) => {});
 router.post(
   "/updateUser",
   verifyToken,
-  upload.array("photos", 5),
+  (req, res, next) => {
+    upload.array("photos", 5)(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        // Erreur multer (taille de fichier, nombre de fichiers, etc.)
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({
+            alert: { type: "warning", message: "Fichier trop volumineux (max 10MB)" }
+          });
+        }
+        if (err.code === 'LIMIT_FILE_COUNT') {
+          return res.status(400).json({
+            alert: { type: "warning", message: "Trop de fichiers (max 5)" }
+          });
+        }
+        return res.status(400).json({
+          alert: { type: "warning", message: "Erreur lors de l'upload: " + err.message }
+        });
+      } else if (err) {
+        // Erreur de validation du type de fichier
+        return res.status(400).json({
+          alert: { type: "warning", message: err.message }
+        });
+      }
+      next();
+    });
+  },
   require("../utils/updateUser"),
   (req, res) => {}
 );

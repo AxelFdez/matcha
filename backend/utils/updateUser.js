@@ -70,26 +70,40 @@ async function updateUser(req, res) {
       }
       updates.interests = newInterests;
     }
-    if (req.files) {
+    if (req.files && req.files.length > 0) {
       const fs = require("fs");
       const { resizeImage, compressImageToUnder1MB } = require("./photosHandler");
 
       const photoUpload = req.files[0];
       const imageIndex = req.body.imageIndex;
-      const photoPath = path.join(__dirname, "../photos/tmp/" + photoUpload.originalname);
-      const extension = photoUpload.originalname.split(".").pop();
+
+      // Utiliser le nom de fichier sécurisé généré par multer
+      const photoPath = path.join(__dirname, "../photos/tmp/" + photoUpload.filename);
+      const extension = path.extname(photoUpload.filename).toLowerCase();
+
+      // Vérifier que l'extension est autorisée (double vérification)
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+      if (!allowedExtensions.includes(extension)) {
+        // Nettoyer le fichier uploadé
+        if (fs.existsSync(photoPath)) {
+          fs.unlinkSync(photoPath);
+        }
+        return res.status(400).json({
+          alert: { type: "warning", message: "Type de fichier non autorisé" }
+        });
+      }
 
       // Resize the image
       const resizedImageFilename =
-        photoPath.slice(0, -extension.length - 1) + "_resized." + extension;
+        photoPath.slice(0, -extension.length) + "_resized" + extension;
       await resizeImage(photoPath, resizedImageFilename, 500, 500);
 
       // Compress the resized image
       const compressImageFilename =
-        photoPath.slice(0, -extension.length - 1) + "_compress." + extension;
+        photoPath.slice(0, -extension.length) + "_compress" + extension;
       await compressImageToUnder1MB(resizedImageFilename, compressImageFilename);
 
-      // Move the compressed file to the final path
+      // Move the compressed file to the final path avec nom sécurisé
       const filename = user.username + "_" + imageIndex + ".png";
       const newPhotoPath = path.join(
         __dirname,
