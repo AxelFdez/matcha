@@ -128,18 +128,18 @@
               <div class="flex-1">
                 <!-- Icône selon le type -->
                 <div class="flex items-center gap-2 mb-1">
-                  <span v-if="notification.type === 'like'" class="text-red-500">❤️</span>
-                  <span v-else-if="notification.type === 'match'" class="text-pink-500">💕</span>
-                  <span v-else-if="notification.type === 'unlike'" class="text-gray-500">💔</span>
                   <span
-                    v-else-if="
-                      notification.type === 'profile_view' || notification.type === 'viewed'
-                    "
-                    class="text-blue-500"
-                    >👁️</span
+                    :class="{
+                      'text-red-500': notification.type === 'Like',
+                      'text-pink-500': notification.type === 'Match!',
+                      'text-gray-500': notification.type === 'Unlike',
+                      'text-blue-500':
+                        notification.type === 'Profile Viewed' || notification.type === 'viewed',
+                      'text-green-500': notification.type === 'message',
+                    }"
                   >
-                  <span v-else-if="notification.type === 'message'" class="text-green-500">💬</span>
-
+                    {{ getNotificationIcon(notification) }}
+                  </span>
                   <p class="text-sm font-medium text-gray-900 dark:text-white">
                     {{ notification.title }}
                   </p>
@@ -465,7 +465,7 @@ import { fetchData } from "../config/api.js";
 import DisconnectBtn from "./header/DisconnectBtn.vue";
 import ProfileBtn from "./header/ProfileBtn.vue";
 import { Dialog, DialogPanel, TransitionChild, TransitionRoot } from "@headlessui/vue";
-import profileInfos from "./ProfileInfos.vue";
+import ProfileInfos from "./ProfileInfos.vue";
 
 export default {
   name: "Sidebar",
@@ -476,13 +476,13 @@ export default {
     DialogPanel,
     TransitionChild,
     TransitionRoot,
-    profileInfos,
+    ProfileInfos,
   },
   emits: ["close"],
   setup(_, { emit }) {
     const store = useStore();
 
-    /** Sidebar UI state */
+    /** UI state */
     const showNotifications = ref(false);
     const showChat = ref(false);
     const showChatMessages = ref(false);
@@ -509,30 +509,64 @@ export default {
 
     const messages = computed(() => {
       if (!selectedConversation.value) return [];
-      const msgs = store.getters["notifications/getConversationMessages"](
-        selectedConversation.value.id
+      return (
+        store.getters["notifications/getConversationMessages"](selectedConversation.value.id) || []
       );
-      // console.log("[COMPUTED MESSAGES] Pour conv", selectedConversation.value.id, msgs);
-      return msgs;
     });
 
     const currentUserId = computed(() => localStorage.getItem("userId"));
+    const currentUserName = computed(() => localStorage.getItem("userName"));
 
     /** Sidebar actions */
     const closeSidebar = () => emit("close");
 
     const openNotifications = async () => {
+      console.log("🔔 openNotifications called");
       showNotifications.value = true;
       showChat.value = false;
       showChatMessages.value = false;
-      await fetchNotifications();
-      store.commit("notifications/markNotificationsViewed");
+
+      try {
+        // 1️⃣ Récupérer les notifications depuis le serveur
+        console.log("📡 Fetching notifications from server...");
+        const res = await fetchData("/notifications", { method: "GET" });
+        console.log("📥 Notifications fetched:", res);
+
+        if (Array.isArray(res.data)) {
+          const data = res.data.map((n) => ({
+            ...n,
+            id: n.id || Date.now().toString(),
+            viewed: n.viewed || false,
+          }));
+          console.log("📝 Formatted notifications:", data);
+
+          store.commit("notifications/setNotifications", data);
+          console.log("✅ Notifications stored in Vuex");
+
+          // 2️⃣ Marquer vues côté serveur
+          console.log("📡 Marking notifications as viewed on server...");
+          const markRes = await fetchData("/notifications/markViewed", {
+            method: "POST",
+            body: JSON.stringify({}),
+          });
+          console.log("📥 Server response for markViewed:", markRes);
+
+          // 3️⃣ Mettre à jour le store local pour refléter les vues
+          store.commit("notifications/markNotificationsViewed");
+          console.log("✅ Vuex notifications updated as viewed");
+        } else {
+          console.warn("⚠️ res.data is not an array:", res.data);
+        }
+      } catch (err) {
+        console.error("❌ Erreur lors de l'ouverture des notifications:", err);
+      }
     };
 
     const openChat = async () => {
       showChat.value = true;
       showNotifications.value = false;
       showChatMessages.value = false;
+
       await fetchConversations();
     };
 
@@ -544,7 +578,7 @@ export default {
       await fetchMessages(conversation);
 
       store.commit("notifications/clearUnreadMessages", conversation.id);
-      scrollToBottom();
+      nextTick(scrollToBottom);
     };
 
     const backToMain = () => {
@@ -560,18 +594,20 @@ export default {
       await fetchConversations();
     };
 
+    /** Notifications */
     const deleteNotification = async (notificationId) => {
+      if (!notificationId) return;
       await store.dispatch("notifications/deleteNotification", notificationId);
     };
 
-    /** Profile functions */
+    /** Profile */
     const loadUserProfile = async (username) => {
       if (!username) return;
       loadingProfile.value = true;
       try {
         const res = await fetchData(`/profile/${username}`, { method: "GET" });
         if (res.response.ok && res.data) {
-          profileUser.value = res.data;
+          profileUser.value = res.data.user || res.data;
           showProfileModal.value = true;
         }
       } catch (err) {
@@ -591,9 +627,7 @@ export default {
             ...res.data.user,
           };
         }
-      } catch (err) {
-        // console.error(err);
-      }
+      } catch (err) {}
     };
 
     const toggleProfileModal = async () => {
@@ -618,8 +652,8 @@ export default {
 
       const viewedMessage = {
         type: "viewed",
-        userId: localStorage.getItem("userId"),
-        message: { user: store.getters.getUserName, userViewed: username },
+        userId: currentUserId.value,
+        message: { user: currentUserName.value, userViewed: username },
       };
       ws.send(JSON.stringify(viewedMessage));
     };
@@ -628,10 +662,16 @@ export default {
     const fetchNotifications = async () => {
       try {
         const res = await fetchData("/notifications", { method: "GET" });
-        store.commit("notifications/setNotifications", Array.isArray(res.data) ? res.data : []);
+        if (Array.isArray(res.data)) {
+          const data = res.data.map((n) => ({
+            ...n,
+            id: n.id || Date.now().toString(),
+            viewed: n.viewed || false,
+          }));
+          return data; // retourner les notifications
+        }
       } catch (err) {
-        // console.error(err);
-        store.commit("notifications/setNotifications", []);
+        return [];
       }
     };
 
@@ -640,10 +680,10 @@ export default {
       chatLoading.value = true;
       try {
         const res = await fetchData("/conversations", { method: "GET" });
-        if (res.response.ok && res.data?.conversations)
+        if (res.response.ok && res.data?.conversations) {
           store.commit("notifications/setConversations", res.data.conversations);
+        }
       } catch (err) {
-        // console.error(err);
         store.commit("notifications/setConversations", []);
       } finally {
         chatLoading.value = false;
@@ -657,13 +697,13 @@ export default {
         const res = await fetchData(`/conversations/${conversation.id}/messages`, {
           method: "GET",
         });
-        if (res.response.ok && res.data?.messages)
+        if (res.response.ok && res.data?.messages) {
           store.commit("notifications/setMessages", {
             conversationId: conversation.id,
             messages: res.data.messages,
           });
+        }
       } catch (err) {
-        // console.error(err);
         store.commit("notifications/setMessages", {
           conversationId: conversation.id,
           messages: [],
@@ -680,7 +720,7 @@ export default {
       const messageText = newMessage.value.trim();
       const tempMessage = {
         id: Date.now().toString(),
-        sender: currentUserId.value,
+        sender: currentUserName.value,
         message: messageText,
         date: new Date(),
         temp: true,
@@ -691,7 +731,7 @@ export default {
         message: tempMessage,
       });
       newMessage.value = "";
-      scrollToBottom();
+      nextTick(scrollToBottom);
 
       sendingMessage.value = true;
       try {
@@ -709,31 +749,34 @@ export default {
           );
           tempMessage.temp = false;
         }
-      } catch (err) {
-        // console.error(err);
       } finally {
         sendingMessage.value = false;
       }
     };
 
-    const scrollToBottom = async () => {
-      await nextTick();
-      if (messagesContainer.value)
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    const scrollToBottom = () => {
+      nextTick(() => {
+        if (messagesContainer.value) {
+          messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        }
+      });
     };
 
-    /** WebSocket centralized handler */
+    /** WebSocket handlers */
     const handleIncomingNotification = (data) => {
       const notif = data.notification || data;
-      store.commit("notifications/addNotification", {
-        id: notif.id || Date.now(),
+      const newNotif = {
+        id: notif.id || Date.now().toString(),
         type: notif.type || "default",
         title: notif.title,
-        message: notif.message,
-        username: notif.username || null,
+        body: notif.body || notif.message,
+        fromUser: notif.username || null,
         createdAt: notif.createdAt || new Date().toISOString(),
         viewed: false,
-      });
+      };
+      if (!store.state.notifications.notifications.some((n) => n.id === newNotif.id)) {
+        store.commit("notifications/addNotification", newNotif);
+      }
     };
 
     const handleIncomingMessage = (data) => {
@@ -746,27 +789,17 @@ export default {
       };
 
       store.dispatch("notifications/addIncomingMessage", msg);
-      // console.log("[HANDLE INCOMING MESSAGE] Avant commit:", msg);
 
-      store.dispatch("notifications/addIncomingMessage", msg);
-
-      // console.log("[HANDLE INCOMING MESSAGE] selectedConversation:", selectedConversation.value);
-      // Si je suis dans la conversation, scroll et mettre à jour
       if (selectedConversation.value && selectedConversation.value.id === msg.conversationId) {
-        // Ajoute directement le message dans la conversation affichée
         store.commit("notifications/addMessage", {
           conversationId: msg.conversationId,
           message: msg,
         });
-        nextTick(() => {
-          if (messagesContainer.value) {
-            messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-          }
-        });
+        nextTick(scrollToBottom);
       }
     };
 
-    /** Polling as backup */
+    /** Polling backup */
     let pollingInterval = null;
     const startPolling = () => {
       pollingInterval = setInterval(async () => {
@@ -787,30 +820,16 @@ export default {
       const ws = store.getters.getWebSocket;
       if (ws && !ws._sidebarListenerAttached) {
         ws._sidebarListenerAttached = true;
-
         ws.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            // // console.log("[WS MESSAGE RECEIVED]", data);
-
-            // Notifications
-            if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type)) {
-              // console.log("[WS NOTIF] Handling notification", data);
+            if (["notification", "Like", "Match!", "Unlike", "Profile Viewed"].includes(data.type))
               handleIncomingNotification(data);
-            }
-
-            // Chat messages
-            if (data.type === "chat" && data.message) {
-              // console.log("[WS CHAT] Handling chat message", data);
-              handleIncomingMessage(data);
-            }
-          } catch (err) {
-            // console.error("[WS ERROR] parsing message", err);
-          }
+            if (data.type === "chat" && data.message) handleIncomingMessage(data);
+          } catch {}
         };
       }
     });
-
     onUnmounted(() => stopPolling());
 
     /** Helpers */
@@ -818,9 +837,8 @@ export default {
       if (!photoData) return null;
       let photo = Array.isArray(photoData) ? photoData[0] : photoData;
       if (typeof photo === "string" && photo.includes(",")) photo = photo.split(",")[0];
-      if (!photo) return null;
       const baseURL = process.env.VUE_APP_API_URL || "http://localhost:3000";
-      return photo.startsWith("http") ? photo : `${baseURL}${photo.replace(/^\/app/, "")}`;
+      return photo?.startsWith("http") ? photo : `${baseURL}${photo.replace(/^\/app/, "")}`;
     };
 
     const formatDate = (dateString) => {
@@ -846,9 +864,23 @@ export default {
         return date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
       return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
     };
+    const getNotificationIcon = (notif) => {
+      switch (notif.type) {
+        case "Like":
+          return "❤️"; // Like
+        case "Unlike":
+          return "💔"; // Unlike
+        case "Match!":
+          return "🔥"; // Match
+        case "Profile Viewed":
+          return "👀"; // Vue profil
+        case "notification":
+        default:
+          return "🔔"; // Notification générique
+      }
+    };
 
     return {
-      // state
       showNotifications,
       showChat,
       showChatMessages,
@@ -861,14 +893,12 @@ export default {
       showProfileModal,
       profileUser,
       loadingProfile,
-      // computed
       notifications,
       notificationCount,
       conversations,
       unreadMessagesCount,
       messages,
       currentUserId,
-      // actions
       closeSidebar,
       openNotifications,
       openChat,
@@ -882,6 +912,7 @@ export default {
       formatDate,
       formatMessageTime,
       deleteNotification,
+      getNotificationIcon,
     };
   },
 };

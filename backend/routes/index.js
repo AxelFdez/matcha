@@ -100,10 +100,13 @@ router.get("/getAllTags", verifyToken, require("../utils/getAllTags"), (req, res
 // Notifications endpoints
 router.get("/notifications", verifyToken, require("../utils/getNotifications"), (req, res) => {});
 router.post(
-  "/notifications/mark-viewed",
+  "/notifications/markViewed",
   verifyToken,
-  require("../utils/markNotificationsViewed"),
-  (req, res) => {}
+  (req, res, next) => {
+    console.log("🚀 POST /notifications/markViewed endpoint hit");
+    next();
+  },
+  require("../utils/markNotificationsViewed")
 );
 router.delete(
   "/notifications/:id",

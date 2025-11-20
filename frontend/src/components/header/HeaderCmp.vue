@@ -8,7 +8,7 @@
         <ConnectBtn v-if="!isConnected" />
 
         <!-- Bouton notifications -->
-        <button v-if="isConnected" class="icon-btn" @click="toggleSidebar">
+        <button v-if="isConnected" class="icon-btn" @click="toggleSidebar('notifications')">
           <i class="fa fa-bell"></i>
           <span v-if="notificationCount > 0" class="badge">
             {{ notificationCount > 99 ? "99+" : notificationCount }}
@@ -16,7 +16,7 @@
         </button>
 
         <!-- Bouton chat -->
-        <button v-if="isConnected" class="icon-btn" @click="toggleSidebar">
+        <button v-if="isConnected" class="icon-btn" @click="toggleSidebar('chat')">
           <i class="fa fa-comment"></i>
           <span v-if="unreadMessagesCount > 0" class="badge">
             {{ unreadMessagesCount > 99 ? "99+" : unreadMessagesCount }}
@@ -30,8 +30,8 @@
           </span>
         </button>
 
-        <!-- Bouton sidebar -->
-        <button v-if="isConnected" @click="toggleSidebar" class="burger-btn">
+        <!-- Bouton menu burger -->
+        <button v-if="isConnected" @click="toggleSidebar(sidebarType || 'menu')" class="burger-btn">
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="3" y1="6" x2="21" y2="6" />
@@ -42,7 +42,7 @@
         </button>
 
         <!-- Sidebar -->
-        <Sidebar v-if="isConnected && open" @close="toggleSidebar" />
+        <Sidebar v-if="isConnected && open" :type="sidebarType" @close="closeSidebar" />
       </div>
     </div>
   </div>
@@ -55,7 +55,7 @@ import { useRouter } from "vue-router";
 import TitleCmp from "./TitleCmp.vue";
 import ConnectBtn from "./ConnectBtn.vue";
 import Sidebar from "@/components/sidebar.vue";
-import { fetchData } from "@/config/api.js"; // <- ajout fetch initial
+import { fetchData } from "@/config/api.js";
 
 export default {
   name: "HeaderCmp",
@@ -63,24 +63,30 @@ export default {
   setup() {
     const store = useStore();
     const router = useRouter();
+
     const open = ref(false);
+    const sidebarType = ref("notifications");
 
     const isConnected = computed(() => store.getters.getIsConnected);
 
-    const toggleSidebar = () => {
+    const toggleSidebar = (type = "notifications") => {
       open.value = !open.value;
+      sidebarType.value = type;
     };
 
-    const redirectToResearchPage = () => {
-      router.push("/ResearchPage");
-    };
+    const closeSidebar = () => (open.value = false);
 
-    // Badges instantanés basés sur store
+    const redirectToResearchPage = () => router.push("/ResearchPage");
+
     const notificationCount = computed(
-      () => store.state.notifications.notifications.filter((n) => !n.viewed).length
+      () => store.state.notifications?.notifications?.filter((n) => !n.viewed).length || 0
     );
-    const unreadMessagesCount = computed(() =>
-      store.state.notifications.conversations.reduce((total, c) => total + (c.unreadCount || 0), 0)
+    const unreadMessagesCount = computed(
+      () =>
+        store.state.notifications?.conversations?.reduce(
+          (total, c) => total + (c.unreadCount || 0),
+          0
+        ) || 0
     );
 
     /** WebSocket */
@@ -88,16 +94,22 @@ export default {
 
     const handleIncomingNotification = (data) => {
       const notif = data.notification || data;
-      store.commit("notifications/addNotification", {
-        id: notif.id || Date.now(),
+      const newNotif = {
+        id: notif.id || Date.now().toString(),
         type: notif.type || "default",
         title: notif.title,
-        message: notif.message,
-        username: notif.username || null,
+        body: notif.body || notif.message,
+        fromUser: notif.username || null,
         createdAt: notif.createdAt || new Date().toISOString(),
         viewed: false,
-      });
+      };
+
+      // Filtrage doublons
+      if (!store.state.notifications.notifications.some((n) => n.id === newNotif.id)) {
+        store.commit("notifications/addNotification", newNotif);
+      }
     };
+
     const handleIncomingMessage = (data) => {
       const msg = {
         conversationId: data.conversationId,
@@ -109,33 +121,33 @@ export default {
       store.dispatch("notifications/addIncomingMessage", msg);
     };
 
-    /** Fetch initial unique au chargement pour pré-remplir le store */
+    /** Fetch initial notifications & conversations */
     const fetchInitialData = async () => {
       try {
-        // Notifications
         const resNotif = await fetchData("/notifications", { method: "GET" });
         if (Array.isArray(resNotif.data)) {
-          // Remplace complètement le store, pas de push/add
-          store.commit("notifications/setNotifications", resNotif.data);
+          store.commit(
+            "notifications/setNotifications",
+            resNotif.data.map((n) => ({
+              ...n,
+              id: n.id || Date.now().toString(),
+              viewed: n.viewed || false,
+            }))
+          );
         }
 
-        // Conversations
         const resConv = await fetchData("/conversations", { method: "GET" });
         if (resConv.response.ok && resConv.data?.conversations) {
           store.commit("notifications/setConversations", resConv.data.conversations);
         }
       } catch (err) {
-        // console.error("Erreur fetch initial header:", err);
+        console.error("Erreur fetch initial header:", err);
       }
     };
 
     onMounted(async () => {
-      // fetch unique pour pré-remplir uniquement si connecté
-      if (isConnected.value) {
-        await fetchInitialData();
-      }
+      if (isConnected.value) await fetchInitialData();
 
-      // WebSocket
       if (ws) {
         const originalOnMessage = ws.onmessage;
         ws.onmessage = (event) => {
@@ -145,9 +157,7 @@ export default {
             if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type))
               handleIncomingNotification(data);
             if (data.type === "chat" && data.message) handleIncomingMessage(data);
-          } catch (err) {
-            // console.error(err);
-          }
+          } catch (err) {}
         };
       }
     });
@@ -158,7 +168,9 @@ export default {
 
     return {
       open,
+      sidebarType,
       toggleSidebar,
+      closeSidebar,
       redirectToResearchPage,
       isConnected,
       notificationCount,
