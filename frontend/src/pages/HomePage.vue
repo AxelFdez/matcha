@@ -3,7 +3,7 @@
     <template v-if="!$store.getters.getIsConnected">
       <div class="home">
         <div class="main--title fade-In">
-          <h1 class="title--line--1">swipe right,</h1>
+          <h1 class="title--line--1">Like,</h1>
           <h1 class="title--line--2">match,</h1>
           <h1 class="title--line--3" id="date">date !</h1>
         </div>
@@ -38,30 +38,7 @@ export default {
     // Utilisation de la fonction de traduction
     const accountCreate_btn = t("accountCreate_btn");
 
-    function handleFileUpload(event, selectedFiles) {
-      selectedFiles.value = event.target.files;
-    }
-
-    async function submitPhotos(selectedFiles) {
-  // console.log("selectedFiles = ", selectedFiles.value);
-  if (!selectedFiles.value) {
-    alert("Please select files first.");
-    return;
-  }
-
-  const formData = new FormData();
-  for (let file of selectedFiles.value) {
-    formData.append('photos', file);
-  }
-
-  // Vérification de ce qui est ajouté à formData
-  formData.forEach((value, key) => {
-    // console.log(`${key}: ${value.name}`); // Assumant que 'value' est un fichier
-  });
-
-}
-
-    return { handleFileUpload, submitPhotos, accountCreate_btn};
+    return { accountCreate_btn };
   },
 };
 </script>
