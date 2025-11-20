@@ -103,6 +103,10 @@ module.exports = async function browseUsers(req, res) {
       FROM users
       WHERE ready = true
         AND id::text != $1::text
+        AND NOT COALESCE($1::text = ANY(ignoredby), FALSE)
+        AND NOT COALESCE($1::text = ANY(likedBy), FALSE)
+        AND NOT COALESCE($1::text = ANY(matcha), FALSE)
+        AND NOT COALESCE($1::text = ANY(blacklist), FALSE)
         AND gender = ANY($2)
         AND (sexualpreferences = 'both' OR sexualpreferences = $3)
     `;
@@ -142,25 +146,32 @@ module.exports = async function browseUsers(req, res) {
       paramIndex++;
     }
 
+    // Filtre de distance (doit être appliqué dans un subquery car distance est calculé)
+    let distanceFilter = "";
     if (distanceRange && userLocation) {
       switch (distanceRange) {
         case "0-5":
-          queryBase += " AND distance <= 5";
+          distanceFilter = " AND distance <= 5";
           break;
         case "5-50":
-          queryBase += " AND distance > 5 AND distance <= 50";
+          distanceFilter = " AND distance > 5 AND distance <= 50";
           break;
         case "50-500":
-          queryBase += " AND distance > 50 AND distance <= 500";
+          distanceFilter = " AND distance > 50 AND distance <= 500";
           break;
         case "500+":
-          queryBase += " AND distance > 500";
+          distanceFilter = " AND distance > 500";
           break;
       }
     }
 
-    // Requête finale avec tri
-    const query = `SELECT * FROM (${queryBase}) AS subquery ORDER BY ${orderBy}`;
+    // Requête finale avec subquery si filtre de distance
+    let query;
+    if (distanceFilter) {
+      query = `SELECT * FROM (${queryBase}) AS subquery WHERE 1=1${distanceFilter} ORDER BY ${orderBy}`;
+    } else {
+      query = `SELECT * FROM (${queryBase}) AS subquery ORDER BY ${orderBy}`;
+    }
 
     // Exécution
     const usersResult = await pool.query(query, queryParams);
@@ -169,7 +180,7 @@ module.exports = async function browseUsers(req, res) {
     if (!users.length) return res.status(404).json({ message: "No users found" });
     return res.status(200).json({ users });
   } catch (error) {
-    console.error("🔥 BROWSE USERS ERROR:", error);
+    // console.error("🔥 BROWSE USERS ERROR:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
