@@ -446,8 +446,8 @@
                   <p class="text-gray-500 dark:text-gray-400">Chargement du profil...</p>
                 </div>
                 <profileInfos
-                  v-else-if="profileUser && profileUser.user"
-                  :user="profileUser.user"
+                  v-else-if="profileUser"
+                  :user="profileUser"
                 ></profileInfos>
               </DialogPanel>
             </TransitionChild>
