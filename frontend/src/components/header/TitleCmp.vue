@@ -1,6 +1,6 @@
 <template>
   <div class="title--header--container">
-    <img src="../../../public/src/feu.png" alt="" />
+    <img src="/src/feu.png" alt="" />
     <router-link class="title--header" :to="{ name: 'HomePage' }">
       <!-- <span> -->
       <h1>matcha</h1>

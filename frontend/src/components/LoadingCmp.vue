@@ -5,7 +5,7 @@
             <!-- Ajoutez une superposition semi-transparente -->
         </div>
         <div class="centered-content">
-            <img src="../../public/src/feu.png" alt="Your Image" class="animated-image" />
+            <img src="/src/feu.png" alt="Your Image" class="animated-image" />
         </div>
     </div>
 </template>

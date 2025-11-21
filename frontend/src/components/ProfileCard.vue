@@ -10,7 +10,7 @@
         navigation
         :pagination="{ clickable: true }"
         :scrollbar="{ draggable: true }"
-        class="swiper-responsive m-2 rounded shadow-sm shadow-black"
+        class="swiper-responsive rounded shadow-sm shadow-black"
         @swiper="onSwiper"
       >
         <swiper-slide v-for="(photo, index) in photos" :key="index">
@@ -224,6 +224,7 @@ onMounted(parsePhotos);
   width: 100%;
   max-width: 500px;
   height: 500px;
+  margin: 0 auto;
 
   @media (max-width: 640px) {
     max-width: 100%;
