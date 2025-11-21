@@ -73,8 +73,9 @@ module.exports = async (req, res) => {
           // Extraire city/country/coordinates si disponibles dans l'objet location
           city = locationData.city || "Inconnue";
           country = locationData.country || "Inconnu";
-          latitude = locationData.latitude || locationData.coordinates?.[0] || null;
-          longitude = locationData.longitude || locationData.coordinates?.[1] || null;
+          // Format GeoJSON: coordinates[0] = longitude, coordinates[1] = latitude
+          latitude = locationData.latitude || locationData.coordinates?.[1] || null;
+          longitude = locationData.longitude || locationData.coordinates?.[0] || null;
         } catch (e) {
           // console.error("Error parsing location for user", visitor.id, e);
         }

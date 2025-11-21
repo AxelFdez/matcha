@@ -46,8 +46,9 @@ module.exports = async (req, res) => {
           const loc = typeof user.location === "string" ? JSON.parse(user.location) : user.location;
           city = loc.city || "Inconnue";
           country = loc.country || "Inconnu";
-          latitude = loc.latitude || loc.coordinates?.[0] || null;
-          longitude = loc.longitude || loc.coordinates?.[1] || null;
+          // Format GeoJSON: coordinates[0] = longitude, coordinates[1] = latitude
+          latitude = loc.latitude || loc.coordinates?.[1] || null;
+          longitude = loc.longitude || loc.coordinates?.[0] || null;
         } catch (e) {
           // console.error("Error parsing location for user", user.id, e);
         }

@@ -151,7 +151,7 @@ router.post(
   "/notifications/markViewed",
   verifyToken,
   (req, res, next) => {
-    console.log("🚀 POST /notifications/markViewed endpoint hit");
+    //console.log("🚀 POST /notifications/markViewed endpoint hit");
     next();
   },
   require("../utils/markNotificationsViewed")

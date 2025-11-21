@@ -509,7 +509,9 @@ onMounted(() => {
         </div>
         <div class="place-items-center min-w-2 px-0 py-2 sm:py-4 sm:px-0">
           <div class="shadow-black shadow-sm w-full h-48">
+            <!-- Afficher la carte seulement si la location est valide -->
             <l-map
+              v-if="user.location && user.location.coordinates && user.location.coordinates.length === 2"
               class="rounded"
               ref="map "
               :zoom="zoom"
@@ -522,6 +524,13 @@ onMounted(() => {
               ></l-tile-layer>
               <l-marker :lat-lng="[user.location.coordinates[1], user.location.coordinates[0]]" />
             </l-map>
+            <!-- Message si pas de localisation -->
+            <div
+              v-else
+              class="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-700 rounded text-gray-500 dark:text-gray-400"
+            >
+              <p>📍 Localisation non disponible</p>
+            </div>
           </div>
         </div>
       </dl>

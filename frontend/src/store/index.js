@@ -237,7 +237,41 @@ export const store = createStore({
       state.profileLikes = likes;
     },
     setLocation(state, location) {
-      state.location = location;
+      // Normaliser l'objet location pour qu'il ait toujours une structure GeoJSON valide
+      if (!location) {
+        // Si pas de location, utiliser Paris par défaut
+        state.location = {
+          type: "Point",
+          coordinates: [2.3522, 48.8566], // [longitude, latitude] Paris
+          city: "Paris",
+          country: "France",
+          manualMode: false,
+          authorization: false,
+        };
+        return;
+      }
+
+      // Si la location a déjà des coordonnées, la garder telle quelle
+      if (location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length === 2) {
+        state.location = {
+          type: location.type || "Point",
+          coordinates: location.coordinates,
+          city: location.city,
+          country: location.country,
+          manualMode: location.manualMode || false,
+          authorization: location.authorization !== false, // true par défaut si non spécifié
+        };
+      } else {
+        // Si pas de coordonnées valides, utiliser Paris par défaut
+        state.location = {
+          type: "Point",
+          coordinates: [2.3522, 48.8566], // [longitude, latitude] Paris
+          city: location.city || "Paris",
+          country: location.country || "France",
+          manualMode: location.manualMode || false,
+          authorization: location.authorization || false,
+        };
+      }
     },
   },
 

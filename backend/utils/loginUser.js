@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const connectBdd = require("../config/connectBdd");
 const pool = require("../config/connectBdd");
+const getLocationFromIP = require("../middlewares/getLocationWithIp");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = "15m";
@@ -60,25 +61,33 @@ async function loginUser(req, res) {
       locationData = JSON.parse(locationData);
     }
 
-    // Vérifier si l'utilisateur a défini sa position manuellement
-    const isManualMode = locationData && locationData.manualMode === true;
+    // Vérifier si l'utilisateur a défini sa position manuellement ET a des coordonnées valides
+    const hasValidCoordinates = locationData.coordinates &&
+                                 Array.isArray(locationData.coordinates) &&
+                                 locationData.coordinates.length === 2;
+    const isManualMode = locationData && locationData.manualMode === true && hasValidCoordinates;
 
-    // Ne mettre à jour la location que si manualMode est false ou n'existe pas
+    // Ne mettre à jour la location que si manualMode est false ou n'existe pas, OU si pas de coordonnées valides
     if (!isManualMode && req.body.location) {
+      // Priorité 1: Localisation navigateur
       const latitude = parseFloat(req.body.location.latitude);
       const longitude = parseFloat(req.body.location.longitude);
       locationData.coordinates = [longitude, latitude]; // GeoJSON format: [longitude, latitude]
       locationData.latitude = latitude;
       locationData.longitude = longitude;
+      locationData.type = "Point";
       locationData.authorization = true;
+      locationData.manualMode = false;
 
-      // console.log(`📍 Updating location for user ${username} (manualMode: false)`);
+      //console.log(`📍 Updating location for user ${username} from browser`);
     } else if (!isManualMode) {
-      locationData.authorization = false;
-      locationData.manualMode = true;
-      // console.log(`⚠️  No location provided for user ${username}`);
+      // Priorité 2: Localisation via IP si pas de localisation navigateur ou pas de coordonnées valides
+      //console.log(`📍 No browser location for user ${username}, fetching from IP...`);
+      const ipLocation = await getLocationFromIP(req.ip);
+      locationData = ipLocation;
+      //console.log(`📍 Location retrieved from IP for user ${username}:`, ipLocation.city, ipLocation.country);
     } else {
-      // console.log(`🔒 Skipping location update for user ${username} (manualMode: true)`);
+      //console.log(`🔒 Skipping location update for user ${username} (manualMode: true with valid coordinates)`);
     }
 
     pool.query(

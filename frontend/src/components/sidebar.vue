@@ -597,14 +597,20 @@ export default {
     const loadUserProfile = async (username) => {
       if (!username) return;
       loadingProfile.value = true;
+      showProfileModal.value = false; // Fermer la modal pendant le chargement
+      profileUser.value = null; // Réinitialiser le profil
       try {
         const res = await fetchData(`/profile/${username}`, { method: "GET" });
         if (res.response.ok && res.data) {
-          profileUser.value = res.data.user || res.data;
-          showProfileModal.value = true;
+          const userData = res.data.user || res.data;
+          // Vérifier que les données essentielles sont présentes
+          if (userData && userData.username) {
+            profileUser.value = userData;
+            showProfileModal.value = true;
+          }
         }
       } catch (err) {
-        // console.error(err);
+        //console.error("❌ Error loading profile:", err);
       } finally {
         loadingProfile.value = false;
       }

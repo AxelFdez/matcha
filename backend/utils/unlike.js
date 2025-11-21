@@ -105,7 +105,7 @@ async function unlike(userId, message) {
         [sortedIds[0], sortedIds[1]]
       );
     } catch (err) {
-      console.error("Error deleting conversation:", err);
+      // console.error("Error deleting conversation:", err);
     }
 
     // Notifications WebSocket unmatch

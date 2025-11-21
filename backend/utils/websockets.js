@@ -152,7 +152,7 @@ async function setupWebSocket(server) {
     });
 
     ws.on("close", () => {
-      console.log('The client has disconnected.');
+      //console.log('The client has disconnected.');
       disconnectUser(userId);
       clients.delete(userId);
     });

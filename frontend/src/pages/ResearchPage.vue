@@ -125,7 +125,9 @@
             <td>
               <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
             </td>
-            <td>{{ calculateDistance(user.location).toFixed(2) }} km</td>
+            <td>
+              {{ calculateDistance(user.location) === Infinity ? 'N/A' : calculateDistance(user.location).toFixed(2) + ' km' }}
+            </td>
 
             <!-- ✅ Bouton Voir Profil -->
             <td>
@@ -161,7 +163,7 @@
               <p><strong>Sexe:</strong> {{ user.gender }}</p>
               <p><strong>Préférence:</strong> {{ user.sexualpreferences }}</p>
               <p><strong>Popularité:</strong> {{ user.famerating }}</p>
-              <p><strong>Distance:</strong> {{ calculateDistance(user.location).toFixed(2) }} km</p>
+              <p><strong>Distance:</strong> {{ calculateDistance(user.location) === Infinity ? 'N/A' : calculateDistance(user.location).toFixed(2) + ' km' }}</p>
               <p><strong>Dernière connexion:</strong> {{ formatDate(user.lastconnection) }}</p>
               <div class="user-tags">
                 <span v-for="tag in user.interests" :key="tag" class="tag">{{ tag }}</span>
@@ -277,11 +279,11 @@ export default {
       const viewedUsername = user.username;
 
       if (!ws || !realUsername || !viewedUsername) {
-        // console.warn("WebSocket or usernames not available");
+        // //console.warn("WebSocket or usernames not available");
         return;
       }
 
-      // console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });
+      // //console.log("Sending viewed event:", { user: realUsername, userViewed: viewedUsername });
       ws.send(
         JSON.stringify({
           type: "viewed",
@@ -297,20 +299,59 @@ export default {
         : `http://localhost:3000/${photoPath}`;
 
     const calculateDistance = (loc) => {
-      if (!loc?.coordinates) return Infinity;
+      // Vérifier que l'utilisateur cible a une localisation valide (format GeoJSON)
+      if (!loc?.coordinates || !Array.isArray(loc.coordinates) || loc.coordinates.length !== 2) {
+        return Infinity;
+      }
 
-      // Utiliser le store comme ProfileInfos
+      // Récupérer la localisation de l'utilisateur actuel depuis le store
       const currentUserLocation = store.getters.getLocation;
-      if (!currentUserLocation) return Infinity;
+      if (!currentUserLocation) {
+        ////console.warn("⚠️ Current user location not available in store");
+        return Infinity;
+      }
 
-      // Format GeoJSON: coordinates[0] = longitude, coordinates[1] = latitude
-      const lat1 = currentUserLocation.latitude || currentUserLocation.coordinates?.[1];
-      const lon1 = currentUserLocation.longitude || currentUserLocation.coordinates?.[0];
-      const lat2 = loc.coordinates?.[1];
-      const lon2 = loc.coordinates?.[0];
+      // Vérifier que la location de l'utilisateur actuel a le format GeoJSON
+      if (!currentUserLocation.coordinates || !Array.isArray(currentUserLocation.coordinates) || currentUserLocation.coordinates.length !== 2) {
+        ////console.warn("⚠️ Current user location invalid format:", currentUserLocation);
+        // Fallback sur latitude/longitude si disponibles (rétrocompatibilité)
+        if (typeof currentUserLocation.latitude === 'number' && typeof currentUserLocation.longitude === 'number') {
+          const lon1 = currentUserLocation.longitude;
+          const lat1 = currentUserLocation.latitude;
+          const lon2 = loc.coordinates[0];
+          const lat2 = loc.coordinates[1];
 
-      if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+          // Formule de Haversine
+          const R = 6371;
+          const dLat = ((lat2 - lat1) * Math.PI) / 180;
+          const dLon = ((lon2 - lon1) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) *
+              Math.cos((lat2 * Math.PI) / 180) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return R * c;
+        }
+        return Infinity;
+      }
 
+      // Format GeoJSON standard: coordinates[0] = longitude, coordinates[1] = latitude
+      const lon1 = currentUserLocation.coordinates[0];
+      const lat1 = currentUserLocation.coordinates[1];
+      const lon2 = loc.coordinates[0];
+      const lat2 = loc.coordinates[1];
+
+      // Vérifier que toutes les coordonnées sont des nombres valides
+      if (typeof lat1 !== 'number' || typeof lon1 !== 'number' ||
+          typeof lat2 !== 'number' || typeof lon2 !== 'number' ||
+          isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+        ////console.warn("⚠️ Invalid coordinates:", { lat1, lon1, lat2, lon2 });
+        return Infinity;
+      }
+
+      // Formule de Haversine pour calculer la distance entre deux points sur une sphère
       const R = 6371; // Rayon de la Terre en km
       const dLat = ((lat2 - lat1) * Math.PI) / 180;
       const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -334,7 +375,12 @@ export default {
           headers: { Authorization: `Bearer ${token}` },
         });
         users.value = response.data.users;
+        //console.log(`✅ Loaded ${users.value.length} users from backend`);
+        if (users.value.length > 0) {
+          //console.log("Sample user:", users.value[0]);
+        }
       } catch (err) {
+        //console.error("❌ Error fetching users:", err);
         error.value = err.response?.data?.message || "Erreur lors du chargement des utilisateurs";
       } finally {
         loading.value = false;
@@ -348,16 +394,24 @@ export default {
     });
 
     const filteredUsers = computed(() => {
+      // Debug location structure once
+      if (users.value.length > 0 && users.value[0]) {
+        const currentUserLocation = store.getters.getLocation;
+        //console.log("📍 Current user location from store:", currentUserLocation);
+        //console.log("📍 First target user location:", users.value[0].location);
+      }
+
       let filtered = users.value.filter((user) => {
         const matchesSearch = user.username.toLowerCase().includes(searchQuery.value.toLowerCase());
         const withinAge = user.age >= ageMin.value && user.age <= ageMax.value;
         const withinFame = user.famerating >= fameMin.value && user.famerating <= fameMax.value;
         const distance = calculateDistance(user.location);
-        const withinDistance = distance <= maxDistance.value;
+        // Si la distance est Infinity (pas de localisation), on accepte l'utilisateur par défaut
+        const withinDistance = distance === Infinity || distance <= maxDistance.value;
         const tagList = selectedTags.value.map((t) => t.toLowerCase());
         const hasTags =
           tagList.length === 0 ||
-          tagList.every((tag) => user.interests.some((i) => i.toLowerCase().includes(tag)));
+          tagList.every((tag) => user.interests?.some((i) => i.toLowerCase().includes(tag)));
         return matchesSearch && withinAge && withinFame && withinDistance && hasTags;
       });
 
@@ -374,6 +428,8 @@ export default {
           return sortOrder.value === "asc" ? valA - valB : valB - valA;
         });
       }
+
+      //console.log(`🔎 Filtered: ${filtered.length} users out of ${users.value.length}`);
       return filtered;
     });
 

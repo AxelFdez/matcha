@@ -1,6 +1,7 @@
 const pool = require("../config/connectBdd");
 
 module.exports = async function browseUsers(req, res) {
+
   try {
     // Vérifier si l'utilisateur est connecté
     if (!req.user) return res.status(401).json({ message: "Unauthorized" });
@@ -22,10 +23,7 @@ module.exports = async function browseUsers(req, res) {
       user.location.coordinates.length === 2
     ) {
       userLocation = user.location.coordinates; // [longitude, latitude]
-    } else {
-      console.warn(`⚠️ User ${user.username} has no valid location. Distance filters disabled.`);
     }
-
     // Préparer le filtre de genre selon les préférences sexuelles
     let genderFilterArray = [];
     switch (user.sexualpreferences) {
@@ -191,9 +189,29 @@ module.exports = async function browseUsers(req, res) {
       query = `SELECT * FROM (${queryBase}) AS subquery ORDER BY ${orderBy}`;
     }
 
-    // Exécution
+    // Debug: compter tous les utilisateurs sans filtres exclusifs
+    const debugCountQuery = `
+      SELECT
+        COUNT(*) FILTER (WHERE ready = true) as total_ready,
+        COUNT(*) FILTER (WHERE ready = false) as total_not_ready,
+        COUNT(*) FILTER (WHERE $1::text = ANY(likedby)) as already_liked,
+        COUNT(*) FILTER (WHERE $1::text = ANY(matcha)) as already_matched,
+        COUNT(*) FILTER (WHERE $1::text = ANY(blacklist)) as blacklisted,
+        COUNT(*) FILTER (WHERE $1::text = ANY(ignoredby)) as ignored_by,
+        COUNT(*) as total_users
+      FROM users
+      WHERE id::text != $1::text
+        AND gender = ANY($2)
+        AND (sexualpreferences = 'both' OR sexualpreferences = $3)
+    `;
+    const debugResult = await pool.query(debugCountQuery, [userId, genderFilterArray, user.gender]);
+    //console.log(`📊 User filtering stats for ${user.username}:`, debugResult.rows[0]);
+
+    // Exécution de la requête principale
     const usersResult = await pool.query(query, queryParams);
     const users = usersResult.rows;
+
+    //console.log(`🔎 Found ${users.length} users matching criteria for user ${user.username}`);
 
     if (!users.length) return res.status(404).json({ message: "No users found" });
     return res.status(200).json({ users });
