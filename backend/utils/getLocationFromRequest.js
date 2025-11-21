@@ -21,6 +21,27 @@ async function getLocationFromRequest(bodyLocation, req) {
         country: "Inconnu",
         coordinates: [longitude, latitude], // GeoJSON format
       };
+
+      // Reverse geocoding pour obtenir city et country à partir des coordonnées
+      try {
+        const axios = require('axios');
+        const reverseGeoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
+        const geoResponse = await axios.get(reverseGeoUrl, {
+          headers: {
+            'User-Agent': 'Matcha Dating App'
+          }
+        });
+        const geoData = geoResponse.data;
+
+        if (geoData && geoData.address) {
+          location.city = geoData.address.city || geoData.address.town || geoData.address.village || "Inconnue";
+          location.country = geoData.address.country || "Inconnu";
+        }
+      } catch (error) {
+        // console.error('Reverse geocoding error:', error);
+        // En cas d'erreur, garder les valeurs par défaut
+      }
+
       // console.log('Location retrieved from request body (GeoJSON):', location);
       return location;
     }

@@ -60,6 +60,13 @@ export default {
       if (!state.messages[conversationId]) state.messages[conversationId] = [];
       state.messages[conversationId].push(message);
     },
+    removeMessage(state, { conversationId, messageId }) {
+      if (state.messages[conversationId]) {
+        state.messages[conversationId] = state.messages[conversationId].filter(
+          (m) => m.id !== messageId
+        );
+      }
+    },
   },
   actions: {
     async deleteNotification({ commit }, notificationId) {
@@ -72,18 +79,37 @@ export default {
     },
     addIncomingMessage({ commit, state }, messageData) {
       const conversationId = messageData.conversationId;
-
-      // Vérifier si le message existe déjà
       const existingMessages = state.messages[conversationId] || [];
+
+      // Vérifier si le message existe déjà (même date exacte)
       const isDuplicate = existingMessages.some(
         (msg) => msg.message === messageData.message && msg.date === messageData.date
       );
       if (isDuplicate) return;
 
+      // Chercher un message temporaire correspondant (même sender, même contenu)
+      const currentUserId = localStorage.getItem("userId");
+      if (messageData.sender === currentUserId) {
+        const tempMessageIndex = existingMessages.findIndex(
+          (msg) =>
+            msg.temp === true &&
+            msg.sender === messageData.sender &&
+            msg.message === messageData.message
+        );
+
+        // Si on trouve un message temporaire, le remplacer au lieu d'ajouter
+        if (tempMessageIndex !== -1) {
+          commit("removeMessage", {
+            conversationId,
+            messageId: existingMessages[tempMessageIndex].id,
+          });
+        }
+      }
+
       commit("addMessage", { conversationId, message: messageData });
 
-      // Incrémenter unread uniquement si le message vient d’un autre utilisateur
-      if (messageData.sender !== localStorage.getItem("userName")) {
+      // Incrémenter unread uniquement si le message vient d'un autre utilisateur
+      if (messageData.sender !== currentUserId) {
         const conv = state.conversations.find((c) => c.id === conversationId);
         if (conv) {
           commit("incrementUnreadMessage", conversationId);

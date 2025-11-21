@@ -96,8 +96,6 @@ export default {
     );
 
     /** WebSocket */
-    const ws = store.getters.getWebSocket;
-
     const handleIncomingNotification = (data) => {
       const notif = data.notification || data;
       const newNotif = {
@@ -156,14 +154,22 @@ onMounted(async () => {
     await fetchInitialData();
   }
 
+  // Variable pour stocker le listener et le cleanup
+  let messageListener = null;
+
   // WATCH pour activer le WS même s'il arrive plus tard
   watch(
     () => store.getters.getWebSocket,
-    (newWs) => {
+    (newWs, oldWs) => {
+      // Nettoyer l'ancien listener si il existe
+      if (oldWs && messageListener) {
+        oldWs.removeEventListener("message", messageListener);
+      }
+
       if (!newWs) return;
 
-      // Écoute des messages WebSocket sans écraser les autres listeners
-      newWs.addEventListener("message", (event) => {
+      // Créer le nouveau listener
+      messageListener = (event) => {
         try {
           const data = JSON.parse(event.data);
 
@@ -172,21 +178,28 @@ onMounted(async () => {
             handleIncomingNotification(data);
           }
 
-          // // Messages de chat
-          // if (data.type === "chat" && data.message) {
-          //   handleIncomingMessage(data);
-          // }
+          // Messages de chat
+          if (data.type === "chat" && data.message) {
+            handleIncomingMessage(data);
+          }
         } catch (err) {
           console.error("Erreur WS header:", err);
         }
-      });
+      };
+
+      // Ajouter le listener
+      newWs.addEventListener("message", messageListener);
     },
     { immediate: true }
   );
 });
 
     onUnmounted(() => {
-      if (ws) ws.onmessage = null;
+      // Nettoyer le listener lors du démontage du composant
+      const ws = store.getters.getWebSocket;
+      if (ws && messageListener) {
+        ws.removeEventListener("message", messageListener);
+      }
     });
 
 

@@ -459,7 +459,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { useStore } from "vuex";
 import { fetchData } from "../config/api.js";
 import DisconnectBtn from "./header/DisconnectBtn.vue";
@@ -756,59 +756,6 @@ export default {
       });
     };
 
-    /** WebSocket handlers */
-    const handleIncomingNotification = (data) => {
-      const notif = data.notification || data;
-      const newNotif = {
-        id: notif.id || Date.now().toString(),
-        type: notif.type || "default",
-        title: notif.title,
-        body: notif.body || notif.message,
-        fromUser: notif.username || null,
-        createdAt: notif.createdAt || new Date().toISOString(),
-        viewed: false,
-      };
-      if (!store.state.notifications.notifications.some((n) => n.id === newNotif.id)) {
-        store.commit("notifications/addNotification", newNotif);
-      }
-    };
-
-    const handleIncomingMessage = (data) => {
-      const msg = {
-        conversationId: data.conversationId,
-        sender: data.message.sender,
-        senderUser: data.message.senderUser,
-        message: data.message.message,
-        date: new Date(data.message.date),
-        temp: false,
-      };
-
-      // Vérifier si un message temporaire avec le même texte existe
-      const existingMessages =
-        store.getters["notifications/getConversationMessages"](msg.conversationId) || [];
-      const duplicate = existingMessages.some(
-        (m) => m.temp && m.message === msg.message && m.sender === msg.sender
-      );
-
-      if (!duplicate) {
-        store.commit("notifications/addMessage", {
-          conversationId: msg.conversationId,
-          message: msg,
-        });
-        nextTick(scrollToBottom);
-      } else {
-        // Remplacer le message temporaire par le message serveur
-        const updatedMessages = existingMessages.map((m) =>
-          m.temp && m.message === msg.message && m.sender === msg.sender ? { ...msg } : m
-        );
-        store.commit("notifications/setMessages", {
-          conversationId: msg.conversationId,
-          messages: updatedMessages,
-        });
-        nextTick(scrollToBottom);
-      }
-    };
-
     /** Polling backup */
     let pollingInterval = null;
     const startPolling = () => {
@@ -827,20 +774,44 @@ export default {
       await fetchConversations();
       startPolling();
 
-      const ws = store.getters.getWebSocket;
-      if (ws && !ws._sidebarListenerAttached) {
-        ws._sidebarListenerAttached = true;
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (["notification", "Like", "Match!", "Unlike", "Profile Viewed"].includes(data.type))
-              handleIncomingNotification(data);
-            // if (data.type === "chat" && data.message) handleIncomingMessage(data);
-          } catch {}
-        };
-      }
+      // WebSocket listeners sont maintenant gérés uniquement dans HeaderCmp.vue
+      // pour éviter les duplications
     });
     onUnmounted(() => stopPolling());
+
+    /** Watch for incoming messages to replace temp messages */
+    watch(
+      messages,
+      (newMessages) => {
+        if (!selectedConversation.value || !newMessages.length) return;
+
+        // Séparer les messages temporaires et serveur
+        const tempMessages = newMessages.filter((m) => m.temp);
+        const serverMessages = newMessages.filter((m) => !m.temp);
+
+        // Pour chaque message serveur de l'utilisateur actuel
+        serverMessages.forEach((serverMsg) => {
+          if (serverMsg.sender === currentUserId.value) {
+            // Trouver un message temporaire correspondant
+            const matchingTemp = tempMessages.find(
+              (tempMsg) =>
+                tempMsg.sender === serverMsg.sender &&
+                tempMsg.message === serverMsg.message &&
+                Math.abs(new Date(serverMsg.date) - new Date(tempMsg.date)) < 10000 // dans les 10 secondes
+            );
+
+            if (matchingTemp) {
+              // Supprimer le message temporaire du store
+              store.commit("notifications/removeMessage", {
+                conversationId: selectedConversation.value.id,
+                messageId: matchingTemp.id,
+              });
+            }
+          }
+        });
+      },
+      { deep: true }
+    );
 
     /** Helpers */
     const getFirstPhoto = (photoData) => {
