@@ -1,3 +1,5 @@
+
+
 <template>
   <div class="header bg-zinc-900">
     <TitleCmp />
@@ -56,6 +58,10 @@ import TitleCmp from "./TitleCmp.vue";
 import ConnectBtn from "./ConnectBtn.vue";
 import Sidebar from "@/components/sidebar.vue";
 import { fetchData } from "@/config/api.js";
+
+import { watch } from "vue";
+
+
 
 export default {
   name: "HeaderCmp",
@@ -145,26 +151,45 @@ export default {
       }
     };
 
-    onMounted(async () => {
-      if (isConnected.value) await fetchInitialData();
+onMounted(async () => {
+  if (isConnected.value) {
+    await fetchInitialData();
+  }
 
-      if (ws) {
-        const originalOnMessage = ws.onmessage;
-        ws.onmessage = (event) => {
-          if (originalOnMessage) originalOnMessage.call(ws, event);
-          try {
-            const data = JSON.parse(event.data);
-            if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type))
-              handleIncomingNotification(data);
-            if (data.type === "chat" && data.message) handleIncomingMessage(data);
-          } catch (err) {}
-        };
-      }
-    });
+  // WATCH pour activer le WS même s'il arrive plus tard
+  watch(
+    () => store.getters.getWebSocket,
+    (newWs) => {
+      if (!newWs) return;
+
+      // Écoute des messages WebSocket sans écraser les autres listeners
+      newWs.addEventListener("message", (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          // Notifications
+          if (["notification", "like", "match", "unlike", "profile_view"].includes(data.type)) {
+            handleIncomingNotification(data);
+          }
+
+          // // Messages de chat
+          // if (data.type === "chat" && data.message) {
+          //   handleIncomingMessage(data);
+          // }
+        } catch (err) {
+          console.error("Erreur WS header:", err);
+        }
+      });
+    },
+    { immediate: true }
+  );
+});
 
     onUnmounted(() => {
       if (ws) ws.onmessage = null;
     });
+
+
 
     return {
       open,
@@ -177,6 +202,8 @@ export default {
       unreadMessagesCount,
     };
   },
+
+
 };
 </script>
 

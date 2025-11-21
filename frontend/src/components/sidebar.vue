@@ -581,7 +581,7 @@ export default {
     };
 
     const backToConversations = async () => {
-      
+
       showChatMessages.value = false;
       selectedConversation.value = null;
       await fetchConversations();
@@ -835,7 +835,7 @@ export default {
             const data = JSON.parse(event.data);
             if (["notification", "Like", "Match!", "Unlike", "Profile Viewed"].includes(data.type))
               handleIncomingNotification(data);
-            if (data.type === "chat" && data.message) handleIncomingMessage(data);
+            // if (data.type === "chat" && data.message) handleIncomingMessage(data);
           } catch {}
         };
       }
