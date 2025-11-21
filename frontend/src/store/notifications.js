@@ -74,7 +74,7 @@ export default {
         await fetchData(`/notifications/${notificationId}`, { method: "DELETE" });
         commit("removeNotification", notificationId);
       } catch (err) {
-        console.error("Erreur lors de la suppression de la notification", err);
+        // console.error("Erreur lors de la suppression de la notification", err);
       }
     },
     addIncomingMessage({ commit, state }, messageData) {

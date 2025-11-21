@@ -145,7 +145,7 @@ export default {
           store.commit("notifications/setConversations", resConv.data.conversations);
         }
       } catch (err) {
-        console.error("Erreur fetch initial header:", err);
+        // console.error("Erreur fetch initial header:", err);
       }
     };
 
@@ -183,7 +183,7 @@ onMounted(async () => {
             handleIncomingMessage(data);
           }
         } catch (err) {
-          console.error("Erreur WS header:", err);
+          // console.error("Erreur WS header:", err);
         }
       };
 

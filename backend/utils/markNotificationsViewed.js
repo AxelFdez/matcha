@@ -8,7 +8,7 @@ async function markNotificationsViewed(req, res) {
     const result = await pool.query("SELECT notifications FROM users WHERE id = $1", [userId]);
 
     if (result.rows.length === 0) {
-      console.warn("⚠️ User not found");
+      // console.warn("⚠️ User not found");
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -27,7 +27,7 @@ async function markNotificationsViewed(req, res) {
 
     res.status(200).json({ message: "Notifications marked as viewed" });
   } catch (error) {
-    console.error("❌ Erreur lors du marquage des notifications comme vues:", error);
+    // console.error("❌ Erreur lors du marquage des notifications comme vues:", error);
     res.status(500).json({
       message: "Erreur du serveur lors du marquage des notifications",
     });

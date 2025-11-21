@@ -547,10 +547,10 @@ export default {
           // 3️⃣ Mettre à jour le store local pour refléter les vues
           store.commit("notifications/markNotificationsViewed");
         } else {
-          console.warn("⚠️ res.data is not an array:", res.data);
+          // console.warn("⚠️ res.data is not an array:", res.data);
         }
       } catch (err) {
-        console.error("❌ Erreur lors de l'ouverture des notifications:", err);
+        // console.error("❌ Erreur lors de l'ouverture des notifications:", err);
       }
     };
 
